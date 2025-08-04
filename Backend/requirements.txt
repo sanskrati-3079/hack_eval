@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+python-dotenv
+motor
+pymongo
+bcrypt
+python-jose
+passlib
+pandas
+sendgrid
