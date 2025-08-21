@@ -28,6 +28,7 @@ class EvaluationSummary(BaseModel):
 
 # ------------------ 🔌 MongoDB Collections ------------------
 
-criteria_collection = db["evaluation_criteria"]
-evaluations_collection = db["team_evaluations"]
-evaluation_summary_collection = db["evaluation_summary"]
+db.create_collection("evaluation_criteria")
+db.create_collection("team_evaluations")
+db.create_collection("evaluation_summary")
+

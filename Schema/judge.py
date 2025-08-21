@@ -1,17 +1,44 @@
 from pydantic import BaseModel, EmailStr
 from typing import List, Dict, Optional
 from datetime import datetime
-from db.mongo import db  # ✅ MongoDB instance
-
-# ------------------ ✅ Pydantic Schemas ------------------
 
 class JudgeProfile(BaseModel):
-    judge_id: str
+    id: str
     name: str
     email: EmailStr
     expertise: List[str]
-    bio: Optional[str]
-    registered_at: datetime
+    bio: Optional[str] = None
+    assigned_teams: List[str] = []
+    rounds: List[int] = []
+
+class JudgeModel(BaseModel):
+    id: str
+    name: str
+    email: EmailStr
+    password: str
+    expertise: List[str]
+    bio: Optional[str] = None
+    assigned_teams: List[str] = []
+    rounds: List[int] = []
+    created_at: datetime = datetime.utcnow()
+    updated_at: datetime = datetime.utcnow()
+
+class JudgeEvaluation(BaseModel):
+    round: int
+    scores: Dict[str, float]  # Criteria to score mapping
+    feedback: Optional[str] = None
+
+class JudgeLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+class JudgeResponse(BaseModel):
+    id: str
+    name: str
+    email: EmailStr
+    expertise: List[str]
+    assigned_teams: List[str]
+    rounds: List[int]
 
 class JudgeAssignment(BaseModel):
     judge_id: str
@@ -26,10 +53,4 @@ class JudgeFeedback(BaseModel):
     round_id: int
     comments: str
     rating: Optional[float]
-    submitted_at: datetime
-
-# ------------------ 🔌 MongoDB Collections ------------------
-
-judges_collection = db["judges"]
-assignments_collection = db["judge_assignments"]
-feedback_collection = db["judge_feedback"]
+    submitted_at: datetime = datetime.utcnow()

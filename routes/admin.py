@@ -20,9 +20,7 @@ from Schema.admin_schema import (
     LeaderboardSettings,
     MentorAvailability
 )
-from Schema.judge import JudgeProfile, JudgeAssignment, JudgeFeedback
-
-
+from Schema.judge import JudgeAssignment, JudgeFeedback
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
