@@ -172,8 +172,8 @@ class MentorTeamAssignment(BaseModel):
 class MentorAvailabilitySchedule(BaseModel):
     mentor_id: str
     day_of_week: int = Field(..., ge=0, le=6)
-    start_time: str = Field(..., regex=r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$")
-    end_time: str = Field(..., regex=r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$")
+    start_time: str = Field(..., pattern=r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$")
+    end_time: str = Field(..., pattern=r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$")
     is_available: bool = True
     notes: Optional[str] = None
 
