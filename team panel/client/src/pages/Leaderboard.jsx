@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { TeamContext } from '../context/TeamContext';
+import React, { useState, useEffect, useContext } from "react";
+import { TeamContext } from "../context/TeamContext";
 
 const Leaderboard = () => {
   const { team } = useContext(TeamContext);
@@ -7,17 +7,24 @@ const Leaderboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulated leaderboard data
-    const mockLeaderboard = [
-      { rank: 1, teamId: 'TC-2024-003', name: 'Team Alpha', score: 95 },
-      { rank: 2, teamId: 'TC-2024-007', name: 'Team Beta', score: 88 },
-      { rank: 3, teamId: 'TC-2024-002', name: 'Team Gamma', score: 85 },
-      { rank: 4, teamId: 'TC-2024-001', name: 'Team Delta', score: 82 },
-      { rank: 5, teamId: 'TC-2024-005', name: 'Team Epsilon', score: 78 },
-    ];
+    const fetchLeaderboard = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`${API_BASE_URL}/leaderboard/overall`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch leaderboard data");
+        }
+        const data = await response.json();
+        setLeaderboardData(data);
+      } catch (error) {
+        console.error("Error fetching leaderboard:", error);
+        // Optionally set an error state to show in the UI
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    setLeaderboardData(mockLeaderboard);
-    setLoading(false);
+    fetchLeaderboard();
   }, []);
 
   return (
@@ -36,20 +43,20 @@ const Leaderboard = () => {
             </div>
             {leaderboardData.map((entry) => (
               <div
-                key={entry.teamId}
-                className={`table-row ${entry.teamId === team?.teamId ? 'current-team' : ''}`}
+                key={entry.team_id}
+                className={`table-row ${entry.team_id === team?.teamId ? "current-team" : ""}`}
               >
                 <div className="rank-col">
-                  {entry.rank === 1 && '🥇'}
-                  {entry.rank === 2 && '🥈'}
-                  {entry.rank === 3 && '🥉'}
+                  {entry.rank === 1 && "🥇"}
+                  {entry.rank === 2 && "🥈"}
+                  {entry.rank === 3 && "🥉"}
                   {entry.rank > 3 && entry.rank}
                 </div>
                 <div className="team-col">
-                  <span className="team-name">{entry.name}</span>
-                  <span className="team-id">({entry.teamId})</span>
+                  <span className="team-name">{entry.team_name}</span>
+                  <span className="team-id">({entry.team_id})</span>
                 </div>
-                <div className="score-col">{entry.score}</div>
+                <div className="score-col">{entry.total_score}</div>
               </div>
             ))}
           </div>

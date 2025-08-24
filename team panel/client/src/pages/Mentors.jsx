@@ -1,79 +1,105 @@
-import React, { useState, useContext } from 'react';
-import { TeamContext } from '../context/TeamContext';
+import React, { useState, useContext, useEffect } from "react";
+import { TeamContext } from "../context/TeamContext";
+
+const API_BASE_URL = "http://localhost:8000"; // Your FastAPI server URL
 
 const Mentors = () => {
   const { team } = useContext(TeamContext);
+  const [mentors, setMentors] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedSlot, setSelectedSlot] = useState(null);
 
-  // Simulated available mentors data
-  const mentors = [
-    {
-      id: 1,
-      name: 'Dr. Sarah Johnson',
-      expertise: ['AI/ML', 'Data Science'],
-      availability: ['2024-02-20 10:00', '2024-02-20 14:00'],
-      image: 'https://via.placeholder.com/150',
-    },
-    {
-      id: 2,
-      name: 'Prof. Michael Chen',
-      expertise: ['Web Development', 'Cloud Architecture'],
-      availability: ['2024-02-21 11:00', '2024-02-21 15:00'],
-      image: 'https://via.placeholder.com/150',
-    },
-    {
-      id: 3,
-      name: 'Emily Rodriguez',
-      expertise: ['UI/UX Design', 'Product Management'],
-      availability: ['2024-02-22 09:00', '2024-02-22 13:00'],
-      image: 'https://via.placeholder.com/150',
-    },
-  ];
+  useEffect(() => {
+    const fetchMentors = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`${API_BASE_URL}/mentors`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch mentors");
+        }
+        const data = await response.json();
+        setMentors(data);
+      } catch (error) {
+        console.error("Error fetching mentors:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMentors();
+  }, []);
 
   const handleSlotSelection = (mentorId, slot) => {
     setSelectedSlot({ mentorId, slot });
-    // Handle booking logic here
+    // In a real app, you would call an API to book this slot
+    alert(
+      `Slot selected with mentor ${mentorId} at ${slot}. Booking functionality not implemented.`,
+    );
   };
 
   return (
     <div className="mentors-container">
       <h1>Mentor Sessions</h1>
-
-      <div className="mentors-grid">
-        {mentors.map((mentor) => (
-          <div key={mentor.id} className="mentor-card">
-            <img src={mentor.image} alt={mentor.name} className="mentor-image" />
-            <div className="mentor-info">
-              <h2>{mentor.name}</h2>
-              <div className="expertise">
-                <h3>Expertise:</h3>
-                <div className="tags">
-                  {mentor.expertise.map((skill, index) => (
-                    <span key={index} className="tag">
-                      {skill}
-                    </span>
-                  ))}
+      {loading ? (
+        <p>Loading available mentors...</p>
+      ) : (
+        <div className="mentors-grid">
+          {mentors.map((mentor) => (
+            <div key={mentor.id} className="mentor-card">
+              <img
+                src={
+                  mentor.profile_picture || "https://via.placeholder.com/150"
+                }
+                alt={mentor.name}
+                className="mentor-image"
+              />
+              <div className="mentor-info">
+                <h2>{mentor.name}</h2>
+                <div className="expertise">
+                  <h3>Expertise:</h3>
+                  <div className="tags">
+                    {mentor.expertise.map((skill, index) => (
+                      <span key={index} className="tag">
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <div className="availability">
-                <h3>Available Slots:</h3>
-                <div className="slots">
-                  {mentor.availability.map((slot, index) => (
-                    <button
-                      key={index}
-                      className={`slot-btn ${selectedSlot?.mentorId === mentor.id && selectedSlot?.slot === slot ? 'selected' : ''}`}
-                      onClick={() => handleSlotSelection(mentor.id, slot)}
-                    >
-                      {new Date(slot).toLocaleString()}
-                    </button>
-                  ))}
+                {/* Availability would need another API call or be part of the mentor object */}
+                <div className="availability">
+                  <h3>
+                    Status:{" "}
+                    <span className={mentor.availability}>
+                      {mentor.availability}
+                    </span>
+                  </h3>
+                  {/* You would map over actual availability slots here */}
+                  {mentor.availability === "available" ? (
+                    <div className="slots">
+                      {mentor.availableSlots.map((slot, index) => (
+                        <button
+                          key={index}
+                          className={`slot-button ${
+                            selectedSlot &&
+                            selectedSlot.mentorId === mentor.id &&
+                            selectedSlot.slot === slot
+                              ? "selected"
+                              : ""
+                          }`}
+                          onClick={() => handleSlotSelection(mentor.id, slot)}
+                        >
+                          {new Date(slot).toLocaleString()}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p>No available slots</p>
+                  )}
                 </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
-
+          ))}
+        </div>
+      )}
       <div className="booked-sessions">
         <h2>Your Booked Sessions</h2>
         {team?.mentorSessions?.length > 0 ? (
@@ -81,13 +107,8 @@ const Mentors = () => {
             {team.mentorSessions.map((session, index) => (
               <div key={index} className="session-card">
                 <h3>Session with {session.mentorName}</h3>
-                <p>Date: {new Date(session.datetime).toLocaleString()}</p>
+                <p>Date: {new Date(session.scheduledFor).toLocaleString()}</p>
                 <p>Status: {session.status}</p>
-                {session.meetingLink && (
-                  <a href={session.meetingLink} target="_blank" rel="noopener noreferrer" className="meeting-link">
-                    Join Meeting
-                  </a>
-                )}
               </div>
             ))}
           </div>

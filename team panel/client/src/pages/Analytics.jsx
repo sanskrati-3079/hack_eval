@@ -1,46 +1,62 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { TeamContext } from '../context/TeamContext';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell, LineChart, Line, ResponsiveContainer } from 'recharts';
+import React, { useContext, useEffect, useState } from "react";
+import { TeamContext } from "../context/TeamContext";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  PieChart,
+  Pie,
+  Cell,
+  LineChart,
+  Line,
+  ResponsiveContainer,
+} from "recharts";
 
 const Analytics = () => {
   const { team } = useContext(TeamContext);
-
   const [analyticsData, setAnalyticsData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (team) {
-      // Simulated analytics data based on team context
-      const data = {
-        activityData: [
-          { name: 'Code Commits', value: team.analytics?.commitCount || 156 },
-          { name: 'Code Reviews', value: team.analytics?.codeReviews || 24 },
-          { name: 'Tests Written', value: team.analytics?.testsWritten || 89 },
-          { name: 'Bugs Fixed', value: team.analytics?.bugsFixed || 15 },
-          { name: 'Documentation', value: 20 },
-        ],
-        progressData: [
-          { name: 'Planning', completed: 100 },
-          { name: 'Design', completed: 85 },
-          { name: 'Development', completed: 60 },
-          { name: 'Testing', completed: 40 },
-          { name: 'Documentation', completed: 30 },
-        ],
-        performanceData: [
-          { day: 'Mon', score: 85 },
-          { day: 'Tue', score: 88 },
-          { day: 'Wed', score: 92 },
-          { day: 'Thu', score: 90 },
-          { day: 'Fri', score: 95 },
-        ],
-      };
-      setAnalyticsData(data);
-    }
-  }, [team]);
+    const fetchAnalytics = async () => {
+      if (!team?.teamId) {
+        setLoading(false);
+        return;
+      }
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+      try {
+        setLoading(true);
+        const response = await fetch(
+          `${API_BASE_URL}/teams/${team.teamId}/analytics`,
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch analytics data");
+        }
+        const data = await response.json();
+        setAnalyticsData(data);
+      } catch (error) {
+        console.error("Error fetching analytics:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  if (!analyticsData) {
-    return <div className="analytics-container">Loading analytics...</div>;
+    fetchAnalytics();
+  }, [team?.teamId]);
+
+  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
+
+  if (loading || !analyticsData) {
+    return (
+      <div className="analytics-container">
+        <h1>Team Analytics</h1>
+        <p>Loading analytics...</p>
+      </div>
+    );
   }
 
   return (
@@ -63,7 +79,10 @@ const Analytics = () => {
                 dataKey="value"
               >
                 {analyticsData.activityData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[index % COLORS.length]}
+                  />
                 ))}
               </Pie>
               <Tooltip />
@@ -117,19 +136,19 @@ const Analytics = () => {
           <div className="metrics-grid">
             <div className="metric">
               <h3>Team Velocity</h3>
-              <p>{team?.analytics?.commitCount || 156} commits</p>
+              <p>{analyticsData.keyMetrics.commitCount} commits</p>
             </div>
             <div className="metric">
               <h3>Code Quality</h3>
-              <p>A+ ({team?.score || 85}%)</p>
+              <p>A+ ({analyticsData.keyMetrics.score}%)</p>
             </div>
             <div className="metric">
               <h3>Tests Coverage</h3>
-              <p>{team?.analytics?.testsWritten || 89} tests</p>
+              <p>{analyticsData.keyMetrics.testsWritten} tests</p>
             </div>
             <div className="metric">
               <h3>Bug Resolution</h3>
-              <p>{team?.analytics?.bugsFixed || 15} fixed</p>
+              <p>{analyticsData.keyMetrics.bugsFixed} fixed</p>
             </div>
           </div>
         </div>
@@ -137,10 +156,9 @@ const Analytics = () => {
         <div className="insights-card">
           <h2>Key Insights</h2>
           <ul>
-            <li>High commit activity with {team?.analytics?.commitCount || 156} total commits</li>
-            <li>Strong code review culture with {team?.analytics?.codeReviews || 24} reviews</li>
-            <li>Robust testing with {team?.analytics?.testsWritten || 89} tests written</li>
-            <li>Efficient bug resolution: {team?.analytics?.bugsFixed || 15} bugs fixed</li>
+            {analyticsData.keyInsights.map((insight, index) => (
+              <li key={index}>{insight}</li>
+            ))}
           </ul>
         </div>
       </div>

@@ -1,65 +1,59 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { useSocket } from '../context/SocketContext';
-import { TeamContext } from '../context/TeamContext';
-import { motion } from 'framer-motion';
+import React, { useContext, useEffect, useState } from "react";
+import { useSocket } from "../context/SocketContext";
+import { TeamContext } from "../context/TeamContext";
+import { motion } from "framer-motion";
+
+const API_BASE_URL = "http://localhost:8000"; // Your FastAPI server URL
 
 const Notifications = () => {
   const socket = useSocket();
-  const { team } = useContext(TeamContext);
+  const { team } = useContext(TeamContext); // For authentication token
   const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // This assumes your TeamContext provides the auth token
+    const token = localStorage.getItem("authToken"); // Example of getting token
+
+    const fetchNotifications = async () => {
+      if (!team || !token) {
+        setLoading(false);
+        return;
+      }
+      try {
+        setLoading(true);
+        const response = await fetch(`${API_BASE_URL}/notifications`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!response.ok) {
+          throw new Error("Failed to fetch notifications");
+        }
+        const data = await response.json();
+        setNotifications(data);
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNotifications();
+
+    // WebSocket listener (if implemented)
     if (socket && socket.connected) {
-      // Listen for new notifications
-      socket.on('notification', (newNotification) => {
+      socket.on("notification", (newNotification) => {
         setNotifications((prev) => [newNotification, ...prev]);
       });
-
-      return () => {
-        socket.off('notification');
-      };
+      return () => socket.off("notification");
     }
-  }, [socket]);
-
-  // Simulated notifications data
-  useEffect(() => {
-    const mockNotifications = [
-      {
-        id: 1,
-        type: 'mentor',
-        title: 'Mentor Session Confirmed',
-        message: 'Your session with Dr. Sarah Johnson has been confirmed for tomorrow at 2 PM.',
-        timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-        read: false,
-      },
-      {
-        id: 2,
-        type: 'submission',
-        title: 'Submission Feedback',
-        message: 'Your latest project submission has been reviewed. Check the feedback in the Submissions section.',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-        read: true,
-      },
-      {
-        id: 3,
-        type: 'announcement',
-        title: 'New Resource Available',
-        message: 'A new AI workshop recording has been added to the resources section.',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-        read: true,
-      },
-    ];
-
-    setNotifications(mockNotifications);
-  }, []);
+  }, [team, socket]);
 
   const markAsRead = (notificationId) => {
+    // In a real app, you'd call a PUT API to mark as read
     setNotifications((prev) =>
-      prev.map((notification) =>
-        notification.id === notificationId
-          ? { ...notification, read: true }
-          : notification
-      )
+      prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n)),
     );
   };
 
@@ -67,16 +61,16 @@ const Notifications = () => {
     const seconds = Math.floor((new Date() - new Date(timestamp)) / 1000);
 
     let interval = seconds / 31536000;
-    if (interval > 1) return Math.floor(interval) + ' years ago';
+    if (interval > 1) return Math.floor(interval) + " years ago";
     interval = seconds / 2592000;
-    if (interval > 1) return Math.floor(interval) + ' months ago';
+    if (interval > 1) return Math.floor(interval) + " months ago";
     interval = seconds / 86400;
-    if (interval > 1) return Math.floor(interval) + ' days ago';
+    if (interval > 1) return Math.floor(interval) + " days ago";
     interval = seconds / 3600;
-    if (interval > 1) return Math.floor(interval) + ' hours ago';
+    if (interval > 1) return Math.floor(interval) + " hours ago";
     interval = seconds / 60;
-    if (interval > 1) return Math.floor(interval) + ' minutes ago';
-    return Math.floor(seconds) + ' seconds ago';
+    if (interval > 1) return Math.floor(interval) + " minutes ago";
+    return Math.floor(seconds) + " seconds ago";
   };
 
   return (
@@ -84,15 +78,18 @@ const Notifications = () => {
       <h1>Notifications</h1>
 
       {!socket && (
-        <div style={{ 
-          background: '#fff3cd', 
-          border: '1px solid #ffeaa7', 
-          borderRadius: '8px', 
-          padding: '1rem', 
-          marginBottom: '1rem',
-          color: '#856404'
-        }}>
-          <strong>Offline Mode:</strong> Real-time notifications are not available. You can still view your existing notifications.
+        <div
+          style={{
+            background: "#fff3cd",
+            border: "1px solid #ffeaa7",
+            borderRadius: "8px",
+            padding: "1rem",
+            marginBottom: "1rem",
+            color: "#856404",
+          }}
+        >
+          <strong>Offline Mode:</strong> Real-time notifications are not
+          available. You can still view your existing notifications.
         </div>
       )}
 
@@ -100,7 +97,7 @@ const Notifications = () => {
         {notifications.map((notification) => (
           <motion.div
             key={notification.id}
-            className={`notification-card ${notification.read ? 'read' : 'unread'}`}
+            className={`notification-card ${notification.read ? "read" : "unread"}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
@@ -108,7 +105,9 @@ const Notifications = () => {
           >
             <div className="notification-header">
               <h3>{notification.title}</h3>
-              <span className="timestamp">{getTimeAgo(notification.timestamp)}</span>
+              <span className="timestamp">
+                {getTimeAgo(notification.timestamp)}
+              </span>
             </div>
             <p className="message">{notification.message}</p>
             {!notification.read && (

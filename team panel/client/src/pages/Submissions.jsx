@@ -1,27 +1,94 @@
-import React, { useContext, useState } from 'react';
-import { TeamContext } from '../context/TeamContext';
-import { useDropzone } from 'react-dropzone';
+import React, { useContext, useState, useEffect, useCallback } from "react";
+import { TeamContext } from "../context/TeamContext";
 
 const Submissions = () => {
-  const { team } = useContext(TeamContext);
+  // Assuming TeamContext provides the auth token
+  const { token } = useContext(TeamContext);
+
+  // State for the submission form
+  const [submissionLink, setSubmissionLink] = useState("");
+  const [roundId, setRoundId] = useState(1); // Default to round 1
+
+  // State for displaying data and UI feedback
+  const [submissionHistory, setSubmissionHistory] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
-  const onDrop = async (acceptedFiles) => {
+  // Function to fetch submission history
+  const fetchSubmissions = useCallback(async () => {
+    if (!token) {
+      setIsLoading(false);
+      setError("Authentication token not found. Please log in.");
+      return;
+    }
+    try {
+      setIsLoading(true);
+      setError("");
+      const response = await fetch(`${API_BASE_URL}/user/submissions`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.detail || "Failed to fetch submission history");
+      }
+      const data = await response.json();
+      setSubmissionHistory(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [token]);
+
+  // Fetch data when the component mounts
+  useEffect(() => {
+    fetchSubmissions();
+  }, [fetchSubmissions]);
+
+  // Handler for form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!submissionLink || !roundId) {
+      setError("Please provide a round number and a GitHub link.");
+      return;
+    }
+
     setUploading(true);
-    // Handle file upload logic here
-    setTimeout(() => {
-      setUploading(false);
-    }, 2000);
-  };
+    setError("");
+    setSuccessMessage("");
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: {
-      'application/zip': ['.zip'],
-      'application/x-zip-compressed': ['.zip'],
-    },
-    maxFiles: 1,
-  });
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/user/submission/${roundId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ submission_link: submissionLink }),
+        },
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.detail || "Failed to upload submission.");
+      }
+
+      setSuccessMessage("Submission uploaded successfully!");
+      setSubmissionLink(""); // Clear input on success
+      fetchSubmissions(); // Refresh history to show the new submission
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
     <div className="submissions-container">
@@ -29,31 +96,58 @@ const Submissions = () => {
 
       <div className="submission-upload">
         <h2>Upload Submission</h2>
-        <div
-          {...getRootProps()}
-          className={`dropzone ${isDragActive ? 'active' : ''}`}
-        >
-          <input {...getInputProps()} />
-          {uploading ? (
-            <p>Uploading...</p>
-          ) : isDragActive ? (
-            <p>Drop the files here...</p>
-          ) : (
-            <p>Drag 'n' drop your project files here, or click to select files</p>
+        <form onSubmit={handleSubmit} className="submission-form">
+          <div className="form-group">
+            <label htmlFor="roundId">Round Number</label>
+            <input
+              type="number"
+              id="roundId"
+              value={roundId}
+              onChange={(e) => setRoundId(parseInt(e.target.value, 10))}
+              min="1"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="githubLink">GitHub Repository Link</label>
+            <input
+              type="url"
+              id="githubLink"
+              placeholder="https://github.com/your-username/your-repo"
+              value={submissionLink}
+              onChange={(e) => setSubmissionLink(e.target.value)}
+              required
+            />
+          </div>
+          {error && <p className="error-message">{error}</p>}
+          {successMessage && (
+            <p className="success-message">{successMessage}</p>
           )}
-        </div>
+          <button type="submit" disabled={uploading}>
+            {uploading ? "Submitting..." : "Submit Project"}
+          </button>
+        </form>
       </div>
 
       <div className="submission-history">
         <h2>Submission History</h2>
-        {team?.submissions?.length > 0 ? (
+        {isLoading ? (
+          <p>Loading submission history...</p>
+        ) : submissionHistory.length > 0 ? (
           <div className="submissions-list">
-            {team.submissions.map((submission, index) => (
-              <div key={index} className="submission-card">
+            {submissionHistory.map((submission) => (
+              <div key={submission.id} className="submission-card">
                 <div className="submission-info">
-                  <h3>Submission #{submission.id}</h3>
-                  <p>Date: {new Date(submission.submittedAt).toLocaleString()}</p>
-                  <p>Status: {submission.status}</p>
+                  <h3>Round #{submission.round_id}</h3>
+                  <p>
+                    Date: {new Date(submission.submitted_at).toLocaleString()}
+                  </p>
+                  <p>
+                    Status:{" "}
+                    <span className={`status-${submission.status}`}>
+                      {submission.status}
+                    </span>
+                  </p>
                   {submission.feedback && (
                     <div className="feedback">
                       <h4>Feedback:</h4>
@@ -62,18 +156,20 @@ const Submissions = () => {
                   )}
                 </div>
                 <div className="submission-actions">
-                  <button
-                    onClick={() => window.open(submission.downloadUrl)}
-                    className="download-btn"
+                  <a
+                    href={submission.submission_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="download-btn" // Re-using class name from original code
                   >
-                    Download
-                  </button>
+                    View on GitHub
+                  </a>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <p>No submissions yet</p>
+          <p>No submissions yet.</p>
         )}
       </div>
     </div>
