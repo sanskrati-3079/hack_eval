@@ -9,7 +9,7 @@ from routes.user import router as user_router
 
 from datetime import datetime
 from Schema import admin
-from utils import helper 
+from utils import helper
 
 
 
@@ -47,5 +47,5 @@ async def root():
         "docs_url": "/docs",
         "swagger_ui_url": "/docs",
         "redoc_url": "/redoc",
-        "timestamp": "datetime.utcnow().isoformat()"
+        "timestamp": datetime.utcnow().isoformat()
     }

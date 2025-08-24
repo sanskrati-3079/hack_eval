@@ -13,7 +13,7 @@ class TeamInfo(BaseModel):
 class Submission(BaseModel):
     team_id: str
     round_id: int
-    filename: Optional[str] = None
+    submission_link: str
     status: str
     submitted_at: Optional[datetime]
 
