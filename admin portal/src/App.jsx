@@ -8,6 +8,7 @@ import JudgeAssignment from './components/JudgeAssignment.jsx';
 import ScoreCompiler from './components/ScoreCompiler.jsx';
 import Leaderboard from './components/Leaderboard.jsx';
 import MentorManagement from './components/MentorManagement.jsx';
+import ExcelUpload from './components/ExcelUpload.jsx';
 import Login from './components/Login.jsx';
 import './App.css';
 
@@ -122,6 +123,14 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/excel-upload"
+                element={
+                  <ProtectedRoute>
+                    <ExcelUpload />
+                  </ProtectedRoute>
+                }
+              />
             </Routes>
           </main>
         </div>
@@ -130,4 +139,4 @@ function App() {
   );
 }
 
-export default App; 
+export default App;

@@ -257,10 +257,10 @@ const ScoreCompiler = () => {
             Export Scores
           </button>
 
-          <button className="btn-upload" onClick={handleUploadExcel}>
+          {/* <button className="btn-upload" onClick={handleUploadExcel}>
             <Upload size={16} />
             Upload Excel File
-          </button>
+          </button> */}
         </div>
       </div>
 

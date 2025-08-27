@@ -7,6 +7,7 @@ import {
   Calculator, 
   Trophy, 
   UserCheck,
+  FileSpreadsheet,
   X
 } from 'lucide-react';
 import './Sidebar.css';
@@ -42,16 +43,19 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       path: '/mentor-management',
       name: 'Mentor Management',
       icon: UserCheck
+    },
+    {
+      path: '/excel-upload',
+      name: 'Upload Teams',
+      icon: FileSpreadsheet
     }
   ];
 
   return (
     <>
-      {/* Mobile overlay */}
       {isOpen && (
         <div className="sidebar-overlay" onClick={() => setIsOpen(false)} />
       )}
-      
       <aside className={`sidebar ${isOpen ? 'sidebar-open' : ''}`}>
         <div className="sidebar-header">
           <div className="sidebar-brand">
@@ -108,4 +112,4 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   );
 };
 
-export default Sidebar; 
+export default Sidebar;
