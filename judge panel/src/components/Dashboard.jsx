@@ -85,8 +85,8 @@ const Dashboard = () => {
   return (
     <div className="dashboard">
       <div className="page-header">
-        <h1 className="page-title">Dashboard</h1>
-        <p className="page-subtitle">Welcome back, Dr. Smith. Here's your evaluation overview.</p>
+        <h1 className="page-title">Welcome back, Dr. Smith</h1>
+        <p className="page-subtitle">Here's your evaluation overview.</p>
       </div>
 
       {/* Statistics Cards */}

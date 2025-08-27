@@ -26,7 +26,7 @@ const EvaluateSubmission = () => {
     description: 'Our solution leverages IoT sensors and machine learning algorithms to create an intelligent waste management system. The platform provides real-time monitoring of waste levels, optimizes collection routes, and provides analytics for better resource allocation. The system reduces operational costs by 30% and improves collection efficiency by 45%.',
     techStack: ['React', 'Node.js', 'Python', 'TensorFlow', 'IoT Sensors', 'MongoDB'],
     pptLink: 'https://docs.google.com/presentation/d/example',
-    abstract: 'Our solution leverages IoT sensors and machine learning algorithms to create an intelligent waste management system. The platform provides real-time monitoring of waste levels, optimizes collection routes, and provides analytics for better resource allocation. The system reduces operational costs by 30% and improves collection efficiency by 45%.',
+    abstract: `The proposal for a Paperless Scholarship Disbursement System presents a solid foundation with innovative features like AI-based document verification and real-time updates. However, it lacks detailed metrics, datasets, and a comprehensive evaluation plan, which are critical for assessing the project's feasibility and impact. The architecture is described adequately, but scalability and cost estimates are vague. Overall, the project shows promise but requires more concrete evidence and planning.`,
     uniquenessScore: 85,
     plagiarismScore: 12,
     submissionDate: '2024-01-15',
@@ -115,7 +115,7 @@ const EvaluateSubmission = () => {
 
             <div className="metadata-item">
               <h3>AI-Generated Abstract</h3>
-              <p className="abstract">{submission.abstract}</p>
+              <p className="abstract" style={{ whiteSpace: 'pre-line' }}>{submission.abstract}</p>
             </div>
 
             <div className="metadata-item">
@@ -249,6 +249,3 @@ const EvaluateSubmission = () => {
 };
 
 export default EvaluateSubmission;
-
-
-
