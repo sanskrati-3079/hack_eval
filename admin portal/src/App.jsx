@@ -10,6 +10,7 @@ import Leaderboard from './components/Leaderboard.jsx';
 import MentorManagement from './components/MentorManagement.jsx';
 import ExcelUpload from './components/ExcelUpload.jsx';
 import Login from './components/Login.jsx';
+import FinalSubmissionList from './components/FinalSubmissionList.jsx';
 import './App.css';
 
 function App() {
@@ -147,6 +148,14 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/final-submissions"
+                element={
+                  <ProtectedRoute>
+                    <FinalSubmissionList />
+                  </ProtectedRoute>
+                }
+              />
             </Routes>
           </main>
         </div>
@@ -155,4 +164,4 @@ function App() {
   );
 }
 
-export default App;
+export default App;

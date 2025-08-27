@@ -5,7 +5,8 @@ import {
   FileText, 
   ClipboardList, 
   Award,
-  GraduationCap
+  GraduationCap,
+  UserPlus // Import an icon for "Assign" (UserPlus is a good fit)
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -20,6 +21,11 @@ const Sidebar = () => {
       path: '/evaluate',
       icon: <FileText size={20} />,
       label: 'Evaluate Submissions'
+    },
+    {
+      path: '/assign',
+      icon: <UserPlus size={20} />,
+      label: 'Assign'
     },
     {
       path: '/my-evaluations',
@@ -79,6 +85,3 @@ const Sidebar = () => {
 };
 
 export default Sidebar;
-
-
-
