@@ -15,29 +15,40 @@ function SignIn() {
             alert("Login successful!");
             navigate("/dashboard");
         } else {
-            alert("Invalid credentials! Use admin@gla.ac.in / 12345");
+            alert("Invalid credentials! Please try again.");
         }
     };
 
     return (
         <div className="auth-container">
-            <h2>Sign In</h2>
+            <div className="auth-logo">
+                <img src="/gla-logo.png" alt="GLA University" />
+            </div>
+            <h1 className="auth-title">Judge Panel</h1>
+            <p className="auth-subtitle">Hackathon Evaluation Portal</p>
+            
             <form onSubmit={handleSubmit}>
-                <input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                />
-                <input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                />
-                <button type="submit">Sign In</button>
+                <div className="form-group">
+                    <input
+                        type="email"
+                        placeholder="Enter your email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                    />
+                </div>
+                <div className="form-group">
+                    <input
+                        type="password"
+                        placeholder="Enter your password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                    />
+                </div>
+                <button type="submit">
+                    Sign In
+                </button>
             </form>
         </div>
     );

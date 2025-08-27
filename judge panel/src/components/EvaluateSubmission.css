@@ -96,6 +96,14 @@
   font-style: italic;
 }
 
+.description {
+  background: var(--gray-50);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border-left: 4px solid var(--primary-green);
+  font-style: italic;
+}
+
 .presentation-links {
   display: flex;
   gap: 1rem;

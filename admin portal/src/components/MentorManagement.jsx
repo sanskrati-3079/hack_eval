@@ -262,7 +262,7 @@ const MentorManagement = () => {
             </div>
           </div>
 
-          <div className="dashboard-card">
+          {/* <div className="dashboard-card">
             <div className="card-header">
               <div className="card-icon" style={{ backgroundColor: 'var(--warning)20', color: 'var(--warning)' }}>
                 <Clock size={24} />
@@ -273,7 +273,7 @@ const MentorManagement = () => {
               <span className="value">{mentors.reduce((sum, m) => sum + m.sessions, 0)}</span>
               <span className="change">Conducted</span>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
 

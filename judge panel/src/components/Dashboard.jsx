@@ -15,29 +15,26 @@ const Dashboard = () => {
       value: '24',
       icon: <FileText size={24} />,
       color: 'blue',
-      change: '+12% from yesterday'
     },
     {
       title: 'Evaluated',
       value: '18',
       icon: <CheckCircle size={24} />,
       color: 'green',
-      change: '75% completion rate'
     },
     {
       title: 'Pending Review',
       value: '6',
       icon: <Clock size={24} />,
       color: 'orange',
-      change: '25% remaining'
     },
-    {
-      title: 'Average Score',
-      value: '7.8',
-      icon: <TrendingUp size={24} />,
-      color: 'purple',
-      change: '+0.3 from last round'
-    }
+    // {
+    //   title: 'Average Score',
+    //   value: '7.8',
+    //   icon: <TrendingUp size={24} />,
+    //   color: 'purple',
+    //   change: '+0.3 from last round'
+    // }
   ];
 
   const recentEvaluations = [
@@ -134,12 +131,12 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Quick Actions */}
+        {/* Quick Actions
         <div className="dashboard-section">
           <div className="section-header">
             <h2>Quick Actions</h2>
-          </div>
-          <div className="quick-actions">
+          </div> */}
+          {/* <div className="quick-actions">
             {quickActions.map((action, index) => (
               <div key={index} className="action-card">
                 <div className="action-icon">
@@ -152,8 +149,8 @@ const Dashboard = () => {
                 </div>
               </div>
             ))}
-          </div>
-        </div>
+          </div> */}
+        {/* </div> */}
       </div>
     </div>
   );

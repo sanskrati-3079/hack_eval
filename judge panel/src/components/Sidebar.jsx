@@ -12,7 +12,7 @@ import './Sidebar.css';
 const Sidebar = () => {
   const menuItems = [
     {
-      path: '/',
+      path: '/dashboard',
       icon: <Home size={20} />,
       label: 'Dashboard Home'
     },
@@ -26,11 +26,11 @@ const Sidebar = () => {
       icon: <ClipboardList size={20} />,
       label: 'My Evaluations'
     },
-    {
-      path: '/final-submissions',
-      icon: <Award size={20} />,
-      label: 'Final Submission List'
-    }
+    // {
+    //   path: '/final-submissions',
+    //   icon: <Award size={20} />,
+    //   label: 'Final Submission List'
+    // }
   ];
 
   return (

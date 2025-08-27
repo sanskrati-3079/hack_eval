@@ -4,9 +4,9 @@ import Sidebar from "./components/Sidebar.jsx";
 import Dashboard from "./components/Dashboard.jsx";
 import EvaluateSubmission from "./components/EvaluateSubmission.jsx";
 import MyEvaluations from "./components/MyEvaluations.jsx";
-import FinalSubmissionList from "./components/FinalSubmissionList.jsx";
+// import FinalSubmissionList from "./components/FinalSubmissionList.jsx";
 import SignIn from "./components/SignIn.jsx";
-import Auth from "./components/Auth.jsx";
+// import Auth from "./components/Auth.jsx";
 import "./App.css";
 
 // Layout to hide sidebar/footer on SignIn page
@@ -44,7 +44,7 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/evaluate" element={<EvaluateSubmission />} />
           <Route path="/my-evaluations" element={<MyEvaluations />} />
-          <Route path="/final-submissions" element={<FinalSubmissionList />} />
+          {/* <Route path="/final-submissions" element={<FinalSubmissionList />} /> */}
         </Routes>
       </Layout>
     </Router>

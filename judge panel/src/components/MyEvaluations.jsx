@@ -33,7 +33,6 @@ const MyEvaluations = () => {
       evaluationDate: '2024-01-15',
       totalScore: 7.2,
       status: 'Needs Improvement',
-      recommendation: 'Needs Improvement',
       feedback: 'Good concept but needs better technical implementation. Consider improving the user interface and adding more features.'
     },
     {
@@ -44,7 +43,6 @@ const MyEvaluations = () => {
       evaluationDate: '2024-01-14',
       totalScore: 9.1,
       status: 'Approved',
-      recommendation: 'Proceed to Next Round',
       feedback: 'Outstanding project with excellent technical depth. Very innovative solution with great potential for real-world application.'
     },
     {
@@ -55,7 +53,6 @@ const MyEvaluations = () => {
       evaluationDate: '2024-01-13',
       totalScore: 6.8,
       status: 'Rejected',
-      recommendation: 'Rejected',
       feedback: 'Concept is good but implementation lacks depth. Technical stack could be better chosen for the problem domain.'
     }
   ];
@@ -162,10 +159,10 @@ const MyEvaluations = () => {
                 <Eye size={16} />
                 View Details
               </button>
-              <button className="btn btn-secondary">
+              {/* <button className="btn btn-secondary">
                 <Download size={16} />
                 Export
-              </button>
+              </button> */}
             </div>
           </div>
         ))}

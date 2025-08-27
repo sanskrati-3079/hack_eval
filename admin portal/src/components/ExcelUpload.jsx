@@ -27,7 +27,9 @@ const ExcelUpload = () => {
         'Leader Contact Number',
       ];
 
-      const missingColumns = requiredColumns.filter(col => !jsonData[0] || !Object.keys(jsonData[0]).includes(col));
+      const missingColumns = requiredColumns.filter(
+        col => !jsonData[0] || !Object.keys(jsonData[0]).includes(col)
+      );
       if (missingColumns.length > 0) {
         throw new Error(`Missing required columns: ${missingColumns.join(', ')}`);
       }
@@ -39,9 +41,7 @@ const ExcelUpload = () => {
       const response = await fetch('http://localhost:8000/upload_excel/', {
         method: 'POST',
         body: formData,
-        headers: {
-          // Let the browser set the Content-Type with boundary for FormData
-        }
+        // Let the browser set the Content-Type with boundary for FormData
       });
 
       if (!response.ok) {
@@ -78,7 +78,11 @@ const ExcelUpload = () => {
         </div>
 
         <div className="mb-6">
-          <div className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors duration-200 ${loading ? 'border-gray-300 bg-gray-50' : 'border-gray-300 hover:border-blue-500'}`}>
+          <div
+            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors duration-200 ${
+              loading ? 'border-gray-300 bg-gray-50' : 'border-gray-300 hover:border-blue-500'
+            }`}
+          >
             <input
               type="file"
               accept=".xlsx,.xls"
@@ -87,7 +91,7 @@ const ExcelUpload = () => {
               id="file-upload"
               disabled={loading}
             />
-            <label 
+            <label
               htmlFor="file-upload"
               className={`cursor-pointer flex flex-col items-center ${loading ? 'cursor-not-allowed' : ''}`}
             >
@@ -98,13 +102,13 @@ const ExcelUpload = () => {
                 </div>
               ) : (
                 <>
-                  <svg 
+                  <svg
                     className="w-8 h-8 text-gray-400 mb-2"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 150 150"
                   >
-                    <path 
+                    <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth="2"

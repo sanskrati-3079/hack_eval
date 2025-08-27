@@ -23,6 +23,7 @@ const EvaluateSubmission = () => {
     teamName: 'Team Innovators',
     teamId: 'TI-2024-001',
     problemStatement: 'Develop a sustainable solution for smart waste management in urban areas using IoT and AI technologies to optimize collection routes and reduce environmental impact.',
+    description: 'Our solution leverages IoT sensors and machine learning algorithms to create an intelligent waste management system. The platform provides real-time monitoring of waste levels, optimizes collection routes, and provides analytics for better resource allocation. The system reduces operational costs by 30% and improves collection efficiency by 45%.',
     techStack: ['React', 'Node.js', 'Python', 'TensorFlow', 'IoT Sensors', 'MongoDB'],
     pptLink: 'https://docs.google.com/presentation/d/example',
     abstract: 'Our solution leverages IoT sensors and machine learning algorithms to create an intelligent waste management system. The platform provides real-time monitoring of waste levels, optimizes collection routes, and provides analytics for better resource allocation. The system reduces operational costs by 30% and improves collection efficiency by 45%.',
@@ -99,6 +100,11 @@ const EvaluateSubmission = () => {
             </div>
 
             <div className="metadata-item">
+              <h3>Description</h3>
+              <p className="abstract">{submission.description}</p>
+            </div>
+
+            <div className="metadata-item">
               <h3>Tech Stack</h3>
               <div className="tech-stack">
                 {submission.techStack.map((tech, index) => (
@@ -119,14 +125,14 @@ const EvaluateSubmission = () => {
                   <ExternalLink size={16} />
                   View Presentation
                 </a>
-                <button className="btn btn-secondary">
+                {/* <button className="btn btn-secondary">
                   <Download size={16} />
                   Download PPT
-                </button>
+                </button> */}
               </div>
             </div>
 
-            <div className="metadata-item">
+            {/* <div className="metadata-item">
               <h3>Quality Metrics</h3>
               <div className="quality-metrics">
                 <div className="metric">
@@ -154,7 +160,7 @@ const EvaluateSubmission = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
 
@@ -201,7 +207,7 @@ const EvaluateSubmission = () => {
             ))}
           </div>
 
-          <div className="form-section">
+          {/* <div className="form-section">
             <label className="form-label">Final Recommendation</label>
             <select
               value={evaluation.finalRecommendation}
@@ -214,7 +220,7 @@ const EvaluateSubmission = () => {
               <option value="improvement">Needs Improvement</option>
               <option value="rejected">Rejected</option>
             </select>
-          </div>
+          </div> */}
 
           <div className="form-section">
             <label className="form-label">Personalized Feedback</label>
