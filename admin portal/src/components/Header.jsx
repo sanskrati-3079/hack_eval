@@ -1,22 +1,19 @@
 import React from 'react';
-import { Menu, Bell, Search, User } from 'lucide-react';
+import { Menu, Bell, User } from 'lucide-react';
 import './Header.css';
 
 const Header = ({ onMenuClick, onLogout }) => {
   return (
     <header className="header">
       <div className="header-left">
+        <img
+          src="/images/gla.png"
+          alt="GLA University"
+          className="header-logo-left"
+        />
         <button className="menu-toggle" onClick={onMenuClick}>
           <Menu size={24} />
         </button>
-        <div className="search-bar">
-          <Search size={20} className="search-icon" />
-          <input
-            type="text"
-            placeholder="Search..."
-            className="search-input"
-          />
-        </div>
       </div>
       
       <div className="header-right">
@@ -31,6 +28,12 @@ const Header = ({ onMenuClick, onLogout }) => {
             <span>Logout</span>
           </button>
         </div>
+
+        <img
+          src="/images/sih.png"
+          alt="Smart India Hackathon 2022"
+          className="header-logo-right"
+        />
       </div>
     </header>
   );

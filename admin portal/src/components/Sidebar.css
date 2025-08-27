@@ -186,10 +186,16 @@
 
 /* Desktop styles */
 @media (min-width: 1024px) {
+  /* Respect toggle state on desktop too */
   .sidebar {
+    transform: translateX(-100%);
+  }
+  .sidebar.sidebar-open {
     transform: translateX(0);
   }
-  
+  .sidebar-overlay {
+    display: none;
+  }
   .sidebar-close {
     display: none;
   }
