@@ -20,6 +20,8 @@
   position: relative;
   z-index: 15;
   border: 2px solid var(--primary-green);
+  /* Ensure content clears the fixed header */
+  padding-top: 10px;
 }
 
 /* Desktop layout - match wireframe structure */
@@ -51,6 +53,7 @@
     padding: 0;
     margin: 0;
     height: calc(100vh - 60px);
+    padding-top: 10px;
     width: 100%;
   }
 }

@@ -11,7 +11,7 @@ const Header = ({ onMenuClick }) => {
     <header className="header">
       <div className="header-content">
         <div className="header-left">
-          <button className="menu-btn" onClick={onMenuClick}>
+          <button className="menu-btn" onClick={onMenuClick} aria-label="Toggle navigation">
             <FaBars />
           </button>
           <Link to="/" className="logo">
