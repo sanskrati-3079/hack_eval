@@ -8,9 +8,17 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  margin-left: 280px;
+  margin-left: 0;
   transition: margin-left 0.3s ease;
 }
+
+/* Shift content when the sidebar is open (desktop behavior) */
+.app.sidebar-opened .main-content {
+  margin-left: 280px;
+}
+
+/* When sidebar is closed on large screens, shift content left */
+/* Keep main-content static; sidebar slide handled in Sidebar.css */
 
 .content {
   flex: 1;
@@ -306,4 +314,5 @@
     margin-top: 0.5rem;       /* add spacing between stacked buttons */
   }
 }
+
 

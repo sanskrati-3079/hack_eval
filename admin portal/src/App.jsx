@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar.jsx';
 import Header from './components/Header.jsx';
@@ -13,7 +13,10 @@ import Login from './components/Login.jsx';
 import './App.css';
 
 function App() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth >= 1024; // default open on desktop
+  });
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     try {
       return Boolean(localStorage.getItem('authUser'));
@@ -36,6 +39,19 @@ function App() {
     setIsAuthenticated(false);
   };
 
+  // Keep behavior consistent on resize: open on desktop, closed on mobile
+  useEffect(() => {
+    const onResize = () => {
+      if (window.innerWidth >= 1024) {
+        setSidebarOpen(true);
+      } else {
+        setSidebarOpen(false);
+      }
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
   const ProtectedRoute = ({ children }) => {
     if (!isAuthenticated) {
       return <Navigate to="/login" replace />;
@@ -45,7 +61,7 @@ function App() {
 
   return (
     <Router>
-      <div className="app">
+      <div className={`app ${sidebarOpen ? 'sidebar-opened' : ''}`}>
         {isAuthenticated && (
           <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
         )}
