@@ -19,6 +19,7 @@ import ProfileSettings from './pages/Auth/ProfileSettings.jsx';
 
 // Styles
 import './pages/styles.css';
+import './App.css';
 
 // Context
 import { SocketContext } from './context/SocketContext.js';

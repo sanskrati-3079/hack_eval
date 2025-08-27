@@ -19,7 +19,7 @@
   width: 100%;
   position: relative;
   z-index: 15;
-  border: 2px solid var(--primary-green);
+  border: 2px solid var(--white); /* Changed from primary-green to white */
   /* Ensure content clears the fixed header */
   padding-top: 10px;
 }
