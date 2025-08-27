@@ -1,0 +1,186 @@
+.excel-upload-container {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.excel-upload-card {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+}
+
+.excel-upload-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  text-align: center;
+  color: #1f2937;
+}
+
+.instructions-box {
+  background-color: #eff6ff;
+  border-left: 4px solid #60a5fa;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.instructions-title {
+  color: #1d4ed8;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.instructions-list {
+  list-style-type: disc;
+  list-style-position: inside;
+  font-size: 0.875rem;
+  color: #2563eb;
+}
+
+.instructions-sublist {
+  margin-left: 1.5rem;
+  margin-top: 0.25rem;
+  list-style-type: disc;
+}
+
+.upload-section {
+  margin-bottom: 1.5rem;
+}
+
+.upload-area {
+  border: 2px dashed #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 2rem;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.upload-area:hover {
+  border-color: #3b82f6;
+}
+
+.upload-area.loading {
+  border-color: #e5e7eb;
+  background-color: #f9fafb;
+}
+
+.file-input {
+  display: none;
+}
+
+.upload-label {
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.upload-label.disabled {
+  cursor: not-allowed;
+}
+
+.upload-icon {
+  width: 2rem;
+  height: 2rem;
+  color: #9ca3af;
+  margin-bottom: 0.5rem;
+}
+
+.upload-text {
+  color: #4b5563;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.upload-subtext {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.loading-animation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: pulse 2s infinite;
+}
+
+.loading-circle {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 9999px;
+  background-color: #e5e7eb;
+  margin-bottom: 0.75rem;
+}
+
+.loading-bar {
+  height: 1rem;
+  width: 6rem;
+  background-color: #e5e7eb;
+  border-radius: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.data-table-section {
+  margin-top: 2rem;
+}
+
+.table-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #374151;
+}
+
+.table-container {
+  overflow-x: auto;
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.data-table {
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table-header {
+  background-color: #f9fafb;
+}
+
+.table-header th {
+  padding: 0.75rem 1.5rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  color: #6b7280;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.table-row {
+  background-color: white;
+}
+
+.table-row:nth-child(even) {
+  background-color: #f9fafb;
+}
+
+.table-cell {
+  padding: 1rem 1.5rem;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  color: #6b7280;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}

@@ -7,6 +7,7 @@ import {
   Calculator, 
   Trophy, 
   UserCheck,
+  FileSpreadsheet,
   X
 } from 'lucide-react';
 import './Sidebar.css';
@@ -42,6 +43,11 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       path: '/mentor-management',
       name: 'Mentor Management',
       icon: UserCheck
+    },
+    {
+      path: '/excel-upload',
+      name: 'Upload Teams',
+      icon: FileSpreadsheet
     }
   ];
 

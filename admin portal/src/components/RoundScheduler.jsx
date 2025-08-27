@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import './RoundScheduler.css';
 import { 
   Plus, 
   Calendar, 
@@ -6,15 +7,13 @@ import {
   Upload, 
   Edit, 
   Trash2,
-  Eye,
-  CheckCircle,
-  AlertCircle
+  Eye
 } from 'lucide-react';
 
 const RoundScheduler = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedRound, setSelectedRound] = useState(null);
-  const [viewMode, setViewMode] = useState('list'); // 'list' or 'calendar'
+  const [viewMode, setViewMode] = useState('list');
 
   const [rounds, setRounds] = useState([
     {
@@ -34,28 +33,15 @@ const RoundScheduler = () => {
       uploadDeadline: '2024-01-17T16:00:00',
       status: 'live',
       description: 'Core development and prototype building'
-    },
-    {
-      id: 3,
-      name: 'Round 3: Final Presentation',
-      startTime: '2024-01-18T10:00:00',
-      endTime: '2024-01-18T16:00:00',
-      uploadDeadline: '2024-01-18T15:00:00',
-      status: 'draft',
-      description: 'Final presentations and judging'
     }
   ]);
 
   const getStatusBadge = (status) => {
     switch (status) {
-      case 'draft':
-        return <span className="badge badge-warning">Draft</span>;
-      case 'live':
-        return <span className="badge badge-success">Live</span>;
-      case 'completed':
-        return <span className="badge badge-info">Completed</span>;
-      default:
-        return <span className="badge badge-warning">Draft</span>;
+      case 'draft': return <span className="badge badge-warning">Draft</span>;
+      case 'live': return <span className="badge badge-success">Live</span>;
+      case 'completed': return <span className="badge badge-info">Completed</span>;
+      default: return <span className="badge badge-warning">Draft</span>;
     }
   };
 
@@ -86,6 +72,27 @@ const RoundScheduler = () => {
     setRounds((prev) => prev.filter((r) => r.id !== roundId));
   };
 
+  // 🔹 Main Add/Edit Logic
+  const handleSaveRound = (roundData) => {
+    if (selectedRound) {
+      // Update existing round
+      setRounds((prev) =>
+        prev.map((r) =>
+          r.id === selectedRound.id ? { ...r, ...roundData } : r
+        )
+      );
+    } else {
+      // Add new round
+      const newRound = {
+        ...roundData,
+        id: rounds.length ? Math.max(...rounds.map((r) => r.id)) + 1 : 1
+      };
+      setRounds((prev) => [...prev, newRound]);
+    }
+    setShowModal(false);
+    setSelectedRound(null);
+  };
+
   return (
     <div className="round-scheduler">
       <div className="page-header">
@@ -102,13 +109,13 @@ const RoundScheduler = () => {
             <Eye size={16} />
             List View
           </button>
-          <button 
+          {/* <button 
             className={`btn ${viewMode === 'calendar' ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => setViewMode('calendar')}
           >
             <Calendar size={16} />
             Calendar View
-          </button>
+          </button> */}
         </div>
         <button className="btn btn-primary" onClick={handleAddRound}>
           <Plus size={16} />
@@ -134,21 +141,15 @@ const RoundScheduler = () => {
                 <div className="round-details">
                   <div className="detail-item">
                     <Clock size={16} />
-                    <div>
-                      <strong>Start:</strong> {formatDateTime(round.startTime)}
-                    </div>
+                    <div><strong>Start:</strong> {formatDateTime(round.startTime)}</div>
                   </div>
                   <div className="detail-item">
                     <Clock size={16} />
-                    <div>
-                      <strong>End:</strong> {formatDateTime(round.endTime)}
-                    </div>
+                    <div><strong>End:</strong> {formatDateTime(round.endTime)}</div>
                   </div>
                   <div className="detail-item">
                     <Upload size={16} />
-                    <div>
-                      <strong>Upload Deadline:</strong> {formatDateTime(round.uploadDeadline)}
-                    </div>
+                    <div><strong>Upload Deadline:</strong> {formatDateTime(round.uploadDeadline)}</div>
                   </div>
                 </div>
 
@@ -157,12 +158,10 @@ const RoundScheduler = () => {
                     className="btn btn-secondary"
                     onClick={() => handleEditRound(round)}
                   >
-                    <Edit size={16} />
-                    Edit
+                    <Edit size={16} /> Edit
                   </button>
                   <button className="btn btn-error" onClick={() => handleDeleteRound(round.id)}>
-                    <Trash2 size={16} />
-                    Delete
+                    <Trash2 size={16} /> Delete
                   </button>
                 </div>
               </div>
@@ -184,10 +183,7 @@ const RoundScheduler = () => {
         <RoundModal 
           round={selectedRound}
           onClose={() => setShowModal(false)}
-          onSave={(roundData) => {
-            console.log('Saving round:', roundData);
-            setShowModal(false);
-          }}
+          onSave={handleSaveRound}
         />
       )}
     </div>
@@ -214,14 +210,13 @@ const RoundModal = ({ round, onClose, onSave }) => {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2 className="modal-title">
-            {round ? 'Edit Round' : 'Add New Round'}
-          </h2>
+          <h2 className="modal-title">{round ? 'Edit Round' : 'Add New Round'}</h2>
           <button className="modal-close" onClick={onClose}>×</button>
         </div>
         
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
+            {/* name */}
             <div className="form-group">
               <label className="form-label">Round Name</label>
               <input
@@ -229,22 +224,20 @@ const RoundModal = ({ round, onClose, onSave }) => {
                 className="form-input"
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
-                placeholder="e.g., Round 1: Ideation"
                 required
               />
             </div>
-
+            {/* description */}
             <div className="form-group">
               <label className="form-label">Description</label>
               <textarea
                 className="form-input"
                 value={formData.description}
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
-                placeholder="Describe what this round involves..."
                 rows="3"
               />
             </div>
-
+            {/* dates */}
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label">Start Time</label>
@@ -256,7 +249,6 @@ const RoundModal = ({ round, onClose, onSave }) => {
                   required
                 />
               </div>
-
               <div className="form-group">
                 <label className="form-label">End Time</label>
                 <input
@@ -268,7 +260,7 @@ const RoundModal = ({ round, onClose, onSave }) => {
                 />
               </div>
             </div>
-
+            {/* deadline */}
             <div className="form-group">
               <label className="form-label">Upload Deadline</label>
               <input
@@ -279,7 +271,7 @@ const RoundModal = ({ round, onClose, onSave }) => {
                 required
               />
             </div>
-
+            {/* status */}
             <div className="form-group">
               <label className="form-label">Status</label>
               <select
@@ -308,4 +300,4 @@ const RoundModal = ({ round, onClose, onSave }) => {
   );
 };
 
-export default RoundScheduler; 
+export default RoundScheduler;
