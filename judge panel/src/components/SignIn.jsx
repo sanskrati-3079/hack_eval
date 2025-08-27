@@ -22,7 +22,7 @@ function SignIn() {
     return (
         <div className="auth-container">
             <div className="auth-logo">
-                <img src="/gla-logo.png" alt="GLA University" />
+                <img src="..\..\public\images\gla.png" alt="GLA University" />
             </div>
             <h1 className="auth-title">Judge Panel</h1>
             <p className="auth-subtitle">Hackathon Evaluation Portal</p>

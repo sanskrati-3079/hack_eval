@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import Sidebar from "./components/Sidebar.jsx";
+import Header from "./components/Header.jsx";
 import Dashboard from "./components/Dashboard.jsx";
 import EvaluateSubmission from "./components/EvaluateSubmission.jsx";
 import MyEvaluations from "./components/MyEvaluations.jsx";
@@ -14,11 +15,17 @@ import "./App.css";
 function Layout({ children }) {
   const location = useLocation();
   const isAuthPage = location.pathname === "/signin";
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const handleMenuClick = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
 
   return (
     <div className="app">
-      {!isAuthPage && <Sidebar />}
-      <main className="main-content">
+      {!isAuthPage && <Header onMenuClick={handleMenuClick} />}
+      {!isAuthPage && <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />}
+      <main className={`main-content ${sidebarOpen ? '' : 'sidebar-hidden'}`}>
         {children}
         {!isAuthPage && (
           <footer className="footer">

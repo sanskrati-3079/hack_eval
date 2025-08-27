@@ -13,6 +13,21 @@
   transition: margin-left 0.2s;
   min-height: 100vh;
   position: relative;
+  margin-top: 70px; /* Add margin to account for fixed header height */
+}
+
+/* When sidebar is hidden, center the dashboard content */
+.main-content.sidebar-hidden {
+  margin-left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.main-content.sidebar-hidden .dashboard-content {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .card {
