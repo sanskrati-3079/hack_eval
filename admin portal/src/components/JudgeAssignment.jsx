@@ -18,7 +18,8 @@ const JudgeAssignment = () => {
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState(null);
 
-  const teams = [
+  // Make teams stateful so we can update assignments
+  const [teams, setTeams] = useState([
     {
       id: 1,
       name: 'Team Alpha',
@@ -59,13 +60,13 @@ const JudgeAssignment = () => {
       assignmentStatus: 'unassigned',
       score: null
     }
-  ];
+  ]);
 
   const judges = [
     { id: 1, name: 'Dr. Sarah Johnson', expertise: 'AI/ML', availability: 'available' },
     { id: 2, name: 'Prof. Robert Chen', expertise: 'Mobile App', availability: 'available' },
-    { id: 3, name: 'Dr. Emily Davis', expertise: 'Web Development', availability: 'busy' },
-    { id: 4, name: 'Prof. Michael Wilson', expertise: 'AI/ML', availability: 'available' }
+    { id: 3, name: 'Dr. Emily Davis', expertise: 'Web Development', availability: 'available' },
+    // { id: 4, name: 'Prof. Michael Wilson', expertise: 'AI/ML', availability: 'available' }
   ];
 
   const categories = ['all', 'AI/ML', 'Web Development', 'Mobile App', 'IoT', 'Blockchain'];
@@ -93,6 +94,31 @@ const JudgeAssignment = () => {
   const handleAssignJudge = (team) => {
     setSelectedTeam(team);
     setShowAssignmentModal(true);
+  };
+
+  // Unassign judge from team
+  const handleUnassignJudge = (teamId) => {
+    setTeams(prev =>
+      prev.map(team =>
+        team.id === teamId
+          ? { ...team, assignedJudge: null, assignmentStatus: 'unassigned', score: null }
+          : team
+      )
+    );
+  };
+
+  // Assign judge to team
+  const handleAssignJudgeToTeam = (judgeId) => {
+    const judge = judges.find(j => j.id.toString() === judgeId.toString());
+    if (!judge) return;
+    setTeams(prev =>
+      prev.map(team =>
+        team.id === selectedTeam.id
+          ? { ...team, assignedJudge: judge.name, assignmentStatus: 'assigned' }
+          : team
+      )
+    );
+    setShowAssignmentModal(false);
   };
 
   return (
@@ -222,19 +248,13 @@ const JudgeAssignment = () => {
                             Assign
                           </button>
                         ) : (
-                          <>
-                            <button 
-                              className="btn btn-secondary btn-sm"
-                              onClick={() => handleAssignJudge(team)}
-                            >
-                              <Edit size={14} />
-                              Reassign
-                            </button>
-                            <button className="btn btn-error btn-sm">
-                              <XCircle size={14} />
-                              Unassign
-                            </button>
-                          </>
+                          <button 
+                            className="btn btn-error btn-sm"
+                            onClick={() => handleUnassignJudge(team.id)}
+                          >
+                            <XCircle size={14} />
+                            Unassign
+                          </button>
                         )}
                       </div>
                     </td>
@@ -298,10 +318,7 @@ const JudgeAssignment = () => {
           team={selectedTeam}
           judges={judges}
           onClose={() => setShowAssignmentModal(false)}
-          onAssign={(judgeId) => {
-            console.log('Assigning judge', judgeId, 'to team', selectedTeam.id);
-            setShowAssignmentModal(false);
-          }}
+          onAssign={handleAssignJudgeToTeam}
         />
       )}
     </div>
@@ -395,4 +412,4 @@ const AssignmentModal = ({ team, judges, onClose, onAssign }) => {
   );
 };
 
-export default JudgeAssignment; 
+export default JudgeAssignment;
