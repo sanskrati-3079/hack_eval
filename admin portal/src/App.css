@@ -266,3 +266,44 @@
   justify-content: flex-end;
   gap: 0.75rem;
 } 
+/* ===================== UPLOAD BUTTON ===================== */ 
+.btn-upload {
+  background-color: var(--primary-dark);
+  color: var(--white);
+  padding: 0.6rem 1.2rem;
+  border-radius: 0.5rem;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  margin-left: 10px; /* keeps spacing between Export and Upload */
+}
+
+.btn-upload:hover {
+      background-color:#0f2e1f;
+}
+
+.btn-upload i {
+  font-size: 1rem; /* upload icon size */
+}
+
+/* ===================== RESPONSIVE BUTTON LAYOUT ===================== */
+@media (max-width: 768px) {
+  .action-buttons {
+    flex-direction: column;   /* stack buttons vertically */
+    align-items: stretch;     /* make them same width */
+  }
+
+  .action-buttons .btn-export,
+  .action-buttons .btn-upload {
+    width: 100%;              /* full width buttons */
+    justify-content: center;  /* center text & icon */
+    margin-left: 0;           /* remove left margin when stacked */
+    margin-top: 0.5rem;       /* add spacing between stacked buttons */
+  }
+}
+

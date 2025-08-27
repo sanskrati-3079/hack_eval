@@ -176,7 +176,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Quick Actions */}
+      {/* Quick Actions
       <div className="quick-actions">
         <div className="card">
           <div className="card-header">
@@ -203,7 +203,7 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

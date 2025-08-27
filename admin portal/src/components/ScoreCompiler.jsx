@@ -2,15 +2,13 @@ import React, { useState } from 'react';
 import { 
   Calculator, 
   Download, 
-  Filter, 
   Search, 
   Eye, 
   Edit,
   TrendingUp,
   BarChart3,
-  FileText,
   CheckCircle,
-  AlertCircle
+  Upload
 } from 'lucide-react';
 
 const ScoreCompiler = () => {
@@ -119,8 +117,11 @@ const ScoreCompiler = () => {
   };
 
   const handleExportScores = () => {
-    // Export functionality would be implemented here
     console.log('Exporting scores...');
+  };
+
+  const handleUploadExcel = () => {
+    console.log('Uploading Excel file...');
   };
 
   const calculateStats = () => {
@@ -255,10 +256,15 @@ const ScoreCompiler = () => {
             <Download size={16} />
             Export Scores
           </button>
+
+          <button className="btn-upload" onClick={handleUploadExcel}>
+            <Upload size={16} />
+            Upload Excel File
+          </button>
         </div>
       </div>
 
-      {/* Scorecards Table */}
+      {/* Table */}
       <div className="card">
         <div className="card-header">
           <h3>Team Scorecards</h3>
@@ -284,56 +290,23 @@ const ScoreCompiler = () => {
               <tbody>
                 {filteredTeams.map((team) => (
                   <tr key={team.id}>
-                    <td>
-                      <div className="team-info">
-                        <strong>{team.name}</strong>
-                      </div>
-                    </td>
-                    <td>
-                      <span className="category-badge">{team.category}</span>
-                    </td>
+                    <td><strong>{team.name}</strong></td>
+                    <td><span className="category-badge">{team.category}</span></td>
                     <td>{team.round}</td>
                     <td>{team.judge}</td>
-                    <td>
-                      <span className="score" style={{ color: getScoreColor(team.scores.innovation) }}>
-                        {team.scores.innovation}/10
-                      </span>
-                    </td>
-                    <td>
-                      <span className="score" style={{ color: getScoreColor(team.scores.technical) }}>
-                        {team.scores.technical}/10
-                      </span>
-                    </td>
-                    <td>
-                      <span className="score" style={{ color: getScoreColor(team.scores.presentation) }}>
-                        {team.scores.presentation}/10
-                      </span>
-                    </td>
-                    <td>
-                      <span className="score" style={{ color: getScoreColor(team.scores.feasibility) }}>
-                        {team.scores.feasibility}/10
-                      </span>
-                    </td>
-                    <td>
-                      <span className="average-score" style={{ color: getScoreColor(team.averageScore) }}>
-                        <strong>{team.averageScore}/10</strong>
-                      </span>
-                    </td>
-                    <td>
-                      {getQualificationBadge(team.qualified)}
-                    </td>
+                    <td style={{ color: getScoreColor(team.scores.innovation) }}>{team.scores.innovation}/10</td>
+                    <td style={{ color: getScoreColor(team.scores.technical) }}>{team.scores.technical}/10</td>
+                    <td style={{ color: getScoreColor(team.scores.presentation) }}>{team.scores.presentation}/10</td>
+                    <td style={{ color: getScoreColor(team.scores.feasibility) }}>{team.scores.feasibility}/10</td>
+                    <td><strong style={{ color: getScoreColor(team.averageScore) }}>{team.averageScore}/10</strong></td>
+                    <td>{getQualificationBadge(team.qualified)}</td>
                     <td>
                       <div className="action-buttons">
-                        <button 
-                          className="btn btn-secondary btn-sm"
-                          onClick={() => handleViewScorecard(team)}
-                        >
-                          <Eye size={14} />
-                          View
+                        <button className="btn btn-secondary btn-sm" onClick={() => handleViewScorecard(team)}>
+                          <Eye size={14} /> View
                         </button>
                         <button className="btn btn-primary btn-sm">
-                          <Edit size={14} />
-                          Edit
+                          <Edit size={14} /> Edit
                         </button>
                       </div>
                     </td>
@@ -356,7 +329,7 @@ const ScoreCompiler = () => {
   );
 };
 
-// Scorecard Modal Component
+// Modal Component
 const ScorecardModal = ({ team, onClose }) => {
   const scoreCategories = [
     { key: 'innovation', label: 'Innovation & Creativity', description: 'Originality and creative thinking' },
@@ -442,4 +415,4 @@ const ScorecardModal = ({ team, onClose }) => {
   );
 };
 
-export default ScoreCompiler; 
+export default ScoreCompiler;
