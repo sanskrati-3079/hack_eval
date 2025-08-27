@@ -1,109 +1,101 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
-  LayoutDashboard, 
+  Home, 
   Calendar, 
   Users, 
-  Calculator, 
-  Trophy, 
-  UserCheck,
-  FileSpreadsheet,
-  X
+  ClipboardList, 
+  BarChart2, 
+  UserCheck, 
+  Upload, 
+  User, 
+  FileText 
 } from 'lucide-react';
 import './Sidebar.css';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
-  const menuItems = [
-    {
-      path: '/dashboard',
-      name: 'Dashboard',
-      icon: LayoutDashboard
-    },
-    {
-      path: '/round-scheduler',
-      name: 'Round Scheduler',
-      icon: Calendar
-    },
-    {
-      path: '/judge-assignment',
-      name: 'Judge Assignment',
-      icon: Users
-    },
-    {
-      path: '/score-compiler',
-      name: 'Score Compiler',
-      icon: Calculator
-    },
-    {
-      path: '/leaderboard',
-      name: 'Leaderboard',
-      icon: Trophy
-    },
-    {
-      path: '/mentor-management',
-      name: 'Mentor Management',
-      icon: UserCheck
-    },
-    {
-      path: '/excel-upload',
-      name: 'Upload Teams',
-      icon: FileSpreadsheet
-    }
-  ];
-
   return (
     <>
-      {isOpen && (
-        <div className="sidebar-overlay" onClick={() => setIsOpen(false)} />
-      )}
-      <aside className={`sidebar ${isOpen ? 'sidebar-open' : ''}`}>
+      {/* Overlay for mobile */}
+      <div
+        className={`sidebar-overlay${isOpen ? ' sidebar-open' : ''}`}
+        style={{ display: isOpen ? 'block' : 'none' }}
+        onClick={() => setIsOpen(false)}
+      />
+      <aside className={`sidebar${isOpen ? ' sidebar-open' : ''}`}>
         <div className="sidebar-header">
           <div className="sidebar-brand">
             <div className="brand-logo">
-              <div className="logo-circle">
-                <span>GLA</span>
-              </div>
+              <span className="logo-circle">HE</span>
             </div>
             <div className="brand-text">
               <h2>Hackathon</h2>
               <p>Admin Portal</p>
             </div>
           </div>
-          <button 
-            className="sidebar-close"
-            onClick={() => setIsOpen(false)}
-          >
-            <X size={20} />
+          <button className="sidebar-close" onClick={() => setIsOpen(false)}>
+            ×
           </button>
         </div>
-
         <nav className="sidebar-nav">
           <ul className="nav-list">
-            {menuItems.map((item) => (
-              <li key={item.path} className="nav-item">
-                <NavLink
-                  to={item.path}
-                  className={({ isActive }) => 
-                    `nav-link ${isActive ? 'nav-link-active' : ''}`
-                  }
-                  onClick={() => setIsOpen(false)}
-                >
-                  <item.icon size={20} />
-                  <span>{item.name}</span>
-                </NavLink>
-              </li>
-            ))}
+            <li className="nav-item">
+              <NavLink to="/dashboard" className="nav-link">
+                <Home size={18} />
+                Dashboard
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink to="/round-scheduler" className="nav-link">
+                <Calendar size={18} />
+                Round Scheduler
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink to="/judge-assignment" className="nav-link">
+                <UserCheck size={18} />
+                Judge Assignment
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink to="/score-compiler" className="nav-link">
+                <ClipboardList size={18} />
+                Score Compiler
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink to="/leaderboard" className="nav-link">
+                <BarChart2 size={18} />
+                Leaderboard
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink to="/mentor-management" className="nav-link">
+                <Users size={18} />
+                Mentor Management
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink to="/excel-upload" className="nav-link">
+                <Upload size={18} />
+                Excel Upload
+              </NavLink>
+            </li>
+            {/* Add Final Submission List link here */}
+            <li className="nav-item">
+              <NavLink to="/final-submissions" className="nav-link">
+                <FileText size={18} />
+                Final Submission List
+              </NavLink>
+            </li>
           </ul>
         </nav>
-
         <div className="sidebar-footer">
           <div className="admin-info">
-            <div className="admin-avatar">
-              <span>AD</span>
-            </div>
+            <div className="admin-avatar">AD</div>
             <div className="admin-details">
-              <p className="admin-name">Admin User</p>
-              <p className="admin-role">System Administrator</p>
+              <p className="admin-name">Admin</p>
+              <p className="admin-role">Super Admin</p>
             </div>
           </div>
         </div>
