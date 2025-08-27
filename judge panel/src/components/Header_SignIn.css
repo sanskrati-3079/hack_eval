@@ -106,7 +106,7 @@
     display: flex;
     align-items: center;
     /* Reduced the gap to bring the logos closer */
-    gap: 8px;
+    gap: 1rem;
 }
 
 .header-logo {

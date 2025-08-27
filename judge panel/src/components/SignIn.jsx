@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./SignIn.css";
+import Header from "./Header_SignIn.jsx";
 
 function SignIn() {
     const [email, setEmail] = useState("");
@@ -20,36 +21,41 @@ function SignIn() {
     };
 
     return (
-        <div className="auth-container">
-            <div className="auth-logo">
-                <img src="..\..\public\images\gla.png" alt="GLA University" />
+        <div className="auth-background">
+            <Header onMenuClick={() => {}} />
+            <div className="auth-container">
+                <div className="auth-logo">
+                    <img src="..\..\public\images\glaf.png" alt="GLA University" />
+                </div>
+                <h1 className="auth-title">Judge Panel</h1>
+                <p className="auth-subtitle">Hackathon Evaluation Portal</p>
+                
+                <form onSubmit={handleSubmit}>
+                    <div className="form-group">
+                        <label>Email:</label>
+                        <input
+                            type="email"
+                            placeholder="Enter your email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>Password:</label>
+                        <input
+                            type="password"
+                            placeholder="Enter your password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <button type="submit">
+                        Sign In
+                    </button>
+                </form>
             </div>
-            <h1 className="auth-title">Judge Panel</h1>
-            <p className="auth-subtitle">Hackathon Evaluation Portal</p>
-            
-            <form onSubmit={handleSubmit}>
-                <div className="form-group">
-                    <input
-                        type="email"
-                        placeholder="Enter your email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                    />
-                </div>
-                <div className="form-group">
-                    <input
-                        type="password"
-                        placeholder="Enter your password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                    />
-                </div>
-                <button type="submit">
-                    Sign In
-                </button>
-            </form>
         </div>
     );
 }

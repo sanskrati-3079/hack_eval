@@ -28,9 +28,9 @@
 /* Desktop layout - match wireframe structure */
 @media (min-width: 769px) {
   .main-content {
-    margin-left: 0px; /* Shifted 30px to the left (280px - 30px) */
+    margin-left: 250px; /* Shifted 30px to the left (280px - 30px) */
     width: calc(100% - 250px); /* Adjusted width to match new margin */
-    padding: 0px 10px 25px 10px; /* Shifted 20px up (150px - 20px) */
+    padding: 130px 25px 25px 25px; /* Shifted 20px up (150px - 20px) */
   }
 }
 
