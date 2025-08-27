@@ -69,6 +69,42 @@ function App() {
     }
   }, []);
 
+  // Global keyboard shortcuts: Ctrl+B or H to toggle sidebar, Esc to close
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      // Ignore when typing in inputs/textareas/contenteditable
+      const target = event.target;
+      const isTyping = target && (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable
+      );
+      if (isTyping) return;
+
+      // Ctrl+B (or Cmd+B on macOS) toggles sidebar
+      const isCtrlOrMeta = event.ctrlKey || event.metaKey;
+      if (isCtrlOrMeta && (event.key === 'b' || event.key === 'B')) {
+        event.preventDefault();
+        setSidebarOpen((prev) => !prev);
+        return;
+      }
+
+      // Standalone H toggles sidebar
+      if (!isCtrlOrMeta && (event.key === 'h' || event.key === 'H')) {
+        setSidebarOpen((prev) => !prev);
+        return;
+      }
+
+      // Escape closes sidebar
+      if (event.key === 'Escape') {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Load team data from localStorage on app start
   useEffect(() => {
     const savedTeam = localStorage.getItem('team');

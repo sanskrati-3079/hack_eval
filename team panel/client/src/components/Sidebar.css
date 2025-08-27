@@ -145,10 +145,14 @@
   .sidebar {
     position: fixed;
     top: 70px;
-    left: 0;
+    left: -280px;
     width: 280px;
     height: calc(100vh - 70px);
     z-index: 50;
+  }
+
+  .sidebar.open {
+    left: 0;
   }
 
   .sidebar-overlay {
