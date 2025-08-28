@@ -39,7 +39,7 @@ class WorkflowAnalysisAgent:
             raise ValueError("OPENAI_API_KEY not found in .env file.")
 
         self.llm = ChatOpenAI(
-            model="gpt-4o-mini",
+            model="gpt-4o",
             temperature=0.2,
             openai_api_key=api_key,
         )
