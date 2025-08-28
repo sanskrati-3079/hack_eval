@@ -5,11 +5,13 @@ import {
   FileText, 
   ClipboardList, 
   Award,
-  GraduationCap
+  GraduationCap,
+  UserPlus,
+  X // Import close icon
 } from 'lucide-react';
 import './Sidebar.css';
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen, onClose }) => {
   const menuItems = [
     {
       path: '/dashboard',
@@ -20,6 +22,11 @@ const Sidebar = () => {
       path: '/evaluate',
       icon: <FileText size={20} />,
       label: 'Evaluate Submissions'
+    },
+    {
+      path: '/assign',
+      icon: <UserPlus size={20} />,
+      label: 'Assign'
     },
     {
       path: '/my-evaluations',
@@ -34,7 +41,7 @@ const Sidebar = () => {
   ];
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isOpen ? 'sidebar-open' : ''}`}>
       <div className="sidebar-header">
         <div className="logo">
           <GraduationCap size={32} color="#1B4332" />
@@ -43,6 +50,9 @@ const Sidebar = () => {
             <p>Judge Portal</p>
           </div>
         </div>
+        <button className="sidebar-close" onClick={onClose}>
+          <X size={20} />
+        </button>
       </div>
       
       <nav className="sidebar-nav">
@@ -79,6 +89,3 @@ const Sidebar = () => {
 };
 
 export default Sidebar;
-
-
-

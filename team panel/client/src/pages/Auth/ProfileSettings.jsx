@@ -9,10 +9,7 @@ const ProfileSettings = () => {
     teamName: team?.name || '',
     projectName: team?.project?.name || '',
     projectDescription: team?.project?.description || '',
-    track: team?.track || '',
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
+    track: team?.track || ''
   });
 
   const handleChange = (e) => {
@@ -24,22 +21,6 @@ const ProfileSettings = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Validate password change if attempted
-    if (formData.newPassword || formData.confirmPassword || formData.currentPassword) {
-      if (formData.currentPassword !== 'hackathon') {
-        toast.error('Current password is incorrect');
-        return;
-      }
-      if (formData.newPassword !== formData.confirmPassword) {
-        toast.error('New passwords do not match');
-        return;
-      }
-      if (formData.newPassword.length < 8) {
-        toast.error('New password must be at least 8 characters long');
-        return;
-      }
-    }
     
     // Update team data
     const updatedTeam = {
@@ -57,14 +38,6 @@ const ProfileSettings = () => {
     localStorage.setItem('team', JSON.stringify(updatedTeam));
     setTeam(updatedTeam);
     toast.success('Profile updated successfully');
-
-    // Reset password fields
-    setFormData(prev => ({
-      ...prev,
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
-    }));
   };
 
   return (
@@ -123,42 +96,6 @@ const ProfileSettings = () => {
                 onChange={handleChange}
                 rows="4"
                 required
-              />
-            </div>
-          </div>
-
-          <div className="form-section">
-            <h3>Change Password</h3>
-            <div className="form-group">
-              <label>Current Password</label>
-              <input
-                type="password"
-                name="currentPassword"
-                value={formData.currentPassword}
-                onChange={handleChange}
-                placeholder="Enter current password"
-              />
-            </div>
-
-            <div className="form-group">
-              <label>New Password</label>
-              <input
-                type="password"
-                name="newPassword"
-                value={formData.newPassword}
-                onChange={handleChange}
-                placeholder="Enter new password"
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Confirm New Password</label>
-              <input
-                type="password"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                placeholder="Confirm new password"
               />
             </div>
           </div>

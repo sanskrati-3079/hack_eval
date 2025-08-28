@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, Bell, Search, User } from 'lucide-react';
+import { Menu, Bell, User } from 'lucide-react';
 import './Header.css';
 
 const Header = ({ onMenuClick, onLogout }) => {
@@ -9,28 +9,36 @@ const Header = ({ onMenuClick, onLogout }) => {
         <button className="menu-toggle" onClick={onMenuClick}>
           <Menu size={24} />
         </button>
-        <div className="search-bar">
-          <Search size={20} className="search-icon" />
-          <input
-            type="text"
-            placeholder="Search..."
-            className="search-input"
-          />
-        </div>
+        <img
+          src="/images/gla.png"
+          alt="GLA University"
+          className="header-logo-left"
+        />
+        <img
+          src="..\..\public\images\DC.png"
+          alt="GLA University"
+          className="header-logo-left-2"
+        />
       </div>
       
       <div className="header-right">
         <button className="notification-btn">
-          <Bell size={20} />
+          <Bell size={25} />
           <span className="notification-badge">3</span>
         </button>
         
         <div className="user-menu">
           <button className="user-btn" onClick={onLogout} title="Log out">
-            <User size={20} />
+            <User size={28} />
             <span>Logout</span>
           </button>
         </div>
+
+        <img
+          src="/images/sih.png"
+          alt="Smart India Hackathon 2022"
+          className="header-logo-right"
+        />
       </div>
     </header>
   );
