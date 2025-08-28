@@ -18,6 +18,9 @@ const EvaluateSubmission = () => {
     feedback: ''
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState('');
+
   // Mock submission data
   const submission = {
     teamName: 'Team Innovators',
@@ -47,11 +50,141 @@ const EvaluateSubmission = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Evaluation submitted:', evaluation);
-    // Here you would typically send the evaluation to your backend
-    alert('Evaluation submitted successfully!');
+    
+    if (!evaluation.feedback.trim()) {
+      alert('Please provide personalized feedback before submitting.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitStatus('Submitting evaluation...');
+
+    try {
+      // Prepare data for backend API
+      const evaluationData = {
+        team_id: submission.teamId,
+        team_name: submission.teamName,
+        problem_statement: submission.problemStatement,
+        category: submission.category,
+        round_id: 1,
+        innovation: evaluation.innovation,
+        problem_relevance: evaluation.problemRelevance,
+        feasibility: evaluation.feasibility,
+        tech_stack_justification: evaluation.techStackJustification,
+        clarity_of_solution: evaluation.clarityOfSolution,
+        presentation_quality: evaluation.presentationQuality,
+        team_understanding: evaluation.teamUnderstanding,
+        personalized_feedback: evaluation.feedback
+      };
+
+      console.log('Sending evaluation data:', evaluationData);
+
+      // Get judge token from localStorage or context
+      const judgeToken = localStorage.getItem('judgeToken') || 'your_judge_token_here';
+      
+      const response = await fetch('http://localhost:8000/judge/evaluation/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${judgeToken}`
+        },
+        body: JSON.stringify(evaluationData)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Evaluation submitted successfully:', result);
+        setSubmitStatus('✅ Evaluation submitted successfully!');
+        
+        // Show success message
+        alert(`Evaluation submitted successfully!\nTotal Score: ${result.total_score}/70\nAverage Score: ${result.average_score}/10`);
+        
+        // Reset form
+        setEvaluation({
+          innovation: 5,
+          problemRelevance: 5,
+          feasibility: 5,
+          techStackJustification: 5,
+          clarityOfSolution: 5,
+          presentationQuality: 5,
+          teamUnderstanding: 5,
+          finalRecommendation: '',
+          feedback: ''
+        });
+        
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to submit evaluation:', errorData);
+        setSubmitStatus(`❌ Failed to submit: ${errorData.detail || 'Unknown error'}`);
+        alert(`Failed to submit evaluation: ${errorData.detail || 'Unknown error'}`);
+      }
+
+    } catch (error) {
+      console.error('Error submitting evaluation:', error);
+      setSubmitStatus(`❌ Error: ${error.message}`);
+      alert(`Error submitting evaluation: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSaveDraft = async () => {
+    if (!evaluation.feedback.trim()) {
+      alert('Please provide personalized feedback before saving draft.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitStatus('Saving draft...');
+
+    try {
+      const evaluationData = {
+        team_id: submission.teamId,
+        team_name: submission.teamName,
+        problem_statement: submission.problemStatement,
+        category: submission.category,
+        round_id: 1,
+        innovation: evaluation.innovation,
+        problem_relevance: evaluation.problemRelevance,
+        feasibility: evaluation.feasibility,
+        tech_stack_justification: evaluation.techStackJustification,
+        clarity_of_solution: evaluation.clarityOfSolution,
+        presentation_quality: evaluation.presentationQuality,
+        team_understanding: evaluation.teamUnderstanding,
+        personalized_feedback: evaluation.feedback
+      };
+
+      const judgeToken = localStorage.getItem('judgeToken') || 'your_judge_token_here';
+      
+      const response = await fetch('http://localhost:8000/judge/evaluation/save-draft', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${judgeToken}`
+        },
+        body: JSON.stringify(evaluationData)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Draft saved successfully:', result);
+        setSubmitStatus('✅ Draft saved successfully!');
+        alert('Draft saved successfully!');
+      } else {
+        const errorData = await response.json();
+        setSubmitStatus(`❌ Failed to save draft: ${errorData.detail || 'Unknown error'}`);
+        alert(`Failed to save draft: ${errorData.detail || 'Unknown error'}`);
+      }
+
+    } catch (error) {
+      console.error('Error saving draft:', error);
+      setSubmitStatus(`❌ Error: ${error.message}`);
+      alert(`Error saving draft: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getScoreColor = (score) => {
@@ -235,13 +368,28 @@ const EvaluateSubmission = () => {
           </div>
 
           <div className="form-actions">
-            <button type="button" className="btn btn-secondary">
-              Save Draft
+            <button 
+              type="button" 
+              className="btn btn-secondary"
+              onClick={handleSaveDraft}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Saving...' : 'Save Draft'}
             </button>
-            <button type="submit" className="btn btn-primary">
-              Submit Evaluation
+            <button 
+              type="submit" 
+              className="btn btn-primary"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit Evaluation'}
             </button>
           </div>
+
+          {submitStatus && (
+            <div className={`submit-status ${submitStatus.includes('✅') ? 'success' : submitStatus.includes('❌') ? 'error' : 'info'}`}>
+              {submitStatus}
+            </div>
+          )}
         </form>
       </div>
     </div>

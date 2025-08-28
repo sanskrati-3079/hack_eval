@@ -1,5 +1,5 @@
 import os
-from pymongo import MongoClient
+from motor.motor_asyncio import AsyncIOMotorClient
 from urllib.parse import quote_plus
 from dotenv import load_dotenv
 
@@ -18,11 +18,41 @@ password = quote_plus(password)
 
 MONGO_URI = f"mongodb+srv://{user}:{password}@{cluster}/{db_name}?retryWrites=true&w=majority"
 
+# Initialize variables
+client = None
+db = None
+
+async def connect_to_mongo():
+    """Establish connection to MongoDB"""
+    global client, db
+    try:
+        client = AsyncIOMotorClient(MONGO_URI)
+        db = client[db_name]
+        
+        # Test the connection
+        await client.admin.command('ping')
+        print("✅ MongoDB connected successfully")
+        return True
+    except Exception as e:
+        print(f"❌ MongoDB connection failed: {e}")
+        client = None
+        db = None
+        return False
+
+async def close_mongo_connection():
+    """Close MongoDB connection"""
+    global client
+    if client:
+        client.close()
+        print("✅ MongoDB connection closed")
+
+# Try to connect immediately (this will be called during startup)
 try:
-    client = MongoClient(MONGO_URI)
-    db = client[db_name]   # ✅ always export db
-    print("✅ MongoDB connected")
+    # Create client but don't connect yet
+    client = AsyncIOMotorClient(MONGO_URI)
+    db = client[db_name]
+    print("✅ MongoDB client initialized")
 except Exception as e:
-    print(f"❌ MongoDB connection failed: {e}")
+    print(f"❌ MongoDB client initialization failed: {e}")
     client = None
-    db = None   # ✅ still export db, so imports won’t crash
+    db = None

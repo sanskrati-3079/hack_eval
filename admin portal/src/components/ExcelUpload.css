@@ -226,3 +226,43 @@
 .skipped-details li {
     margin-bottom: 0.25rem;
 }
+
+/* Additional styles for TeamPSUpload component */
+.upload-details {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #d1d5db;
+}
+
+.upload-details p {
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.error-details {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #f5c0c0;
+}
+
+.error-details strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #9b2c2c;
+}
+
+.error-details ul {
+    list-style-type: disc;
+    padding-left: 20px;
+    margin: 0;
+}
+
+.error-details li {
+    margin-bottom: 0.25rem;
+    color: #9b2c2c;
+}
+
+.error-item {
+    font-size: 0.85rem;
+    line-height: 1.4;
+}

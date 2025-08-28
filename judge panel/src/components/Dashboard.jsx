@@ -1,19 +1,104 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   FileText, 
   CheckCircle, 
   Clock,
   TrendingUp,
-  Award
+  Award,
+  Users,
+  Search,
+  Filter,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
+import { getJudgeProfile, getAllTeams } from '../utils/api.js';
 import './Dashboard.css';
 
 const Dashboard = () => {
+  const [judgeName, setJudgeName] = useState('Judge');
+  const [isLoading, setIsLoading] = useState(true);
+  const [teams, setTeams] = useState([]);
+  const [teamsLoading, setTeamsLoading] = useState(true);
+  const [judgeProfileError, setJudgeProfileError] = useState(false);
+  
+  // Filtering and pagination states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [teamsPerPage] = useState(6);
+
+  useEffect(() => {
+    const fetchJudgeProfile = async () => {
+      try {
+        const profile = await getJudgeProfile();
+        if (profile && profile.name) {
+          setJudgeName(profile.name);
+        } else if (profile && profile.username) {
+          setJudgeName(profile.username);
+        }
+      } catch (error) {
+        console.error('Failed to fetch judge profile:', error);
+        setJudgeProfileError(true);
+        // Fallback to username from localStorage if available
+        const storedUsername = localStorage.getItem('judgeUsername');
+        if (storedUsername) {
+          setJudgeName(storedUsername);
+        } else {
+          setJudgeName('Judge'); // Default fallback
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    const fetchTeams = async () => {
+      try {
+        const teamsData = await getAllTeams();
+        setTeams(teamsData);
+        console.log('Teams fetched successfully:', teamsData);
+      } catch (error) {
+        console.error('Failed to fetch teams:', error);
+        // Set error state to show user-friendly message
+        setTeams([]);
+      } finally {
+        setTeamsLoading(false);
+      }
+    };
+
+    // Try to fetch teams first since that's the main requirement
+    fetchTeams();
+    // Then try to fetch judge profile (this might fail due to schema issues)
+    fetchJudgeProfile();
+  }, []);
+
+  // Filter teams based on search term and category
+  const filteredTeams = teams.filter(team => {
+    const matchesSearch = team.team_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         team.college?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || 
+                           team.problem_statement?.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  // Get unique categories for filter dropdown
+  const categories = ['all', ...Array.from(new Set(teams.map(team => team.problem_statement?.category).filter(Boolean)))];
+
+  // Pagination logic
+  const indexOfLastTeam = currentPage * teamsPerPage;
+  const indexOfFirstTeam = indexOfLastTeam - teamsPerPage;
+  const currentTeams = filteredTeams.slice(indexOfFirstTeam, indexOfLastTeam);
+  const totalPages = Math.ceil(filteredTeams.length / teamsPerPage);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedCategory]);
+
   const stats = [
     {
-      title: 'Total Submissions',
-      value: '24',
-      icon: <FileText size={24} />,
+      title: 'Total Teams',
+      value: teamsLoading ? '...' : teams.length.toString(),
+      icon: <Users size={24} />,
       color: 'blue',
     },
     {
@@ -37,29 +122,8 @@ const Dashboard = () => {
     // }
   ];
 
-  const recentEvaluations = [
-    {
-      teamName: 'Team Innovators',
-      projectName: 'Smart Waste Management',
-      score: 8.5,
-      status: 'Approved',
-      date: '2 hours ago'
-    },
-    {
-      teamName: 'CodeCrafters',
-      projectName: 'AI-Powered Education Platform',
-      score: 7.2,
-      status: 'Needs Improvement',
-      date: '4 hours ago'
-    },
-    {
-      teamName: 'TechVision',
-      projectName: 'Healthcare Monitoring System',
-      score: 9.1,
-      status: 'Approved',
-      date: '6 hours ago'
-    }
-  ];
+  // Get first 6 teams for display
+  const displayTeams = teams.slice(0, 6);
 
   const quickActions = [
     {
@@ -85,8 +149,11 @@ const Dashboard = () => {
   return (
     <div className="dashboard">
       <div className="page-header">
-        <h1 className="page-title">Welcome back, Dr. Smith</h1>
+        <h1 className="page-title">Welcome back, {judgeName}</h1>
         <p className="page-subtitle">Here's your evaluation overview.</p>
+        {judgeProfileError && (
+          <p className="page-error">Note: Using fallback profile data</p>
+        )}
       </div>
 
       {/* Statistics Cards */}
@@ -106,51 +173,123 @@ const Dashboard = () => {
       </div>
 
       <div className="dashboard-content">
-        {/* Recent Evaluations */}
+        {/* Teams List */}
         <div className="dashboard-section">
           <div className="section-header">
-            <h2>Recent Evaluations</h2>
-            <button className="btn btn-secondary">View All</button>
-          </div>
-          <div className="evaluations-list">
-            {recentEvaluations.map((evaluation, index) => (
-              <div key={index} className="evaluation-item">
-                <div className="evaluation-info">
-                  <h4>{evaluation.teamName}</h4>
-                  <p>{evaluation.projectName}</p>
-                  <span className="evaluation-date">{evaluation.date}</span>
+            <h2>All Teams</h2>
+            <div className="section-actions">
+              <div className="search-filter-container">
+                {/* Search Bar */}
+                <div className="search-container">
+                  <Search size={18} className="search-icon" />
+                  <input
+                    type="text"
+                    placeholder="Search teams or colleges..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="search-input"
+                  />
                 </div>
-                <div className="evaluation-score">
-                  <div className="score-badge">{evaluation.score}/10</div>
-                  <div className={`status-badge status-${evaluation.status.toLowerCase().replace(' ', '-')}`}>
-                    {evaluation.status}
-                  </div>
+                
+                {/* Category Filter */}
+                <div className="filter-container">
+                  <Filter size={18} className="filter-icon" />
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="category-filter"
+                  >
+                    {categories.map(category => (
+                      <option key={category} value={category}>
+                        {category === 'all' ? 'All Categories' : category}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
-            ))}
+            </div>
           </div>
-        </div>
 
-        {/* Quick Actions
-        <div className="dashboard-section">
-          <div className="section-header">
-            <h2>Quick Actions</h2>
-          </div> */}
-          {/* <div className="quick-actions">
-            {quickActions.map((action, index) => (
-              <div key={index} className="action-card">
-                <div className="action-icon">
-                  {action.icon}
-                </div>
-                <div className="action-content">
-                  <h4>{action.title}</h4>
-                  <p>{action.description}</p>
-                  <button className="btn btn-primary">{action.action}</button>
-                </div>
+          {/* Results Summary */}
+          <div className="results-summary">
+            <span className="results-count">
+              Showing {filteredTeams.length} of {teams.length} teams
+            </span>
+            {searchTerm && (
+              <span className="search-term">
+                for "{searchTerm}"
+              </span>
+            )}
+            {selectedCategory !== 'all' && (
+              <span className="category-term">
+                in {selectedCategory}
+              </span>
+            )}
+          </div>
+
+          {teamsLoading ? (
+            <div className="loading">Loading teams...</div>
+          ) : filteredTeams.length === 0 ? (
+            <div className="no-results">
+              <div className="no-results-icon">🔍</div>
+              <h3>No teams found</h3>
+              <p>Try adjusting your search or filter criteria</p>
+            </div>
+          ) : (
+            <>
+              <div className="teams-list">
+                {currentTeams.map((team, index) => (
+                  <div key={index} className="team-item">
+                    <div className="team-info">
+                      <h4>{team.team_name}</h4>
+                      <p className="team-category">Category: {team.problem_statement?.category || 'N/A'}</p>
+                      <p className="team-domain">Domain: {team.problem_statement?.domain || 'N/A'}</p>
+                    </div>
+                    <div className="team-details">
+                      <div className="college-badge">{team.college}</div>
+                      <div className="difficulty-badge">{team.problem_statement?.difficulty || 'N/A'}</div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div> */}
-        {/* </div> */}
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="pagination">
+                  <button
+                    className="pagination-btn"
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft size={16} />
+                    Previous
+                  </button>
+                  
+                  <div className="page-numbers">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                      <button
+                        key={page}
+                        className={`page-btn ${page === currentPage ? 'active' : ''}`}
+                        onClick={() => setCurrentPage(page)}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                  </div>
+                  
+                  <button
+                    className="pagination-btn"
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

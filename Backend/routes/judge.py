@@ -18,7 +18,25 @@ async def get_judge_profile(current_judge = Depends(get_current_judge)):
         judge = await db.judges.find_one({"_id": ObjectId(current_judge["id"])})
         if not judge:
             raise HTTPException(status_code=404, detail="Judge not found")
-        return JudgeResponse(**judge)
+        
+        # Transform the database document to match JudgeResponse schema
+        # Handle email validation - if username is not a valid email, create a dummy one
+        username = judge.get("username", "")
+        email = judge.get("email", "")
+        if not email and username:
+            # Create a valid email format from username if none exists
+            email = f"{username}@gla.ac.in"
+        
+        judge_response = {
+            "id": str(judge["_id"]),
+            "name": judge.get("name", judge.get("username", "Unknown")),
+            "email": email,
+            "expertise": judge.get("expertise", []),
+            "assigned_teams": judge.get("assigned_teams", []),
+            "rounds": judge.get("rounds", [])
+        }
+        
+        return JudgeResponse(**judge_response)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -45,6 +63,21 @@ async def get_assigned_teams(
             if team:
                 teams.append(TeamMeta(**team).dict())
         return {"teams": teams}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ------------------ 👥 All Teams ------------------
+@router.get("/all-teams")
+async def get_all_teams(current_judge = Depends(get_current_judge)):
+    """Get all teams with their problem statement details for judges to view"""
+    try:
+        teams = await db.team_ps_details.find({"status": "active"}).to_list(None)
+        
+        # Convert ObjectId to string for JSON serialization
+        for team in teams:
+            team["_id"] = str(team["_id"])
+        
+        return teams
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

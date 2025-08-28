@@ -8,6 +8,7 @@ import MyEvaluations from "./components/MyEvaluations.jsx";
 // import FinalSubmissionList from "./components/FinalSubmissionList.jsx";
 import SignIn from "./components/SignIn.jsx";
 import Assign from "./components/Assign.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
 // import Auth from "./components/Auth.jsx";
 import "./App.css";
 
@@ -48,11 +49,27 @@ function App() {
           {/* Auth */}
           <Route path="/signin" element={<SignIn />} />
 
-          {/* Judge Portal */}
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/evaluate" element={<EvaluateSubmission />} />
-          <Route path="/my-evaluations" element={<MyEvaluations />} />
-          <Route path="/assign" element={<Assign />} />
+          {/* Judge Portal - Protected Routes */}
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/evaluate" element={
+            <ProtectedRoute>
+              <EvaluateSubmission />
+            </ProtectedRoute>
+          } />
+          <Route path="/my-evaluations" element={
+            <ProtectedRoute>
+              <MyEvaluations />
+            </ProtectedRoute>
+          } />
+          <Route path="/assign" element={
+            <ProtectedRoute>
+              <Assign />
+            </ProtectedRoute>
+          } />
           {/* <Route path="/final-submissions" element={<FinalSubmissionList />} /> */}
         </Routes>
       </Layout>

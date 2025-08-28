@@ -11,15 +11,14 @@ from typing import Optional
 from Schema.judge import JudgeLogin, JudgeModel, JudgeResponse
 from utils.hash_password import verify_password, get_password_hash
 from jose import JWTError, jwt
+from db.mongo import db  # Use the main database connection
+
 
 router = APIRouter()
 
-# Initialize database variables
-client = None
-db = None
+# Initialize collection variables
 logins_collection = None
 admin_collection = None
-judges_collection = None
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -35,71 +34,57 @@ def check_db_connection():
 async def health_check():
     """Check database connection health"""
     try:
-        if client and db:
-            await client.admin.command('ping')
+        if db is not None:
+            await db.command('ping')
             return {"status": "healthy", "database": "connected"}
         else:
             return {"status": "degraded", "database": "disconnected"}
     except Exception as e:
         return {"status": "unhealthy", "database": "error", "message": str(e)}
 
-@router.on_event("startup")
-async def startup_db_client():
-    global client, db, logins_collection, admin_collection
-    try:
-        # Connect with increased timeout and retry settings
-        client = AsyncIOMotorClient(
-            MONGO_URI,
-            serverSelectionTimeoutMS=30000,
-            connectTimeoutMS=30000,
-            retryWrites=True,
-            maxPoolSize=50
-        )
-        # Test the connection
-        await client.admin.command('ping')
-        print("Successfully connected to MongoDB!")
-        
-        # Initialize database and collections
-        db = client[MONGO_DB]
+# Initialize collections when needed
+async def get_collections():
+    """Get or initialize collections"""
+    global logins_collection, admin_collection
+    
+    if logins_collection is None and db is not None:
         logins_collection = db["team_login"]
         admin_collection = db["admin_users"]
         
         # Create indexes for better performance
-        await admin_collection.create_index("email", unique=True)
-        await logins_collection.create_index("email", unique=True)
-        
-    except Exception as e:
-        print(f"Warning: Failed to connect to MongoDB: {str(e)}")
-        print("Application will start but database operations will fail until MongoDB is available.")
-        # Don't raise exception - let the app start
-        client = None
-        db = None
-        logins_collection = None
-        admin_collection = None
-            
+        try:
+            await admin_collection.create_index("email", unique=True)
+            await logins_collection.create_index("email", unique=True)
+        except Exception as e:
+            print(f"Warning: Failed to create indexes: {e}")
+    
+    return logins_collection, admin_collection
+
 @router.post("/judge/login")
 async def judge_login(form_data: OAuth2PasswordRequestForm = Depends()):
     """Authenticate judge and return JWT token"""
     try:
         check_db_connection()
-        judge = await db.judges.find_one({"email": form_data.username})
+        # Look for judge by username instead of email
+        judge = await db.judges.find_one({"username": form_data.username})
         if not judge:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect email or password"
+                detail="Incorrect username or password"
             )
             
-        if not verify_password(form_data.password, judge["password"]):
+        # Check if password matches (assuming passwords are stored as plain text for now)
+        if form_data.password != judge["password"]:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect email or password"
+                detail="Incorrect username or password"
             )
             
         # Create access token
         token_data = {
             "sub": str(judge["_id"]),
             "type": "judge",
-            "email": judge["email"]
+            "username": judge["username"]
         }
         access_token = create_access_token(token_data)
         
@@ -244,28 +229,58 @@ async def admin_login(payload: LoginRequest):
 
 @router.post("/team_login/")
 async def team_login(payload: LoginRequest):
-    user = await logins_collection.find_one({"email": payload.email})
+    # Ensure db is initialized
+    if db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+
+    # Find user in team_login collection
+    user = await db["team_login"].find_one({"email": payload.email})
     if not user:
         raise HTTPException(status_code=404, detail="Team not registered")
 
-    stored_password = user["password"]
+    # Password check
+    stored_password = user.get("password") or user.get("password_hash")
+    if not stored_password:
+        raise HTTPException(status_code=500, detail="No password found for user")
     try:
         stored_password_bytes = stored_password.encode("utf-8") if isinstance(stored_password, str) else stored_password
-        if not (payload.password== stored_password_bytes):
+        if not bcrypt.checkpw(payload.password.encode("utf-8"), stored_password_bytes):
             raise HTTPException(status_code=401, detail="Invalid credentials")
     except Exception as e:
         print("Password verification error:", e)
         raise HTTPException(status_code=500, detail="Password verification error")
 
+    # Try to find team meta by team_id first
+    team_id = user.get("team_id")
+    print("DEBUG: team_id from login:", team_id)
+    print("DEBUG: email from login:", payload.email)
+    print("DEBUG: All team_ids:", await db["teams_meta"].distinct("team_id"))
+    print("DEBUG: All team_leader.emails:", await db["teams_meta"].distinct("team_leader.email"))
+
+    team_data = await db["teams_meta"].find_one({"team_id": team_id})
+    if not team_data:
+        team_data = await db["teams_meta"].find_one({"team_leader.email": payload.email})
+
+    if not team_data:
+        raise HTTPException(status_code=404, detail=f"Team data not found for team_id {team_id} or email {payload.email}")
+
+    if "_id" in team_data:
+        team_data["_id"] = str(team_data["_id"])
+
     token = create_access_token({
         "sub": str(user.get("_id", user.get("team_id"))),
         "type": "user",
-        "team_id": user["team_id"], 
+        "team_id": user["team_id"],
         "email": user["email"],
         "is_admin": False
     })
-    return {"access_token": token, "token_type": "bearer"}
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "team": team_data
+    }
 
+    
 @router.post("/user/login")
 async def user_login(payload: LoginRequest):
     """Alias for team login; returns a JWT for user/team access."""

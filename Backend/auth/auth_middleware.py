@@ -1,5 +1,5 @@
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer, HTTPBearer
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from typing import Optional
@@ -13,6 +13,7 @@ ALGORITHM = JWT_ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/judge/login")
+security = HTTPBearer()
 
 async def get_current_judge(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
@@ -32,4 +33,13 @@ async def get_current_judge(token: str = Depends(oauth2_scheme)):
     if judge is None:
         raise credentials_exception
         
-    return {"id": str(judge["_id"])}
+    return {
+        "id": str(judge["_id"]),
+        "name": judge.get("name", ""),
+        "email": judge.get("email", ""),
+        "expertise": judge.get("expertise", [])
+    }
+
+async def get_current_judge_from_bearer(credentials: HTTPBearer = Depends(security)):
+    """Alternative function for Bearer token authentication"""
+    return await get_current_judge(credentials.credentials)

@@ -2,21 +2,33 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./SignIn.css";
 import Header from "./Header_SignIn.jsx";
+import { judgeLogin } from "../utils/api.js";
 
 function SignIn() {
-    const [email, setEmail] = useState("");
+    const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState("");
     const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsLoading(true);
+        setError("");
 
-        // Static credentials
-        if (email === "admin@gla.ac.in" && password === "12345") {
+        try {
+            const data = await judgeLogin(username, password);
+            
+            // Store the token in localStorage
+            localStorage.setItem('judgeToken', data.access_token);
+            localStorage.setItem('judgeUsername', username);
             alert("Login successful!");
             navigate("/dashboard");
-        } else {
-            alert("Invalid credentials! Please try again.");
+        } catch (err) {
+            setError(err.message || "Login failed. Please check your credentials.");
+            console.error("Login error:", err);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -30,15 +42,29 @@ function SignIn() {
                 <h1 className="auth-title">Judge Panel</h1>
                 <p className="auth-subtitle">Hackathon Evaluation Portal</p>
                 
+                {error && (
+                    <div className="error-message" style={{ 
+                        color: 'red', 
+                        backgroundColor: '#ffe6e6', 
+                        padding: '10px', 
+                        borderRadius: '5px', 
+                        marginBottom: '15px',
+                        textAlign: 'center'
+                    }}>
+                        {error}
+                    </div>
+                )}
+                
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
-                        <label>Email:</label>
+                        <label>Username:</label>
                         <input
-                            type="email"
-                            placeholder="Enter your email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            type="text"
+                            placeholder="Enter your username"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
                             required
+                            disabled={isLoading}
                         />
                     </div>
                     <div className="form-group">
@@ -49,10 +75,11 @@ function SignIn() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
+                            disabled={isLoading}
                         />
                     </div>
-                    <button type="submit">
-                        Sign In
+                    <button type="submit" disabled={isLoading}>
+                        {isLoading ? "Signing In..." : "Sign In"}
                     </button>
                 </form>
             </div>

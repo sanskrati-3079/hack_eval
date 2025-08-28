@@ -1,172 +1,156 @@
-# Judge Evaluation Portal - GLA University
+# Judge Panel - Hackathon Evaluation Portal
 
-A modern, professional web application for evaluating hackathon submissions at GLA University. Built with React and designed with GLA University's brand colors.
+This is the frontend for the Judge Panel of the GLA University Hackathon Evaluation System.
 
 ## Features
 
-### 🎯 Core Functionality
-- **Dashboard Home**: Overview of evaluation statistics and recent activities
-- **Evaluate Submissions**: Comprehensive evaluation form with 7 judging parameters
-- **My Evaluations**: Review and manage completed evaluations
-- **Final Submission List**: View all approved submissions for the final round
+- **Secure Authentication**: Judges can log in using credentials stored in the database
+- **Protected Routes**: All judge portal pages are protected and require authentication
+- **JWT Token Management**: Secure token-based authentication with automatic logout
+- **Responsive Design**: Modern UI that works on all devices
 
-### 🎨 Design Features
-- **GLA University Branding**: Uses official brand colors (Dark Green #1B4332, Light Green #B7E4C7)
-- **Modern UI**: Clean, professional interface with card-based layouts
-- **Responsive Design**: Optimized for desktop, tablet, and mobile devices
-- **Accessibility**: High contrast colors and keyboard navigation support
+## Setup Instructions
 
-### 📊 Evaluation System
-- **7 Judging Parameters**: Innovation, Problem Relevance, Feasibility, Tech Stack Justification, Clarity of Solution, Presentation Quality, Team Understanding
-- **Slider-based Scoring**: 1-10 scale with visual feedback
-- **Quality Metrics**: Uniqueness and plagiarism scores with progress bars
-- **Final Recommendations**: Proceed to Next Round, Needs Improvement, or Rejected
-- **Personalized Feedback**: Text area for detailed judge comments
+### 1. Backend Setup
 
-### 🔍 Project Information Display
-- **Team Metadata**: Team name, ID, submission date, category
-- **Problem Statement**: Clear project description
-- **Tech Stack**: Color-coded technology tags
-- **AI-Generated Abstract**: Automated project summary
-- **Presentation Links**: Direct access to PPT files
-- **Quality Scores**: Visual indicators for uniqueness and plagiarism
+First, ensure your backend server is running:
 
-## Technology Stack
+```bash
+cd Backend
+# Activate virtual environment (if using one)
+# .venv/Scripts/activate  # Windows
+# source .venv/bin/activate  # Linux/Mac
 
-- **Frontend**: React 18.2.0
-- **Routing**: React Router DOM 6.3.0
-- **Icons**: Lucide React 0.263.1
-- **Styling**: CSS3 with CSS Custom Properties
-- **Font**: Inter (Google Fonts)
+# Install dependencies
+pip install -r requirements.txt
 
-## Getting Started
+# Start MongoDB (if not already running)
+# On Windows, you can use the provided batch file:
+start_mongodb.bat
 
-### Prerequisites
-- Node.js (version 14 or higher)
-- npm or yarn package manager
+# Start the backend server
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
 
-### Installation
+### 2. Create Test Judge
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd judge-panel
-   ```
+Before testing the frontend, create a test judge in the database:
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+```bash
+cd Backend
+python create_test_judge.py
+```
 
-3. **Start the development server**
-   ```bash
-   npm start
-   ```
+This will create a test judge with:
+- **Email**: judge@test.com
+- **Password**: test123
 
-4. **Open your browser**
-   Navigate to `http://localhost:3000`
+### 3. Frontend Setup
 
-### Available Scripts
+```bash
+cd "judge panel"
+npm install
+npm run dev
+```
 
-- `npm start` - Runs the app in development mode
-- `npm build` - Builds the app for production
-- `npm test` - Launches the test runner
-- `npm eject` - Ejects from Create React App (not recommended)
+The frontend will be available at `http://localhost:3000`
 
-## Project Structure
+## Testing the Authentication
+
+1. **Open the application** in your browser at `http://localhost:3000`
+2. **Use the test credentials**:
+   - Username: `testjudge`
+   - Password: `test123`
+3. **Or use your existing database credentials**:
+   - Username: `judge01`, Password: `GLA_01`
+   - Username: `judge02`, Password: `GLA_02`
+4. **Click Sign In** - you should be redirected to the dashboard
+5. **Test protected routes** - try accessing `/evaluate`, `/my-evaluations`, etc.
+6. **Test logout** - click the logout button in the header
+
+## How It Works
+
+### Authentication Flow
+
+1. **Login**: User enters username/password
+2. **Backend Validation**: Credentials are sent to `/auth/judge/login`
+3. **Database Lookup**: Backend searches for judge by username in `judges` collection
+4. **Password Verification**: Plain text password comparison (as per your DB structure)
+5. **JWT Token**: Backend returns a JWT token on successful authentication
+6. **Token Storage**: Token is stored in localStorage
+7. **Protected Routes**: All judge portal routes check for valid token
+8. **Automatic Logout**: Token expiration or logout clears credentials
+
+### Security Features
+
+- **Password Hashing**: Passwords are hashed using bcrypt
+- **JWT Tokens**: Secure, time-limited authentication tokens
+- **Protected Routes**: Unauthenticated users are redirected to login
+- **Secure Storage**: Tokens stored in localStorage (consider httpOnly cookies for production)
+
+## API Endpoints Used
+
+- `POST /auth/judge/login` - Judge authentication
+- `GET /judge/profile` - Get judge profile
+- `GET /judge/assigned-teams` - Get teams assigned to judge
+- `POST /judge/evaluate/{team_id}` - Submit evaluation
+- `GET /judge/evaluations` - Get submitted evaluations
+
+## File Structure
 
 ```
-src/
+judge panel/src/
 ├── components/
-│   ├── Dashboard.js              # Dashboard overview page
-│   ├── Dashboard.css
-│   ├── EvaluateSubmission.js     # Main evaluation form
-│   ├── EvaluateSubmission.css
-│   ├── MyEvaluations.js          # Completed evaluations list
-│   ├── MyEvaluations.css
-│   ├── FinalSubmissionList.js    # Approved submissions list
-│   ├── FinalSubmissionList.css
-│   ├── Sidebar.js                # Navigation sidebar
-│   └── Sidebar.css
-├── App.js                        # Main app component
-├── App.css                       # App-specific styles
-├── index.js                      # Entry point
-└── index.css                     # Global styles
+│   ├── SignIn.jsx          # Login form with backend authentication
+│   ├── ProtectedRoute.jsx  # Route protection component
+│   ├── Header.jsx          # Header with logout functionality
+│   └── ...                 # Other components
+├── utils/
+│   └── api.js              # API utility functions
+└── App.jsx                 # Main app with protected routes
 ```
 
-## Usage Guide
+## Troubleshooting
 
-### For Judges
+### Common Issues
 
-1. **Dashboard**: Start here to see your evaluation overview and quick actions
-2. **Evaluate Submissions**: 
-   - Review project metadata and quality metrics
-   - Use sliders to score each parameter (1-10)
-   - Select final recommendation
-   - Provide detailed feedback
-   - Submit evaluation
-3. **My Evaluations**: Search and filter your completed evaluations
-4. **Final Submissions**: View all approved submissions for the final round
+1. **"Database connection not available"**
+   - Ensure MongoDB is running
+   - Check environment variables in `.env` file
 
-### Evaluation Process
+2. **"Login failed"**
+   - Verify backend server is running on port 8000
+   - Check if test judge was created successfully
+   - Verify credentials: `judge@test.com` / `test123`
 
-1. **Review Project Information**: Read the problem statement, tech stack, and abstract
-2. **Check Quality Metrics**: Review uniqueness and plagiarism scores
-3. **Score Parameters**: Use sliders to rate each of the 7 judging criteria
-4. **Make Recommendation**: Choose from three options based on overall assessment
-5. **Provide Feedback**: Write detailed comments for the team
-6. **Submit**: Save and submit the evaluation
+3. **CORS errors**
+   - Backend CORS is configured for `http://localhost:3000`
+   - Ensure frontend is running on the correct port
 
-## Design System
+4. **"Network error"**
+   - Check if backend server is accessible
+   - Verify network connectivity
 
-### Color Palette
-- **Primary Green**: #1B4332 (Dark Green)
-- **Light Green**: #B7E4C7 (Highlights)
-- **White**: #FFFFFF (Background)
-- **Gray Scale**: 50-900 for text and borders
+### Debug Mode
 
-### Typography
-- **Font Family**: Inter (Sans-serif)
-- **Weights**: 300, 400, 500, 600, 700
-- **Sizes**: 0.75rem to 2rem
+To see detailed error messages, check the browser console and backend server logs.
 
-### Components
-- **Cards**: Rounded corners, subtle shadows, hover effects
-- **Buttons**: Primary (green) and Secondary (outline) variants
-- **Badges**: Status indicators with color coding
-- **Progress Bars**: Visual metrics with gradient fills
-- **Sliders**: Custom-styled range inputs for scoring
+## Production Considerations
 
-## Responsive Design
+For production deployment:
 
-The application is fully responsive and optimized for:
-- **Desktop**: Full sidebar layout with detailed information
-- **Tablet**: Adjusted grid layouts and spacing
-- **Mobile**: Stacked layouts with touch-friendly interactions
-
-## Browser Support
-
-- Chrome (latest)
-- Firefox (latest)
-- Safari (latest)
-- Edge (latest)
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## License
-
-This project is developed for GLA University's hackathon evaluation system.
+1. **Use HTTPS** for all communications
+2. **Implement httpOnly cookies** instead of localStorage for tokens
+3. **Add token refresh** mechanism
+4. **Implement rate limiting** on authentication endpoints
+5. **Add logging** for security events
+6. **Use environment variables** for API URLs
 
 ## Support
 
-For technical support or questions about the evaluation portal, please contact the development team.
+If you encounter issues:
 
----
-
-**Built with ❤️ for GLA University** 
+1. Check the browser console for error messages
+2. Verify backend server logs
+3. Ensure all dependencies are installed
+4. Check MongoDB connection status 
