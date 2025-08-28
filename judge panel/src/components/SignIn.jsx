@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./SignIn.css";
-import Header from "./Header_SignIn.jsx";
+import Header from "./Header";
 
 function SignIn() {
     const [email, setEmail] = useState("");
@@ -25,7 +25,7 @@ function SignIn() {
             <Header onMenuClick={() => {}} />
             <div className="auth-container">
                 <div className="auth-logo">
-                    <img src="..\..\public\images\glaf.png" alt="GLA University" />
+                    <img src="..\..\public\images\gla.png" alt="GLA University" />
                 </div>
                 <h1 className="auth-title">Judge Panel</h1>
                 <p className="auth-subtitle">Hackathon Evaluation Portal</p>

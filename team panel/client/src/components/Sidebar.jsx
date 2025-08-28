@@ -55,7 +55,7 @@ const Sidebar = ({ isOpen, onClose }) => {
           })}
         </nav>
 
-        <div className="sidebar-footer">
+        {/* <div className="sidebar-footer">
           <div className="quick-stats">
             <div className="stat-item">
               <span className="stat-label">Current Round</span>
@@ -66,7 +66,7 @@ const Sidebar = ({ isOpen, onClose }) => {
               <span className="stat-value">3</span>
             </div>
           </div>
-        </div>
+        </div> */}
       </aside>
     </>
   );

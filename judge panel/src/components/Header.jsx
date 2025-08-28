@@ -6,17 +6,17 @@ const Header = ({ onMenuClick }) => {
     return (
         <header className="header">
             <div className="header-left">
+                <img src='../../public/images/gla.png' alt="GLA University" className="header-logo" />
                 <div className="menu-icon" onClick={onMenuClick}>
                     {/* Three horizontal lines for hamburger menu */}
                     <span className="hamburger-line"></span>
                     <span className="hamburger-line"></span>
                     <span className="hamburger-line"></span>
                 </div>
-                <img src='../../public/images/gla.png' alt="GLA University" className="header-logo" />
-                <img src='../../public/images/DC.png' alt="Logo 2" className="dc-logo" />
             </div>
             <div className="header-right">
                 <img src='../../public/images/sih.png' alt="Logo 1" className="header-right-logo" />
+                <img src='../../public/images/DC.png' alt="Logo 2" className="header-right-logo dc-logo" />
             </div>
         </header>
     );
