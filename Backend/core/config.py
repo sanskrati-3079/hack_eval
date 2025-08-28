@@ -8,6 +8,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load environment variables from .env file
 load_dotenv(BASE_DIR / '.env')
+GMAIL_USER = os.getenv("GMAIL_USER")
+GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
+FROM_EMAIL = os.getenv("FROM_EMAIL")
 
 # Get MongoDB credentials from environment variables
 mongo_user = os.getenv("MONGO_USER", "")
