@@ -49,9 +49,15 @@ async def upload_excel(file: UploadFile = File(...)):
             "select category",
             "team name",
             "team leader name",
+            "university roll no",
             "team leader email id (gla email id only)",
-            "team leader contact no."
+            "team leader contact no.",
+            "psid",
+            "statement"
         ]
+
+        member_columns = [f"team_memeber_{i}" for i in range(1, 6)]
+
 
         missing_columns = [col for col in required_columns if col not in df.columns]
         if missing_columns:
@@ -64,8 +70,11 @@ async def upload_excel(file: UploadFile = File(...)):
         COL_CATEGORY = "select category"
         COL_TEAM_NAME = "team name"
         COL_LEADER_NAME = "team leader name"
+        COL_ROLL_NO = "university roll no"
         COL_LEADER_EMAIL = "team leader email id (gla email id only)"
         COL_LEADER_CONTACT = "team leader contact no."
+        COL_PSID = "psid"
+        COL_STATEMENT = "statement"
         # Optional columns
         COL_MEMBERS = [f"team member {i} name" for i in range(1, 6)]
         COL_PPT_LINK = "ppt drive link"
@@ -94,6 +103,9 @@ async def upload_excel(file: UploadFile = File(...)):
             password = generate_password()
             password_hash = hash_password(password)
 
+             # Collect members
+            members = [str(row.get(col)).strip() for col in member_columns if pd.notna(row.get(col)) and str(row.get(col)).strip()]
+
             team_data = {
                 "team_id": team_id,
                 # Assuming 'Problem Statement Id' is not in the new file, you can assign it or remove it
@@ -104,8 +116,7 @@ async def upload_excel(file: UploadFile = File(...)):
                     "email": leader_email,
                     "contact": row.get(COL_LEADER_CONTACT)
                 },
-                "members": [row.get(col) for col in COL_MEMBERS if pd.notna(row.get(col))],
-                "ppt_drive_link": row.get(COL_PPT_LINK),
+                "members": members,
                 "category": row.get(COL_CATEGORY),
                 "subcategory": row.get(COL_SUBCATEGORY)
             }

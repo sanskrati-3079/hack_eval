@@ -34,8 +34,11 @@ const ExcelUpload = () => {
         "select category",
         "team name",
         "team leader name",
+        "university roll no",
         "team leader email id (gla email id only)",
         "team leader contact no.",
+        "psid",
+        "statement",
       ];
       const missingColumns = requiredColumns.filter(
         (col) => !fileHeaders.includes(col),
@@ -112,8 +115,16 @@ const ExcelUpload = () => {
                 <li>Select Category</li>
                 <li>Team Name</li>
                 <li>Team Leader Name</li>
+                <li>University Roll No</li>
                 <li>Team Leader Email id (gla email id only)</li>
                 <li>Team Leader Contact No.</li>
+                <li>Team_Memeber_1</li>
+                <li>Team_Memeber_2</li>
+                <li>Team_Memeber_3</li>
+                <li>Team_Memeber_4</li>
+                <li>Team_Memeber_5</li>
+                <li>PSID</li>
+                <li>Statement</li>
               </ul>
             </li>
             <li>
