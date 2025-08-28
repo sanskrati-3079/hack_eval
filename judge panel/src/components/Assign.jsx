@@ -12,6 +12,14 @@ const mockAssignedTeams = [
     abstract: `A smart water meter system using IoT sensors to monitor and optimize water usage in real time.`,
     status: 'Pending',
     assignedBy: 'Admin',
+    details: {
+      teamId: 'AC-2024-001',
+      problemStatement: 'Monitor and optimize residential water consumption using connected meters and predictive analytics.',
+      description: 'End-to-end system with LoRaWAN meters, gateway, and cloud analytics to detect leaks and provide usage insights.',
+      techStack: ['React', 'Node.js', 'LoRaWAN', 'AWS IoT', 'PostgreSQL'],
+      pptLink: 'https://docs.google.com/presentation/d/alpha',
+      abstract: 'IoT-driven conservation approach with tiered alerting. Requires pilot study and ROI analysis.'
+    }
   },
   {
     id: 'T-002',
@@ -22,16 +30,36 @@ const mockAssignedTeams = [
     abstract: `An AI-powered virtual tutor that adapts to student learning styles and provides personalized feedback.`,
     status: 'Pending',
     assignedBy: 'Admin',
+    details: {
+      teamId: 'BB-2024-002',
+      problemStatement: 'Personalize learning pathways for K-12 students using AI.',
+      description: 'Recommendation engine suggests next lessons; teacher dashboard provides mastery insights and interventions.',
+      techStack: ['Next.js', 'FastAPI', 'PyTorch', 'Redis'],
+      pptLink: 'https://docs.google.com/presentation/d/beta',
+      abstract: 'Strong pedagogy alignment; needs clearer dataset governance and bias mitigation plan.'
+    }
   }
 ];
 
 const Assign = () => {
   const [search, setSearch] = useState('');
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [selectedTeam, setSelectedTeam] = useState(null);
 
   const filteredTeams = mockAssignedTeams.filter(team =>
     team.teamName.toLowerCase().includes(search.toLowerCase()) ||
     team.projectName.toLowerCase().includes(search.toLowerCase())
   );
+
+  const openDetails = (team) => {
+    setSelectedTeam(team);
+    setIsDetailsOpen(true);
+  };
+
+  const closeDetails = () => {
+    setIsDetailsOpen(false);
+    setSelectedTeam(null);
+  };
 
   return (
     <div className="assign-teams">
@@ -86,7 +114,7 @@ const Assign = () => {
               </div>
             </div>
             <div className="assign-actions">
-              <button className="btn btn-secondary">
+              <button className="btn btn-secondary" onClick={() => openDetails(team)}>
                 <Eye size={16} /> View Details
               </button>
             </div>
@@ -98,6 +126,73 @@ const Assign = () => {
         <div className="empty-state">
           <h3>No assigned teams found</h3>
           <p>Try adjusting your search.</p>
+        </div>
+      )}
+
+      {isDetailsOpen && selectedTeam && (
+        <div className="modal-overlay" onClick={closeDetails}>
+          <div className="modal-content card" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="team-info">
+                <h2>{selectedTeam.teamName}</h2>
+                {selectedTeam.details?.teamId && (
+                  <p className="team-id">ID: {selectedTeam.details.teamId}</p>
+                )}
+                {selectedTeam.category && (
+                  <span className="category-badge">{selectedTeam.category}</span>
+                )}
+              </div>
+              <button className="modal-close" onClick={closeDetails}>×</button>
+            </div>
+
+            <div className="metadata-content">
+              {selectedTeam.details?.problemStatement && (
+                <div className="metadata-item">
+                  <h3>Problem Statement</h3>
+                  <p>{selectedTeam.details.problemStatement}</p>
+                </div>
+              )}
+
+              {selectedTeam.details?.description && (
+                <div className="metadata-item">
+                  <h3>Description</h3>
+                  <p className="abstract">{selectedTeam.details.description}</p>
+                </div>
+              )}
+
+              {selectedTeam.details?.techStack?.length > 0 && (
+                <div className="metadata-item">
+                  <h3>Tech Stack</h3>
+                  <div className="tech-stack">
+                    {selectedTeam.details.techStack.map((tech, index) => (
+                      <span key={index} className="tech-tag">{tech}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedTeam.details?.abstract && (
+                <div className="metadata-item">
+                  <h3>AI-Generated Abstract</h3>
+                  <p className="abstract" style={{ whiteSpace: 'pre-line' }}>{selectedTeam.details.abstract}</p>
+                </div>
+              )}
+
+              {(selectedTeam.details?.pptLink || selectedTeam.submissionDate) && (
+                <div className="metadata-item">
+                  <h3>Submission</h3>
+                  <div className="presentation-links">
+                    {selectedTeam.details?.pptLink && (
+                      <a href={selectedTeam.details.pptLink} target="_blank" rel="noopener noreferrer" className="btn btn-secondary">View Presentation</a>
+                    )}
+                    {selectedTeam.submissionDate && (
+                      <span className="submission-date">Submitted: {selectedTeam.submissionDate}</span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>
