@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   Home, 
   FileText, 
@@ -7,11 +7,13 @@ import {
   Award,
   GraduationCap,
   UserPlus,
-  X // Import close icon
+  X, // Import close icon
+  LogOut // Import logout icon
 } from 'lucide-react';
 import './Sidebar.css';
 
 const Sidebar = ({ isOpen, onClose }) => {
+  const navigate = useNavigate();
   const menuItems = [
     {
       path: '/dashboard',
@@ -72,6 +74,18 @@ const Sidebar = ({ isOpen, onClose }) => {
           ))}
         </ul>
       </nav>
+      
+      {/* Logout Button */}
+      <div className="logout-section">
+        <button 
+          className="logout-button" 
+          onClick={() => navigate("/signin")}
+          title="Log out"
+        >
+          <LogOut size={20} />
+          <span>Logout</span>
+        </button>
+      </div>
       
       <div className="sidebar-footer">
         <div className="judge-info">
