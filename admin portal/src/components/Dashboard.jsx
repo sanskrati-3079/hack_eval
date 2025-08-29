@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   Users, 
   Calendar, 
@@ -7,10 +7,21 @@ import {
   TrendingUp, 
   Clock,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Upload,
+  RefreshCw,
+  FileText,
+  Database
 } from 'lucide-react';
+import './Dashboard.css';
 
 const Dashboard = () => {
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [lastUpdate, setLastUpdate] = useState('Never');
+  const fileInputRef = useRef(null);
+
   const stats = [
     {
       title: 'Total Teams',
@@ -98,6 +109,76 @@ const Dashboard = () => {
     }
   ];
 
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const lowerName = file.name.toLowerCase();
+      const isExcel = lowerName.endsWith('.xlsx') || lowerName.endsWith('.xls');
+      if (isExcel) {
+        setSelectedFile(file);
+        setUploadStatus({ type: 'info', message: `Selected: ${file.name}` });
+        return;
+      }
+    }
+    setUploadStatus({ type: 'error', message: 'Please select a valid Excel (.xlsx or .xls) file' });
+    setSelectedFile(null);
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      setUploadStatus({ type: 'error', message: 'Please select a file first' });
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadStatus({ type: 'info', message: 'Uploading and updating database...' });
+
+    try {
+      const formData = new FormData();
+      // Backend expects field name "file"
+      formData.append('file', selectedFile);
+
+      const response = await fetch('/api/upload-ppt-report', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setUploadStatus({ 
+          type: 'success', 
+          message: `Successfully updated! ${result.total_records} records processed.` 
+        });
+        setLastUpdate(new Date().toLocaleString());
+        setSelectedFile(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      } else {
+        setUploadStatus({ 
+          type: 'error', 
+          message: result.detail || result.error || 'Upload failed. Please try again.' 
+        });
+      }
+    } catch (error) {
+      setUploadStatus({ 
+        type: 'error', 
+        message: 'Network error. Please check your connection.' 
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleRefresh = () => {
+    setUploadStatus(null);
+    setSelectedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   return (
     <div className="dashboard">
       <div className="page-header">
@@ -105,21 +186,88 @@ const Dashboard = () => {
         <p className="page-subtitle">Welcome back! Here's what's happening with your hackathon.</p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="dashboard-grid">
-        {stats.map((stat, index) => (
-          <div key={index} className="dashboard-card">
-            <div className="card-header">
-              <div className="card-icon" style={{ backgroundColor: stat.color + '20', color: stat.color }}>
-                <stat.icon size={24} />
-              </div>
-              <h3>{stat.title}</h3>
+      {/* PPT Report Update Section */}
+      <div className="ppt-update-section">
+        <div className="section-header">
+          <h2 className="section-title">
+            <FileText className="section-icon" />
+            PPT Report Management
+          </h2>
+          <div className="last-update">
+            Last updated: {lastUpdate}
+          </div>
+        </div>
+        
+        <div className="upload-container">
+          <div className="file-input-wrapper">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={handleFileSelect}
+              className="file-input"
+              id="ppt-file-input"
+            />
+            <label htmlFor="ppt-file-input" className="file-input-label">
+              <Upload className="upload-icon" />
+              {selectedFile ? selectedFile.name : 'Choose PPT Report Excel File'}
+            </label>
+          </div>
+          
+          <div className="upload-actions">
+            <button
+              onClick={handleUpload}
+              disabled={!selectedFile || isUploading}
+              className={`upload-btn ${isUploading ? 'uploading' : ''}`}
+            >
+              {isUploading ? (
+                <>
+                  <RefreshCw className="spinning" />
+                  Updating Database...
+                </>
+              ) : (
+                <>
+                  <Database className="btn-icon" />
+                  Update Database
+                </>
+              )}
+            </button>
+            
+            <button
+              onClick={handleRefresh}
+              className="refresh-btn"
+              title="Clear selection"
+            >
+              <RefreshCw className="btn-icon" />
+            </button>
+          </div>
+        </div>
+
+        {uploadStatus && (
+          <div className={`status-message ${uploadStatus.type}`}>
+            <div className="status-content">
+              {uploadStatus.type === 'success' && <CheckCircle className="status-icon" />}
+              {uploadStatus.type === 'error' && <AlertCircle className="status-icon" />}
+              {uploadStatus.type === 'info' && <AlertCircle className="status-icon" />}
+              <span>{uploadStatus.message}</span>
             </div>
-            <div className="card-value">
-              <span className="value">{stat.value}</span>
-              <span className={`change ${stat.changeType}`}>
+          </div>
+        )}
+      </div>
+
+      {/* Stats Grid */}
+      <div className="stats-grid">
+        {stats.map((stat, index) => (
+          <div key={index} className="stat-card" style={{ borderLeftColor: stat.color }}>
+            <div className="stat-icon" style={{ color: stat.color }}>
+              <stat.icon size={24} />
+            </div>
+            <div className="stat-content">
+              <h3 className="stat-title">{stat.title}</h3>
+              <div className="stat-value">{stat.value}</div>
+              <div className={`stat-change ${stat.changeType}`}>
                 {stat.change}
-              </span>
+              </div>
             </div>
           </div>
         ))}
@@ -130,80 +278,39 @@ const Dashboard = () => {
         {/* Recent Activities */}
         <div className="content-card">
           <div className="card-header">
-            <h3>Recent Activities</h3>
+            <h3 className="card-title">
+              <Clock className="card-icon" />
+              Recent Activities
+            </h3>
           </div>
-          <div className="card-body">
-            <div className="activity-list">
-              {recentActivities.map((activity) => (
-                <div key={activity.id} className="activity-item">
-                  <div className="activity-icon">
-                    {activity.status === 'success' && <CheckCircle size={16} />}
-                    {activity.status === 'info' && <AlertCircle size={16} />}
-                  </div>
-                  <div className="activity-content">
-                    <p className="activity-message">{activity.message}</p>
-                    <span className="activity-time">{activity.time}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="card-content">
+            {recentActivities.map((activity) => (
+              <div key={activity.id} className={`activity-item ${activity.status}`}>
+                <div className="activity-message">{activity.message}</div>
+                <div className="activity-time">{activity.time}</div>
+              </div>
+            ))}
           </div>
         </div>
 
         {/* Upcoming Events */}
         <div className="content-card">
           <div className="card-header">
-            <h3>Upcoming Events</h3>
+            <h3 className="card-title">
+              <Calendar className="card-icon" />
+              Upcoming Events
+            </h3>
           </div>
-          <div className="card-body">
-            <div className="event-list">
-              {upcomingEvents.map((event) => (
-                <div key={event.id} className="event-item">
-                  <div className="event-icon">
-                    <Clock size={16} />
-                  </div>
-                  <div className="event-content">
-                    <h4 className="event-title">{event.title}</h4>
-                    <span className="event-time">{event.time}</span>
-                  </div>
-                  <div className="event-status">
-                    <span className="status-indicator status-upcoming">Upcoming</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="card-content">
+            {upcomingEvents.map((event) => (
+              <div key={event.id} className="event-item">
+                <div className="event-title">{event.title}</div>
+                <div className="event-time">{event.time}</div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
-
-      {/* Quick Actions
-      <div className="quick-actions">
-        <div className="card">
-          <div className="card-header">
-            <h3>Quick Actions</h3>
-          </div>
-          <div className="card-body">
-            <div className="action-grid">
-              <button className="btn btn-primary">
-                <Calendar size={16} />
-                Schedule New Round
-              </button>
-              <button className="btn btn-secondary">
-                <Users size={16} />
-                Assign Judges
-              </button>
-              <button className="btn btn-secondary">
-                <Trophy size={16} />
-                View Leaderboard
-              </button>
-              <button className="btn btn-secondary">
-                <UserCheck size={16} />
-                Manage Mentors
-              </button>
-            </div>
-          </div>
-        </div>
-      </div> */}
     </div>
   );
 };
