@@ -47,6 +47,7 @@ async def upload_excel(file: UploadFile = File(...)):
         # Now define required columns in lowercase
         required_columns = [
             "select category",
+            "team id",
             "team name",
             "team leader name",
             "university roll no",
@@ -69,6 +70,7 @@ async def upload_excel(file: UploadFile = File(...)):
         # --- Define expected column names from your Excel file ---
         COL_CATEGORY = "select category"
         COL_TEAM_NAME = "team name"
+        COL_TEAM_ID = "team id"
         COL_LEADER_NAME = "team leader name"
         COL_ROLL_NO = "university roll no"
         COL_LEADER_EMAIL = "team leader email id (gla email id only)"
@@ -99,7 +101,7 @@ async def upload_excel(file: UploadFile = File(...)):
                 })
                 continue # Skip to the next row
 
-            team_id = generate_team_id(index)
+
             password = generate_password()
             password_hash = hash_password(password)
 
@@ -107,7 +109,7 @@ async def upload_excel(file: UploadFile = File(...)):
             members = [str(row.get(col)).strip() for col in member_columns if pd.notna(row.get(col)) and str(row.get(col)).strip()]
 
             team_data = {
-                "team_id": team_id,
+                "team_id": COL_TEAM_ID,
                 # Assuming 'Problem Statement Id' is not in the new file, you can assign it or remove it
                 "problem_statement_id": None,
                 "team_name": team_name,
@@ -124,21 +126,21 @@ async def upload_excel(file: UploadFile = File(...)):
             # Insert into MongoDB
             teams_collection.insert_one(team_data)
             logins_collection.insert_one({
-                "team_id": team_id,
+                "team_id": COL_TEAM_ID,
                 "email": leader_email,
                 "password": password_hash
             })
 
             # Store plain text password for export
             credentials_store.append({
-                "team_id": team_id,
+                "team_id": COL_TEAM_ID,
                 "team_name": team_name,
                 "email": leader_email,
                 "password": password
             })
 
             # Send email with credentials
-            send_email(to_email=leader_email, team_id=team_id, password=password)
+            send_email(to_email=leader_email, team_id=COL_TEAM_ID, password=password)
 
             inserted_teams.append(team_data)
 
