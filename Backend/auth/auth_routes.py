@@ -90,7 +90,7 @@ async def judge_login(form_data: OAuth2PasswordRequestForm = Depends()):
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect username or password"
             )
-            
+
         # Check if password matches (assuming passwords are stored as plain text for now)
         if form_data.password != judge["password"]:
             raise HTTPException(
@@ -272,7 +272,6 @@ async def team_login(payload: LoginRequest):
         raise HTTPException(status_code=500, detail="No password found for user")
     try:
         stored_password_bytes = stored_password.encode("utf-8") if isinstance(stored_password, str) else stored_password
-        if not bcrypt.checkpw(payload.password.encode("utf-8"), stored_password_bytes):
         if not bcrypt.checkpw(payload.password.encode("utf-8"), stored_password_bytes):
             raise HTTPException(status_code=401, detail="Invalid credentials")
     except Exception as e:
