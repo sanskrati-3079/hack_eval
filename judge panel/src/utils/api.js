@@ -117,6 +117,34 @@ export const getEvaluations = async (roundId = null, teamId = null) => {
     return response.json();
 };
 
+// Get judge's own evaluations
+export const getMyEvaluations = async () => {
+    const response = await fetch(`${API_BASE_URL}/judge/evaluation/my-evaluations`, {
+        headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to fetch my evaluations');
+    }
+
+    return response.json();
+};
+
+// Get team details by team ID
+export const getTeamDetails = async (teamId) => {
+    const response = await fetch(`${API_BASE_URL}/team-ps/teams/${teamId}`, {
+        headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to fetch team details');
+    }
+
+    return response.json();
+};
+
 // Get all teams with problem statement details
 export const getAllTeams = async () => {
     const response = await fetch(`${API_BASE_URL}/judge/all-teams`, {
@@ -126,6 +154,20 @@ export const getAllTeams = async () => {
     if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || 'Failed to fetch teams');
+    }
+
+    return response.json();
+};
+
+// Count evaluations by team name
+export const countEvaluationsByTeamName = async (teamName) => {
+    const response = await fetch(`${API_BASE_URL}/judge/evaluation/count-by-team-name/${encodeURIComponent(teamName)}`, {
+        headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to count evaluations');
     }
 
     return response.json();

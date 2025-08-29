@@ -1,11 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ExternalLink, 
   Download
 } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import './EvaluateSubmission.css';
 
 const EvaluateSubmission = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const selectedTeam = location.state?.selectedTeam;
+  
   const [evaluation, setEvaluation] = useState({
     innovation: 5,
     problemRelevance: 5,
@@ -21,20 +26,64 @@ const EvaluateSubmission = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState('');
 
-  // Mock submission data
-  const submission = {
-    teamName: 'Team Innovators',
-    teamId: 'TI-2024-001',
-    problemStatement: 'Develop a sustainable solution for smart waste management in urban areas using IoT and AI technologies to optimize collection routes and reduce environmental impact.',
-    description: 'Our solution leverages IoT sensors and machine learning algorithms to create an intelligent waste management system. The platform provides real-time monitoring of waste levels, optimizes collection routes, and provides analytics for better resource allocation. The system reduces operational costs by 30% and improves collection efficiency by 45%.',
-    techStack: ['React', 'Node.js', 'Python', 'TensorFlow', 'IoT Sensors', 'MongoDB'],
-    pptLink: 'https://docs.google.com/presentation/d/example',
-    abstract: `The proposal for a Paperless Scholarship Disbursement System presents a solid foundation with innovative features like AI-based document verification and real-time updates. However, it lacks detailed metrics, datasets, and a comprehensive evaluation plan, which are critical for assessing the project's feasibility and impact. The architecture is described adequately, but scalability and cost estimates are vague. Overall, the project shows promise but requires more concrete evidence and planning.`,
-    uniquenessScore: 85,
-    plagiarismScore: 12,
-    submissionDate: '2024-01-15',
-    category: 'Smart Cities'
+  // Load existing evaluation if available
+  useEffect(() => {
+    if (selectedTeam) {
+      loadExistingEvaluation(selectedTeam.team_id);
+    }
+  }, [selectedTeam]);
+
+  const loadExistingEvaluation = async (teamId) => {
+    try {
+      const judgeToken = localStorage.getItem('judgeToken') || 'your_judge_token_here';
+      
+      const response = await fetch(`http://localhost:8000/judge/evaluation/${teamId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${judgeToken}`
+        }
+      });
+
+      if (response.ok) {
+        const existingEval = await response.json();
+        setEvaluation({
+          innovation: existingEval.innovation || 5,
+          problemRelevance: existingEval.problem_relevance || 5,
+          feasibility: existingEval.feasibility || 5,
+          techStackJustification: existingEval.tech_stack_justification || 5,
+          clarityOfSolution: existingEval.clarity_of_solution || 5,
+          presentationQuality: existingEval.presentation_quality || 5,
+          teamUnderstanding: existingEval.team_understanding || 5,
+          finalRecommendation: existingEval.final_recommendation || '',
+          feedback: existingEval.personalized_feedback || ''
+        });
+      }
+    } catch (error) {
+      console.log('No existing evaluation found or error loading it');
+    }
   };
+
+  // If no team is selected, show selection message
+  if (!selectedTeam) {
+    return (
+      <div className="evaluate-submission">
+        <div className="page-header">
+          <h1 className="page-title">Evaluate Submission</h1>
+          <p className="page-subtitle">Please select a team to evaluate</p>
+        </div>
+        <div className="no-team-selected">
+          <p>No team selected. Please go back and select a team to evaluate.</p>
+          <button className="btn btn-primary" onClick={() => navigate('/dashboard')}>
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Debug: Log the team data structure
+  console.log('Selected Team Data:', selectedTeam);
+  console.log('Problem Statement Object:', selectedTeam.problem_statement);
 
   const handleSliderChange = (parameter, value) => {
     setEvaluation(prev => ({
@@ -64,10 +113,10 @@ const EvaluateSubmission = () => {
     try {
       // Prepare data for backend API
       const evaluationData = {
-        team_id: submission.teamId,
-        team_name: submission.teamName,
-        problem_statement: submission.problemStatement,
-        category: submission.category,
+        team_id: selectedTeam.team_id,
+        team_name: selectedTeam.team_name,
+        problem_statement: selectedTeam.problem_statement?.title || 'No problem statement',
+        category: selectedTeam.problem_statement?.category || 'General',
         round_id: 1,
         innovation: evaluation.innovation,
         problem_relevance: evaluation.problemRelevance,
@@ -101,18 +150,10 @@ const EvaluateSubmission = () => {
         // Show success message
         alert(`Evaluation submitted successfully!\nTotal Score: ${result.total_score}/70\nAverage Score: ${result.average_score}/10`);
         
-        // Reset form
-        setEvaluation({
-          innovation: 5,
-          problemRelevance: 5,
-          feasibility: 5,
-          techStackJustification: 5,
-          clarityOfSolution: 5,
-          presentationQuality: 5,
-          teamUnderstanding: 5,
-          finalRecommendation: '',
-          feedback: ''
-        });
+        // Wait for 2 seconds to show success message, then navigate to dashboard
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 2000);
         
       } else {
         const errorData = await response.json();
@@ -141,10 +182,10 @@ const EvaluateSubmission = () => {
 
     try {
       const evaluationData = {
-        team_id: submission.teamId,
-        team_name: submission.teamName,
-        problem_statement: submission.problemStatement,
-        category: submission.category,
+        team_id: selectedTeam.team_id,
+        team_name: selectedTeam.team_name,
+        problem_statement: selectedTeam.problem_statement?.title || 'No problem statement',
+        category: selectedTeam.problem_statement?.category || 'General',
         round_id: 1,
         innovation: evaluation.innovation,
         problem_relevance: evaluation.problemRelevance,
@@ -172,6 +213,11 @@ const EvaluateSubmission = () => {
         console.log('Draft saved successfully:', result);
         setSubmitStatus('✅ Draft saved successfully!');
         alert('Draft saved successfully!');
+        
+        // Wait for 2 seconds to show success message, then navigate to dashboard
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 2000);
       } else {
         const errorData = await response.json();
         setSubmitStatus(`❌ Failed to save draft: ${errorData.detail || 'Unknown error'}`);
@@ -210,6 +256,9 @@ const EvaluateSubmission = () => {
       <div className="page-header">
         <h1 className="page-title">Evaluate Submission</h1>
         <p className="page-subtitle">Review and evaluate team submission</p>
+        <button className="btn btn-secondary back-btn" onClick={() => navigate('/dashboard')}>
+          ← Back to Teams
+        </button>
       </div>
 
       <div className="evaluation-container">
@@ -217,83 +266,100 @@ const EvaluateSubmission = () => {
         <div className="metadata-section card">
           <div className="metadata-header">
             <div className="team-info">
-              <h2>{submission.teamName}</h2>
-              <p className="team-id">ID: {submission.teamId}</p>
-              <span className="category-badge">{submission.category}</span>
+              <h2>{selectedTeam.team_name}</h2>
+              <p className="team-id">ID: {selectedTeam.team_id}</p>
+              <span className="category-badge">{selectedTeam.problem_statement?.category || 'General'}</span>
             </div>
             <div className="submission-meta">
-              <p className="submission-date">Submitted: {submission.submissionDate}</p>
+              <p className="submission-date">Submitted: {selectedTeam.submission_date || 'N/A'}</p>
             </div>
           </div>
 
           <div className="metadata-content">
             <div className="metadata-item">
               <h3>Problem Statement</h3>
-              <p>{submission.problemStatement}</p>
-            </div>
-
-            <div className="metadata-item">
-              <h3>Description</h3>
-              <p className="abstract">{submission.description}</p>
-            </div>
-
-            <div className="metadata-item">
-              <h3>Tech Stack</h3>
-              <div className="tech-stack">
-                {submission.techStack.map((tech, index) => (
-                  <span key={index} className="tech-tag">{tech}</span>
-                ))}
-              </div>
-            </div>
-
-            <div className="metadata-item">
-              <h3>AI-Generated Abstract</h3>
-              <p className="abstract" style={{ whiteSpace: 'pre-line' }}>{submission.abstract}</p>
-            </div>
-
-            <div className="metadata-item">
-              <h3>Presentation</h3>
-              <div className="presentation-links">
-                <a href={submission.pptLink} target="_blank" rel="noopener noreferrer" className="btn btn-secondary">
-                  <ExternalLink size={16} />
-                  View Presentation
-                </a>
-                {/* <button className="btn btn-secondary">
-                  <Download size={16} />
-                  Download PPT
-                </button> */}
-              </div>
-            </div>
-
-            {/* <div className="metadata-item">
-              <h3>Quality Metrics</h3>
-              <div className="quality-metrics">
-                <div className="metric">
-                  <span className="metric-label">Uniqueness Score</span>
-                  <div className="metric-value">
-                    <div className={`progress-bar ${getUniquenessColor(submission.uniquenessScore)}`}>
-                      <div 
-                        className="progress-fill" 
-                        style={{ width: `${submission.uniquenessScore}%` }}
-                      ></div>
-                    </div>
-                    <span className="metric-score">{submission.uniquenessScore}%</span>
-                  </div>
+              <p className="problem-title">{selectedTeam.problem_statement?.title || 'No problem statement available'}</p>
+              {selectedTeam.problem_statement?.description && (
+                <div className="problem-description">
+                  <p>{selectedTeam.problem_statement.description}</p>
                 </div>
-                <div className="metric">
-                  <span className="metric-label">Plagiarism Score</span>
-                  <div className="metric-value">
-                    <div className={`progress-bar ${getPlagiarismColor(submission.plagiarismScore)}`}>
-                      <div 
-                        className="progress-fill" 
-                        style={{ width: `${submission.plagiarismScore}%` }}
-                      ></div>
-                    </div>
-                    <span className="metric-score">{submission.plagiarismScore}%</span>
-                  </div>
+              )}
+            </div>
+
+            <div className="metadata-item">
+              <h3>Team Information</h3>
+              <div className="team-details-grid">
+                <div className="detail-item">
+                  <strong>Department:</strong> {selectedTeam.department || 'Not specified'}
+                </div>
+                <div className="detail-item">
+                  <strong>Year:</strong> {selectedTeam.year || 'Not specified'}
+                </div>
+                <div className="detail-item">
+                  <strong>Status:</strong> <span className={`status-badge ${selectedTeam.status || 'inactive'}`}>{selectedTeam.status || 'Inactive'}</span>
                 </div>
               </div>
-            </div> */}
+            </div>
+
+            <div className="metadata-item">
+              <h3>Team Leader</h3>
+              {selectedTeam.team_leader ? (
+                <div className="team-leader-info">
+                  <p><strong>Name:</strong> {selectedTeam.team_leader.name}</p>
+                  <p><strong>Roll No:</strong> {selectedTeam.team_leader.roll_no}</p>
+                  <p><strong>Email:</strong> {selectedTeam.team_leader.email}</p>
+                  <p><strong>Contact:</strong> {selectedTeam.team_leader.contact}</p>
+                  <p><strong>Role:</strong> {selectedTeam.team_leader.role}</p>
+                </div>
+              ) : (
+                <p>No team leader information available</p>
+              )}
+            </div>
+
+            <div className="metadata-item">
+              <h3>Team Members</h3>
+              {selectedTeam.team_members && selectedTeam.team_members.length > 0 ? (
+                <div className="team-members-list">
+                  {selectedTeam.team_members.map((member, index) => (
+                    <div key={index} className="member-card">
+                      <div className="member-header">
+                        <h4>{member.name}</h4>
+                        <span className="member-role">{member.role}</span>
+                      </div>
+                      <div className="member-details">
+                        <p><strong>Roll No:</strong> {member.roll_no}</p>
+                        <p><strong>Email:</strong> {member.email}</p>
+                        <p><strong>Contact:</strong> {member.contact}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p>No team members information available</p>
+              )}
+            </div>
+
+            <div className="metadata-item">
+              <h3>Project Details</h3>
+              <div className="project-details">
+                <div className="detail-row">
+                  <strong>Category:</strong> {selectedTeam.problem_statement?.category || 'Not specified'}
+                </div>
+                <div className="detail-row">
+                  <strong>Domain:</strong> {selectedTeam.problem_statement?.domain || 'Not specified'}
+                </div>
+                
+                <div className="detail-row">
+                  <strong>Problem ID:</strong> {selectedTeam.problem_statement?.ps_id || 'Not specified'}
+                </div>
+              </div>
+            </div>
+
+
+           
+
+            {/* Debug: Show raw data for development */}
+            
           </div>
         </div>
 
@@ -339,21 +405,6 @@ const EvaluateSubmission = () => {
               </div>
             ))}
           </div>
-
-          {/* <div className="form-section">
-            <label className="form-label">Final Recommendation</label>
-            <select
-              value={evaluation.finalRecommendation}
-              onChange={(e) => handleInputChange('finalRecommendation', e.target.value)}
-              className="form-select"
-              required
-            >
-              <option value="">Select recommendation</option>
-              <option value="proceed">Proceed to Next Round</option>
-              <option value="improvement">Needs Improvement</option>
-              <option value="rejected">Rejected</option>
-            </select>
-          </div> */}
 
           <div className="form-section">
             <label className="form-label">Personalized Feedback</label>

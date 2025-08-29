@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Search, 
   Download, 
   Eye,
   Calendar,
-  Star
+  Star,
+  Loader2
 } from 'lucide-react';
+import { getMyEvaluations, getTeamDetails } from '../utils/api';
 import './MyEvaluations.css';
 
 const MyEvaluations = () => {
@@ -13,88 +15,99 @@ const MyEvaluations = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [selectedEvaluation, setSelectedEvaluation] = useState(null);
+  const [evaluations, setEvaluations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Mock evaluations data
-  const evaluations = [
-    {
-      id: 'EV-001',
-      teamName: 'Team Innovators',
-      projectName: 'Smart Waste Management',
-      submissionDate: '2024-01-15',
-      evaluationDate: '2024-01-16',
-      totalScore: 8.5,
-      status: 'Approved',
-      recommendation: 'Proceed to Next Round',
-      feedback: 'Excellent innovation and well-executed solution. Strong technical implementation with clear problem understanding.',
-      // Details mirrored from EvaluateSubmission
-      details: {
-        teamId: 'TI-2024-001',
-        category: 'Smart Cities',
-        problemStatement: 'Develop a sustainable solution for smart waste management in urban areas using IoT and AI technologies to optimize collection routes and reduce environmental impact.',
-        description: 'Our solution leverages IoT sensors and machine learning algorithms to create an intelligent waste management system. The platform provides real-time monitoring of waste levels, optimizes collection routes, and provides analytics for better resource allocation. The system reduces operational costs by 30% and improves collection efficiency by 45%.',
-        techStack: ['React', 'Node.js', 'Python', 'TensorFlow', 'IoT Sensors', 'MongoDB'],
-        pptLink: 'https://docs.google.com/presentation/d/example',
-        abstract: 'The proposal for a Paperless Scholarship Disbursement System presents a solid foundation with innovative features like AI-based document verification and real-time updates. However, it lacks detailed metrics, datasets, and a comprehensive evaluation plan, which are critical for assessing the project\'s feasibility and impact. The architecture is described adequately, but scalability and cost estimates are vague. Overall, the project shows promise but requires more concrete evidence and planning.'
-      }
-    },
-    {
-      id: 'EV-002',
-      teamName: 'CodeCrafters',
-      projectName: 'AI-Powered Education Platform',
-      submissionDate: '2024-01-14',
-      evaluationDate: '2024-01-15',
-      totalScore: 7.2,
-      status: 'Needs Improvement',
-      feedback: 'Good concept but needs better technical implementation. Consider improving the user interface and adding more features.',
-      details: {
-        teamId: 'CC-2024-014',
-        category: 'Education',
-        problemStatement: 'Improve remote learning outcomes using adaptive AI tutoring.',
-        description: 'An adaptive learning platform that personalizes content difficulty and pacing using student performance signals. Includes analytics dashboards for educators.',
-        techStack: ['React', 'Express', 'PostgreSQL', 'PyTorch'],
-        pptLink: 'https://docs.google.com/presentation/d/example2',
-        abstract: 'Adaptive tutoring shows promise for increasing engagement. Further validation and dataset clarity needed.'
-      }
-    },
-    {
-      id: 'EV-003',
-      teamName: 'TechVision',
-      projectName: 'Healthcare Monitoring System',
-      submissionDate: '2024-01-13',
-      evaluationDate: '2024-01-14',
-      totalScore: 9.1,
-      status: 'Approved',
-      feedback: 'Outstanding project with excellent technical depth. Very innovative solution with great potential for real-world application.',
-      details: {
-        teamId: 'TV-2024-008',
-        category: 'Healthcare',
-        problemStatement: 'Continuous patient monitoring with proactive alerts.',
-        description: 'Edge IoT and cloud analytics to track vitals and alert clinicians in real-time with anomaly detection.',
-        techStack: ['Next.js', 'FastAPI', 'TimescaleDB', 'IoT'],
-        pptLink: 'https://docs.google.com/presentation/d/example3',
-        abstract: 'Promising architecture with clear clinical pathways and data governance considerations.'
-      }
-    },
-    {
-      id: 'EV-004',
-      teamName: 'DataMasters',
-      projectName: 'Predictive Analytics Dashboard',
-      submissionDate: '2024-01-12',
-      evaluationDate: '2024-01-13',
-      totalScore: 6.8,
-      status: 'Rejected',
-      feedback: 'Concept is good but implementation lacks depth. Technical stack could be better chosen for the problem domain.',
-      details: {
-        teamId: 'DM-2024-021',
-        category: 'Analytics',
-        problemStatement: 'Forecast operational KPIs across departments with explainability.',
-        description: 'Unified dashboard pulling data from multiple sources, with forecasting and SHAP-based explanations for business users.',
-        techStack: ['Vue', 'Flask', 'MongoDB', 'XGBoost'],
-        pptLink: 'https://docs.google.com/presentation/d/example4',
-        abstract: 'Needs stronger validation strategy and cost-benefit analysis.'
+
+
+    // Fetch evaluations from backend
+  const fetchEvaluations = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const data = await getMyEvaluations();
+      console.log('Fetched evaluations:', data);
+      
+      // Transform the data to match our component structure
+      const transformedEvaluations = data.map(evaluation => ({
+        id: evaluation.evaluation_id || evaluation._id,
+        teamName: evaluation.team_name,
+        projectName: evaluation.problem_statement,
+        submissionDate: evaluation.submitted_at ? new Date(evaluation.submitted_at).toISOString().split('T')[0] : 'N/A',
+        evaluationDate: evaluation.evaluated_at ? new Date(evaluation.evaluated_at).toISOString().split('T')[0] : 'N/A',
+        totalScore: evaluation.total_score || 0,
+        status: evaluation.evaluation_status === 'submitted' ? 'Approved' : evaluation.evaluation_status,
+        recommendation: getRecommendation(evaluation.total_score || 0),
+        feedback: evaluation.personalized_feedback || 'No feedback provided',
+        category: evaluation.category || 'General',
+        scores: evaluation.scores || {},
+        details: {
+          teamId: evaluation.team_id,
+          category: evaluation.category || 'General',
+          problemStatement: evaluation.problem_statement,
+          description: evaluation.problem_statement, // Using problem statement as description for now
+          techStack: [], // This would need to be fetched from team details
+          pptLink: '', // This would need to be fetched from team details
+          abstract: evaluation.personalized_feedback || 'No abstract available'
+        }
+      }));
+
+      setEvaluations(transformedEvaluations);
+    } catch (err) {
+      console.error('Error fetching evaluations:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Get recommendation based on score
+  const getRecommendation = (score) => {
+    if (score >= 8) return 'Proceed to Next Round';
+    if (score >= 6) return 'Needs Improvement';
+    return 'Rejected';
+  };
+
+  // Fetch team details for a specific evaluation
+  const fetchTeamDetails = async (teamId) => {
+    try {
+      const teamData = await getTeamDetails(teamId);
+      return teamData;
+    } catch (err) {
+      console.warn('Error fetching team details:', err);
+      return null;
+    }
+  };
+
+  // Enhanced openDetails function that fetches team details
+  const openDetails = async (evaluation) => {
+    setSelectedEvaluation(evaluation);
+    setIsDetailsOpen(true);
+    
+    // Try to fetch additional team details
+    if (evaluation.details?.teamId) {
+      const teamDetails = await fetchTeamDetails(evaluation.details.teamId);
+      if (teamDetails) {
+        // Update the evaluation with team details
+        setSelectedEvaluation(prev => ({
+          ...prev,
+          details: {
+            ...prev.details,
+            techStack: teamDetails.tech_stack || [],
+            pptLink: teamDetails.presentation_link || '',
+            abstract: teamDetails.abstract || prev.details.abstract
+          }
+        }));
       }
     }
-  ];
+  };
+
+  // Load evaluations on component mount
+  useEffect(() => {
+    fetchEvaluations();
+  }, []);
 
   const filteredEvaluations = evaluations.filter(evaluation => {
     const matchesSearch = evaluation.teamName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -118,21 +131,66 @@ const MyEvaluations = () => {
     return 'error';
   };
 
-  const openDetails = (evaluation) => {
-    setSelectedEvaluation(evaluation);
-    setIsDetailsOpen(true);
-  };
-
   const closeDetails = () => {
     setIsDetailsOpen(false);
     setSelectedEvaluation(null);
   };
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="my-evaluations">
+        <div className="page-header">
+          <div className="header-content">
+            <div>
+              <h1 className="page-title">My Evaluations</h1>
+              <p className="page-subtitle">Review your completed evaluations</p>
+            </div>
+          </div>
+        </div>
+        <div className="loading-state">
+          <Loader2 size={48} className="loading-spinner" />
+          <p>Loading your evaluations...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="my-evaluations">
+        <div className="page-header">
+          <div className="header-content">
+            <div>
+              <h1 className="page-title">My Evaluations</h1>
+              <p className="page-subtitle">Review your completed evaluations</p>
+            </div>
+          </div>
+        </div>
+        <div className="error-state">
+          <p className="error-message">Error: {error}</p>
+          <button className="btn btn-primary" onClick={fetchEvaluations}>
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="my-evaluations">
       <div className="page-header">
-        <h1 className="page-title">My Evaluations</h1>
-        <p className="page-subtitle">Review your completed evaluations</p>
+        <div className="header-content">
+          <div>
+            <h1 className="page-title">My Evaluations</h1>
+            <p className="page-subtitle">Review your completed evaluations</p>
+          </div>
+          <button className="btn btn-primary" onClick={fetchEvaluations} disabled={loading}>
+            <Loader2 size={16} className={loading ? 'loading-spinner' : ''} />
+            {loading ? 'Loading...' : 'Refresh'}
+          </button>
+        </div>
       </div>
 
       {/* Filters and Search */}
@@ -208,19 +266,15 @@ const MyEvaluations = () => {
                 <Eye size={16} />
                 View Details
               </button>
-              {/* <button className="btn btn-secondary">
-                <Download size={16} />
-                Export
-              </button> */}
             </div>
           </div>
         ))}
       </div>
 
-      {filteredEvaluations.length === 0 && (
+      {filteredEvaluations.length === 0 && !loading && (
         <div className="empty-state">
           <h3>No evaluations found</h3>
-          <p>Try adjusting your search or filter criteria.</p>
+          <p>You haven't completed any evaluations yet, or try adjusting your search criteria.</p>
         </div>
       )}
 

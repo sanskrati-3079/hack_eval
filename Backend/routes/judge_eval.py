@@ -407,3 +407,23 @@ async def get_evaluation_leaderboard(round_id: int = 1):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching leaderboard: {str(e)}")
+
+@router.get("/count-by-team-name/{team_name}", response_model=dict)
+async def count_evaluations_by_team_name(team_name: str):
+    """
+    Count all evaluations for a specific team name
+    """
+    try:
+        # Count evaluations for the specific team name
+        count = await team_evaluations_collection.count_documents({
+            "team_name": team_name
+        })
+        
+        return {
+            "team_name": team_name,
+            "evaluation_count": count,
+            "message": f"Found {count} evaluations for team '{team_name}'"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error counting evaluations: {str(e)}")

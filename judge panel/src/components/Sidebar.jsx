@@ -20,16 +20,16 @@ const Sidebar = ({ isOpen, onClose }) => {
       icon: <Home size={20} />,
       label: 'Dashboard Home'
     },
-    {
-      path: '/evaluate',
-      icon: <FileText size={20} />,
-      label: 'Evaluate Submissions'
-    },
-    {
-      path: '/assign',
-      icon: <UserPlus size={20} />,
-      label: 'Assign'
-    },
+    // {
+    //   path: '/evaluate',
+    //   icon: <FileText size={20} />,
+    //   label: 'Evaluate Submissions'
+    // },
+    // {
+    //   path: '/assign',
+    //   icon: <UserPlus size={20} />,
+    //   label: 'Assign'
+    // },
     {
       path: '/my-evaluations',
       icon: <ClipboardList size={20} />,
@@ -87,17 +87,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         </button>
       </div>
       
-      <div className="sidebar-footer">
-        <div className="judge-info">
-          <div className="judge-avatar">
-            <GraduationCap size={24} />
-          </div>
-          <div className="judge-details">
-            <p className="judge-name">Dr. John Smith</p>
-            <p className="judge-role">Technical Judge</p>
-          </div>
-        </div>
-      </div>
+      
     </aside>
   );
 };

@@ -9,9 +9,12 @@ import {
   Search,
   Filter,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Eye,
+  Play
 } from 'lucide-react';
 import { getJudgeProfile, getAllTeams } from '../utils/api.js';
+import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -26,6 +29,8 @@ const Dashboard = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [teamsPerPage] = useState(6);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchJudgeProfile = async () => {
@@ -93,6 +98,19 @@ const Dashboard = () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, selectedCategory]);
+
+  const handleTeamSelect = (team) => {
+    // Navigate to evaluation page with complete team data
+    navigate('/evaluate', { 
+      state: { selectedTeam: team } 
+    });
+  };
+
+  const handleViewTeam = (team) => {
+    // For now, just show team details in console
+    console.log('Team details:', team);
+    // You can implement a modal or expand the card to show more details
+  };
 
   const stats = [
     {
@@ -247,7 +265,25 @@ const Dashboard = () => {
                     </div>
                     <div className="team-details">
                       <div className="college-badge">{team.college}</div>
-                      <div className="difficulty-badge">{team.problem_statement?.difficulty || 'N/A'}</div>
+                      {/* <div className="difficulty-badge">{team.problem_statement?.difficulty || 'N/A'}</div> */}
+                    </div>
+                    <div className="team-actions">
+                      {/* <button 
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => handleViewTeam(team)}
+                        title="View Team Details"
+                      >
+                        <Eye size={16} />
+                        View
+                      </button> */}
+                      <button 
+                        className="btn btn-primary btn-sm"
+                        onClick={() => handleTeamSelect(team)}
+                        title="Evaluate This Team"
+                      >
+                        <Play size={16} />
+                        Evaluate
+                      </button>
                     </div>
                   </div>
                 ))}
