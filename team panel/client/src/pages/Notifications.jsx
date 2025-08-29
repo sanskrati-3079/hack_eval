@@ -2,8 +2,9 @@ import React, { useContext, useEffect, useState } from "react";
 import { useSocket } from "../context/SocketContext";
 import { TeamContext } from "../context/TeamContext";
 import { motion } from "framer-motion";
+// const { token } = useContext(TeamContext);
 
-const API_BASE_URL = "http://localhost:8000"; // Your FastAPI server URL
+import { API_BASE_URL } from "../config"; // Your FastAPI server URL
 
 const Notifications = () => {
   const socket = useSocket();
@@ -12,43 +13,15 @@ const Notifications = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // This assumes your TeamContext provides the auth token
-    const token = localStorage.getItem("authToken"); // Example of getting token
-
-    const fetchNotifications = async () => {
-      if (!team || !token) {
-        setLoading(false);
-        return;
-      }
-      try {
-        setLoading(true);
-        const response = await fetch(`${API_BASE_URL}/notifications`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (!response.ok) {
-          throw new Error("Failed to fetch notifications");
-        }
-        const data = await response.json();
-        setNotifications(data);
-      } catch (error) {
-        console.error("Error fetching notifications:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchNotifications();
-
-    // WebSocket listener (if implemented)
-    if (socket && socket.connected) {
-      socket.on("notification", (newNotification) => {
-        setNotifications((prev) => [newNotification, ...prev]);
+    async function fetchNotifications() {
+      const response = await fetch(`${API_BASE_URL}/notifications`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      return () => socket.off("notification");
+      const data = await response.json();
+      setNotifications(data);
     }
-  }, [team, socket]);
+    fetchNotifications();
+  }, [token]);
 
   const markAsRead = (notificationId) => {
     // In a real app, you'd call a PUT API to mark as read

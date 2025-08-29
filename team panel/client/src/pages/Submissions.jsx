@@ -1,5 +1,6 @@
 import React, { useContext, useState, useEffect, useCallback } from "react";
 import { TeamContext } from "../context/TeamContext";
+import { API_BASE_URL } from "../config";
 
 const Submissions = () => {
   // Assuming TeamContext provides the auth token
@@ -18,30 +19,12 @@ const Submissions = () => {
 
   // Function to fetch submission history
   const fetchSubmissions = useCallback(async () => {
-    if (!token) {
-      setIsLoading(false);
-      setError("Authentication token not found. Please log in.");
-      return;
-    }
-    try {
-      setIsLoading(true);
-      setError("");
-      const response = await fetch(`${API_BASE_URL}/user/submissions`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.detail || "Failed to fetch submission history");
-      }
-      const data = await response.json();
-      setSubmissionHistory(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
+    if (!token) return;
+    const response = await fetch(`${API_BASE_URL}/user/submissions`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await response.json();
+    setSubmissionHistory(data);
   }, [token]);
 
   // Fetch data when the component mounts
@@ -52,7 +35,7 @@ const Submissions = () => {
   // Handler for form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!submissionLink || !roundId) {
+    if (!submissionLink) {
       setError("Please provide a round number and a GitHub link.");
       return;
     }

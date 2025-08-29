@@ -15,6 +15,7 @@ import {
   Line,
   ResponsiveContainer,
 } from "recharts";
+import { API_BASE_URL } from "../config";
 
 const Analytics = () => {
   const { team } = useContext(TeamContext);
@@ -23,28 +24,20 @@ const Analytics = () => {
 
   useEffect(() => {
     const fetchAnalytics = async () => {
-      if (!team?.teamId) {
-        setLoading(false);
-        return;
-      }
-
+      if (!team?.teamId) return;
       try {
         setLoading(true);
         const response = await fetch(
           `${API_BASE_URL}/teams/${team.teamId}/analytics`,
         );
-        if (!response.ok) {
-          throw new Error("Failed to fetch analytics data");
-        }
         const data = await response.json();
         setAnalyticsData(data);
       } catch (error) {
-        console.error("Error fetching analytics:", error);
+        // handle error
       } finally {
         setLoading(false);
       }
     };
-
     fetchAnalytics();
   }, [team?.teamId]);
 

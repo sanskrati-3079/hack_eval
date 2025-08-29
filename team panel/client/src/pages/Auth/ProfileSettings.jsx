@@ -1,43 +1,46 @@
-import React, { useState, useContext } from 'react';
-import { TeamContext } from '../../context/TeamContext';
-import toast from 'react-hot-toast';
-import './Auth.css';
+import React, { useState, useContext } from "react";
+import { TeamContext } from "../../context/TeamContext";
+import toast from "react-hot-toast";
+import "./Auth.css";
 
 const ProfileSettings = () => {
   const { team, setTeam } = useContext(TeamContext);
+  const token = localStorage.getItem("token");
   const [formData, setFormData] = useState({
-    teamName: team?.name || '',
-    projectName: team?.project?.name || '',
-    projectDescription: team?.project?.description || '',
-    track: team?.track || ''
+    teamName: team?.name || "",
+    projectName: team?.project?.name || "",
+    projectDescription: team?.project?.description || "",
+    track: team?.track || "",
   });
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Update team data
-    const updatedTeam = {
-      ...team,
-      name: formData.teamName,
-      track: formData.track,
-      project: {
-        ...team.project,
-        name: formData.projectName,
-        description: formData.projectDescription
-      }
-    };
-    
-    // Update localStorage and context
-    localStorage.setItem('team', JSON.stringify(updatedTeam));
+    const response = await fetch(`${API_BASE_URL}/teams/${team.teamId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        name: formData.teamName,
+        track: formData.track,
+        project: {
+          name: formData.projectName,
+          description: formData.projectDescription,
+        },
+      }),
+    });
+    const updatedTeam = await response.json();
+    localStorage.setItem("team", JSON.stringify(updatedTeam));
     setTeam(updatedTeam);
-    toast.success('Profile updated successfully');
+    toast.success("Profile updated successfully");
   };
 
   return (
@@ -100,7 +103,9 @@ const ProfileSettings = () => {
             </div>
           </div>
 
-          <button type="submit" className="auth-button">Save Changes</button>
+          <button type="submit" className="auth-button">
+            Save Changes
+          </button>
         </form>
       </div>
     </div>

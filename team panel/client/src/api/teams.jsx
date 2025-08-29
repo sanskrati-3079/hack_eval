@@ -1,12 +1,13 @@
-import axios from 'axios';
+import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
 // Create axios instance with timeout and error handling
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
   timeout: 10000, // 10 second timeout
 });
@@ -18,9 +19,9 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.log('API request error:', error);
+    console.log("API request error:", error);
     return Promise.reject(error);
-  }
+  },
 );
 
 // Add response interceptor for error handling
@@ -29,61 +30,100 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    if (error.code === 'ECONNREFUSED' || error.code === 'ERR_NETWORK') {
-      console.log('API server not available - running in offline mode');
+    if (error.code === "ECONNREFUSED" || error.code === "ERR_NETWORK") {
+      console.log("API server not available - running in offline mode");
       // Return mock data for offline mode
       return Promise.resolve({ data: getMockData(error.config.url) });
     }
-    console.log('API response error:', error);
+    console.log("API response error:", error);
     return Promise.reject(error);
-  }
+  },
 );
 
 // Mock data for offline mode
 const getMockData = (url) => {
-  if (url.includes('/teams')) {
+  if (url.includes("/teams")) {
     return {
-      id: 'TC-2024-001',
-      teamId: 'TC-2024-001',
-      name: 'Team Innovators',
+      id: "TC-2024-001",
+      teamId: "TC-2024-001",
+      name: "Team Innovators",
       members: [
-        { id: 1, name: 'John Doe', role: 'Team Lead', email: 'john@example.com' },
-        { id: 2, name: 'Jane Smith', role: 'Developer', email: 'jane@example.com' },
-        { id: 3, name: 'Mike Johnson', role: 'Designer', email: 'mike@example.com' },
-        { id: 4, name: 'Sarah Wilson', role: 'Developer', email: 'sarah@example.com' }
+        {
+          id: 1,
+          name: "John Doe",
+          role: "Team Lead",
+          email: "john@example.com",
+        },
+        {
+          id: 2,
+          name: "Jane Smith",
+          role: "Developer",
+          email: "jane@example.com",
+        },
+        {
+          id: 3,
+          name: "Mike Johnson",
+          role: "Designer",
+          email: "mike@example.com",
+        },
+        {
+          id: 4,
+          name: "Sarah Wilson",
+          role: "Developer",
+          email: "sarah@example.com",
+        },
       ],
-      track: 'Web Development',
+      track: "Web Development",
       project: {
-        name: 'Smart Dashboard',
-        description: 'A comprehensive team management dashboard for hackathons.',
-        status: 'In Progress',
-        githubUrl: 'https://github.com/team-innovators/smart-dashboard',
-        techStack: ['React', 'Node.js', 'MongoDB']
+        name: "Smart Dashboard",
+        description:
+          "A comprehensive team management dashboard for hackathons.",
+        status: "In Progress",
+        githubUrl: "https://github.com/team-innovators/smart-dashboard",
+        techStack: ["React", "Node.js", "MongoDB"],
       },
       submissions: [
-        { id: 1, title: 'Project Proposal', status: 'Approved', submittedAt: '2024-02-15T10:00:00Z', feedback: 'Excellent proposal!' },
-        { id: 2, title: 'MVP Demo', status: 'Pending', submittedAt: '2024-02-18T15:30:00Z', feedback: null },
-        { id: 3, title: 'Final Presentation', status: 'Scheduled', submittedAt: null, feedback: null }
+        {
+          id: 1,
+          title: "Project Proposal",
+          status: "Approved",
+          submittedAt: "2024-02-15T10:00:00Z",
+          feedback: "Excellent proposal!",
+        },
+        {
+          id: 2,
+          title: "MVP Demo",
+          status: "Pending",
+          submittedAt: "2024-02-18T15:30:00Z",
+          feedback: null,
+        },
+        {
+          id: 3,
+          title: "Final Presentation",
+          status: "Scheduled",
+          submittedAt: null,
+          feedback: null,
+        },
       ],
       mentorSessions: [
         {
           id: 1,
-          mentorName: 'Dr. Sarah Wilson',
-          topic: 'Architecture Review',
-          scheduledFor: '2024-02-20T14:00:00Z',
-          status: 'Scheduled'
+          mentorName: "Dr. Sarah Wilson",
+          topic: "Architecture Review",
+          scheduledFor: "2024-02-20T14:00:00Z",
+          status: "Scheduled",
         },
         {
           id: 2,
-          mentorName: 'Prof. James Brown',
-          topic: 'Technical Implementation',
-          scheduledFor: '2024-02-22T11:00:00Z',
-          status: 'Pending'
-        }
+          mentorName: "Prof. James Brown",
+          topic: "Technical Implementation",
+          scheduledFor: "2024-02-22T11:00:00Z",
+          status: "Pending",
+        },
       ],
       currentRank: 5,
       score: 85,
-      status: 'Active',
+      status: "Active",
       analytics: {
         commitCount: 156,
         codeReviews: 24,
@@ -92,8 +132,8 @@ const getMockData = (url) => {
         velocity: 85,
         codeQuality: 95,
         collaborationScore: 4.8,
-        onTimeDelivery: 92
-      }
+        onTimeDelivery: 92,
+      },
     };
   }
   return null;
@@ -102,11 +142,11 @@ const getMockData = (url) => {
 // Get all teams
 export const getAllTeams = async () => {
   try {
-    const response = await api.get('/teams');
+    const response = await api.get("/teams");
     return response.data;
   } catch (error) {
-    console.log('Error fetching teams:', error);
-    throw new Error(error.response?.data?.message || 'Failed to fetch teams');
+    console.log("Error fetching teams:", error);
+    throw new Error(error.response?.data?.message || "Failed to fetch teams");
   }
 };
 
@@ -116,8 +156,8 @@ export const getTeamById = async (id) => {
     const response = await api.get(`/teams/${id}`);
     return response.data;
   } catch (error) {
-    console.log('Error fetching team by ID:', error);
-    throw new Error(error.response?.data?.message || 'Failed to fetch team');
+    console.log("Error fetching team by ID:", error);
+    throw new Error(error.response?.data?.message || "Failed to fetch team");
   }
 };
 
@@ -127,19 +167,19 @@ export const getTeamByTeamId = async (teamId) => {
     const response = await api.get(`/teams/team/${teamId}`);
     return response.data;
   } catch (error) {
-    console.log('Error fetching team by team ID:', error);
-    throw new Error(error.response?.data?.message || 'Failed to fetch team');
+    console.log("Error fetching team by team ID:", error);
+    throw new Error(error.response?.data?.message || "Failed to fetch team");
   }
 };
 
 // Create new team
 export const createTeam = async (teamData) => {
   try {
-    const response = await api.post('/teams', teamData);
+    const response = await api.post("/teams", teamData);
     return response.data;
   } catch (error) {
-    console.log('Error creating team:', error);
-    throw new Error(error.response?.data?.message || 'Failed to create team');
+    console.log("Error creating team:", error);
+    throw new Error(error.response?.data?.message || "Failed to create team");
   }
 };
 
@@ -149,19 +189,24 @@ export const updateTeam = async (id, teamData) => {
     const response = await api.put(`/teams/${id}`, teamData);
     return response.data;
   } catch (error) {
-    console.log('Error updating team:', error);
-    throw new Error(error.response?.data?.message || 'Failed to update team');
+    console.log("Error updating team:", error);
+    throw new Error(error.response?.data?.message || "Failed to update team");
   }
 };
 
 // Add member contribution
 export const addContribution = async (teamId, contributionData) => {
   try {
-    const response = await api.post(`/teams/${teamId}/contributions`, contributionData);
+    const response = await api.post(
+      `/teams/${teamId}/contributions`,
+      contributionData,
+    );
     return response.data;
   } catch (error) {
-    console.log('Error adding contribution:', error);
-    throw new Error(error.response?.data?.message || 'Failed to add contribution');
+    console.log("Error adding contribution:", error);
+    throw new Error(
+      error.response?.data?.message || "Failed to add contribution",
+    );
   }
 };
 
@@ -171,8 +216,10 @@ export const getTeamAnalytics = async (teamId) => {
     const response = await api.get(`/teams/${teamId}/analytics`);
     return response.data;
   } catch (error) {
-    console.log('Error fetching team analytics:', error);
-    throw new Error(error.response?.data?.message || 'Failed to fetch team analytics');
+    console.log("Error fetching team analytics:", error);
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch team analytics",
+    );
   }
 };
 
@@ -182,7 +229,9 @@ export const getTeamsByCategory = async (category) => {
     const response = await api.get(`/teams/category/${category}`);
     return response.data;
   } catch (error) {
-    console.log('Error fetching teams by category:', error);
-    throw new Error(error.response?.data?.message || 'Failed to fetch teams by category');
+    console.log("Error fetching teams by category:", error);
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch teams by category",
+    );
   }
-}; 
+};

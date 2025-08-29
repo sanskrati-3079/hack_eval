@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { TeamContext } from "../context/TeamContext";
+import { API_BASE_URL } from "../config";
 
 const Leaderboard = () => {
   const { team } = useContext(TeamContext);
@@ -11,19 +12,15 @@ const Leaderboard = () => {
       try {
         setLoading(true);
         const response = await fetch(`${API_BASE_URL}/leaderboard/overall`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch leaderboard data");
-        }
         const data = await response.json();
         setLeaderboardData(data);
       } catch (error) {
         console.error("Error fetching leaderboard:", error);
-        // Optionally set an error state to show in the UI
+        // handle error
       } finally {
         setLoading(false);
       }
     };
-
     fetchLeaderboard();
   }, []);
 

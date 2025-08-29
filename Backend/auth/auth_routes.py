@@ -42,23 +42,41 @@ async def health_check():
     except Exception as e:
         return {"status": "unhealthy", "database": "error", "message": str(e)}
 
-# Initialize collections when needed
-async def get_collections():
-    """Get or initialize collections"""
-    global logins_collection, admin_collection
-    
-    if logins_collection is None and db is not None:
+@router.on_event("startup")
+async def startup_db_client():
+    global client, db, logins_collection, admin_collection, team_ps_details
+    try:
+        # Connect with increased timeout and retry settings
+        client = AsyncIOMotorClient(
+            MONGO_URI,
+            serverSelectionTimeoutMS=30000,
+            connectTimeoutMS=30000,
+            retryWrites=True,
+            maxPoolSize=50
+        )
+        # Test the connection
+        await client.admin.command('ping')
+        print("Successfully connected to MongoDB!")
+
+        # Initialize database and collections
+        db = client[MONGO_DB]
         logins_collection = db["team_login"]
+        team_ps_details = db["team_ps_details"]
         admin_collection = db["admin_users"]
-        
+
         # Create indexes for better performance
-        try:
-            await admin_collection.create_index("email", unique=True)
-            await logins_collection.create_index("email", unique=True)
-        except Exception as e:
-            print(f"Warning: Failed to create indexes: {e}")
-    
-    return logins_collection, admin_collection
+        await admin_collection.create_index("email", unique=True)
+        await logins_collection.create_index("email", unique=True)
+
+    except Exception as e:
+        print(f"Warning: Failed to connect to MongoDB: {str(e)}")
+        print("Application will start but database operations will fail until MongoDB is available.")
+        # Don't raise exception - let the app start
+        client = None
+        db = None
+        logins_collection = None
+        team_ps_details = None
+        admin_collection = None
 
 @router.post("/judge/login")
 async def judge_login(form_data: OAuth2PasswordRequestForm = Depends()):
@@ -79,7 +97,7 @@ async def judge_login(form_data: OAuth2PasswordRequestForm = Depends()):
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect username or password"
             )
-            
+
         # Create access token
         token_data = {
             "sub": str(judge["_id"]),
@@ -87,12 +105,12 @@ async def judge_login(form_data: OAuth2PasswordRequestForm = Depends()):
             "username": judge["username"]
         }
         access_token = create_access_token(token_data)
-        
+
         return {
             "access_token": access_token,
             "token_type": "bearer"
         }
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -110,30 +128,30 @@ async def register_judge(judge: JudgeModel):
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email already registered"
             )
-            
+
         # Hash password
         hashed_password = get_password_hash(judge.password)
-        
+
         # Prepare judge document
         judge_dict = judge.dict()
         judge_dict["password"] = hashed_password
         judge_dict["_id"] = ObjectId()  # Generate new ObjectId
-        
+
         # Insert into database
         await db.judges.insert_one(judge_dict)
-        
+
         # Convert _id to string for response
         judge_dict["id"] = str(judge_dict.pop("_id"))
         del judge_dict["password"]  # Remove password from response
-        
+
         return judge_dict
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
         )
-        
+
 
 class LoginRequest(BaseModel):
     email: EmailStr
@@ -151,7 +169,7 @@ async def get_current_admin(token: str = Depends(oauth2_scheme)):
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    
+
     try:
         payload = verify_access_token(token)
         email: str = payload.get("email")
@@ -164,7 +182,7 @@ async def get_current_admin(token: str = Depends(oauth2_scheme)):
             )
     except:
         raise credentials_exception
-        
+
     admin = await admin_collection.find_one({"email": email})
     if admin is None:
         raise credentials_exception
@@ -175,7 +193,7 @@ async def create_admin(admin: AdminCreate):
     try:
         check_db_connection()
         print(f"Creating admin user with email: {admin.email}")
-        
+
         # Check if admin already exists
         existing_admin = await admin_collection.find_one({"email": admin.email})
         if existing_admin:
@@ -183,17 +201,17 @@ async def create_admin(admin: AdminCreate):
                 status_code=400,
                 detail="Admin with this email already exists"
             )
-        
+
         # Store password as plain text for now (we'll hash during comparison)
         admin_dict = admin.dict()
         admin_dict["password"] = admin.password
         admin_dict["created_at"] = datetime.utcnow()
-        
+
         result = await admin_collection.insert_one(admin_dict)
         print(f"Admin user created with ID: {result.inserted_id}")
-        
+
         return {"message": "Admin created successfully", "admin_id": str(result.inserted_id)}
-        
+
     except Exception as e:
         print(f"Error creating admin: {str(e)}")
         raise HTTPException(
@@ -210,7 +228,7 @@ async def admin_login(payload: LoginRequest):
 
     stored_password = admin["password"]
     print(f"Stored password: {stored_password}")
-    
+
     try:
         # Simple password comparison since we're storing plain text
         if payload.password != stored_password:
@@ -235,6 +253,12 @@ async def team_login(payload: LoginRequest):
 
     # Find user in team_login collection
     user = await db["team_login"].find_one({"email": payload.email})
+    # Ensure db is initialized
+    if db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+
+    # Find user in team_login collection
+    user = await db["team_login"].find_one({"email": payload.email})
     if not user:
         raise HTTPException(status_code=404, detail="Team not registered")
 
@@ -242,8 +266,13 @@ async def team_login(payload: LoginRequest):
     stored_password = user.get("password") or user.get("password_hash")
     if not stored_password:
         raise HTTPException(status_code=500, detail="No password found for user")
+    # Password check
+    stored_password = user.get("password") or user.get("password_hash")
+    if not stored_password:
+        raise HTTPException(status_code=500, detail="No password found for user")
     try:
         stored_password_bytes = stored_password.encode("utf-8") if isinstance(stored_password, str) else stored_password
+        if not bcrypt.checkpw(payload.password.encode("utf-8"), stored_password_bytes):
         if not bcrypt.checkpw(payload.password.encode("utf-8"), stored_password_bytes):
             raise HTTPException(status_code=401, detail="Invalid credentials")
     except Exception as e:
@@ -252,14 +281,9 @@ async def team_login(payload: LoginRequest):
 
     # Try to find team meta by team_id first
     team_id = user.get("team_id")
-    print("DEBUG: team_id from login:", team_id)
-    print("DEBUG: email from login:", payload.email)
-    print("DEBUG: All team_ids:", await db["teams_meta"].distinct("team_id"))
-    print("DEBUG: All team_leader.emails:", await db["teams_meta"].distinct("team_leader.email"))
-
-    team_data = await db["teams_meta"].find_one({"team_id": team_id})
+    team_data = await db["team_ps_details"].find_one({"team_id": team_id})
     if not team_data:
-        team_data = await db["teams_meta"].find_one({"team_leader.email": payload.email})
+        team_data = await db["team_ps_details"].find_one({"team_leader.email": payload.email})
 
     if not team_data:
         raise HTTPException(status_code=404, detail=f"Team data not found for team_id {team_id} or email {payload.email}")
@@ -271,6 +295,7 @@ async def team_login(payload: LoginRequest):
         "sub": str(user.get("_id", user.get("team_id"))),
         "type": "user",
         "team_id": user["team_id"],
+        "team_id": user["team_id"],
         "email": user["email"],
         "is_admin": False
     })
@@ -279,12 +304,6 @@ async def team_login(payload: LoginRequest):
         "token_type": "bearer",
         "team": team_data
     }
-
-    
-@router.post("/user/login")
-async def user_login(payload: LoginRequest):
-    """Alias for team login; returns a JWT for user/team access."""
-    return await team_login(payload)
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
