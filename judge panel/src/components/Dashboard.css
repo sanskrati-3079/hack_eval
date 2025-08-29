@@ -9,7 +9,7 @@
   text-align: center;
   margin-bottom: 2rem;
   padding: 2rem 0;
-  background: linear-gradient(135deg, var(--primary-green), #2d5a4a);
+  /* background: linear-gradient(135deg, var(--primary-green), #2d5a4a); */
   border-radius: 1rem;
   color: var(--white);
   box-shadow: var(--shadow-lg);

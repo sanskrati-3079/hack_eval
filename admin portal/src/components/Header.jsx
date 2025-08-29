@@ -2,7 +2,7 @@ import React from 'react';
 import { Menu, Bell, User } from 'lucide-react';
 import './Header.css';
 
-const Header = ({ onMenuClick, onLogout }) => {
+const Header = ({ onMenuClick, onLogout, activeRound }) => {
   return (
     <header className="header">
       <div className="header-left">
@@ -15,13 +15,19 @@ const Header = ({ onMenuClick, onLogout }) => {
           className="header-logo-left"
         />
         <img
-          src="..\..\public\images\DC.png"
+          src="..\\..\\public\\images\\DC.png"
           alt="GLA University"
           className="header-logo-left-2"
         />
       </div>
       
       <div className="header-right">
+        <div style={{ color: '#e5e7eb', fontWeight: 600, marginRight: 12 }}>
+          Current Round:
+        </div>
+        <div style={{ color: '#ffffff', fontWeight: 700, marginRight: 16 }}>
+          {activeRound ? `Round ${activeRound}` : 'None'}
+        </div>
         <button className="notification-btn">
           <Bell size={25} />
           <span className="notification-badge">3</span>

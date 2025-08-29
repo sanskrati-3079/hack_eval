@@ -53,3 +53,84 @@ async def get_leaderboard_stats():
         }
 
     return stats_result[0]
+
+
+@router.get("/ppt", response_model=List[Dict[str, Any]])
+async def get_ppt_leaderboard(limit: int = 100):
+    """
+    Leaderboard based on PPT report marks stored in `ppt_reports` collection.
+    Assumes each document structure:
+      { sheet_name, data: { team_name, ...criteria numeric fields... }, upload_timestamp }
+
+    We sum all numeric fields in `data` except obvious non-score keys to compute total.
+    """
+    # Keys inside `data` that are not scores
+    non_score_keys = {
+        "team_id",
+        "team_name",
+        "Team Name",
+        "category",
+        "Category",
+        "project",
+        "Project",
+        "round",
+        "Round",
+    }
+
+    # Build pipeline to compute total score per team_name
+    pipeline = [
+        {"$project": {
+            "team_name": {
+                "$ifNull": ["$data.team_name", {"$ifNull": ["$data.Team Name", "Unknown Team"]}]
+            },
+            "data": "$data"
+        }},
+        {"$project": {
+            "team_name": 1,
+            # Convert key-value pairs to array to filter numeric values
+            "pairs": {"$objectToArray": "$data"}
+        }},
+        {"$project": {
+            "team_name": 1,
+            "numeric_values": {
+                "$map": {
+                    "input": {
+                        "$filter": {
+                            "input": "$pairs",
+                            "as": "p",
+                            "cond": {
+                                "$and": [
+                                    {"$not": {"$in": ["$$p.k", list(non_score_keys)]}},
+                                    {"$isNumber": {
+                                        "$convert": {"input": "$$p.v", "to": "double", "onError": None, "onNull": None}
+                                    }}
+                                ]
+                            }
+                        }
+                    },
+                    "as": "q",
+                    "in": {"$convert": {"input": "$$q.v", "to": "double", "onError": 0, "onNull": 0}}
+                }
+            }
+        }},
+        {"$project": {
+            "team_name": 1,
+            "total": {"$sum": "$numeric_values"}
+        }},
+        {"$group": {
+            "_id": "$team_name",
+            "team_name": {"$first": "$team_name"},
+            "total_score": {"$max": "$total"}
+        }},
+        {"$sort": {"total_score": -1}},
+        {"$limit": limit},
+        {"$project": {"_id": 0, "team_name": 1, "total_score": {"$round": ["$total_score", 2]}}}
+    ]
+
+    results = await db.ppt_reports.aggregate(pipeline).to_list(None)
+
+    # Add rank field
+    for idx, doc in enumerate(results, start=1):
+        doc["rank"] = idx
+
+    return results

@@ -1,11 +1,30 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaBars, FaCode, FaBell, FaUser } from 'react-icons/fa';
 import { TeamContext } from '../context/TeamContext';
+import { API_BASE_URL } from '../config';
 import './Header.css';
 
 const Header = ({ onMenuClick }) => {
   const { team } = useContext(TeamContext);
+  const [activeRound, setActiveRound] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+    let timerId;
+    const fetchActive = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/round-state/active`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!mounted) return;
+        setActiveRound(data.round);
+      } catch {}
+    };
+    fetchActive();
+    timerId = setInterval(fetchActive, 5000);
+    return () => { mounted = false; if (timerId) clearInterval(timerId); };
+  }, []);
 
   return (
     <header className="header">
@@ -32,7 +51,7 @@ const Header = ({ onMenuClick }) => {
         <div className="header-right">
           <div className="current-round">
             <span className="round-label">Current Round:</span>
-            <span className="round-name">Round 1</span>
+            <span className="round-name">{activeRound ? `Round ${activeRound}` : 'None'}</span>
           </div>
           
           <div className="header-actions">

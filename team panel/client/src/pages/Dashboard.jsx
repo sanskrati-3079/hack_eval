@@ -9,6 +9,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const token = localStorage.getItem("token");
+  const [activeRound, setActiveRound] = useState(null);
 
   useEffect(() => {
     async function fetchTeam() {
@@ -56,6 +57,24 @@ const Dashboard = () => {
     console.log("DEBUG: dashboardData after fetch:", dashboardData);
   }, [dashboardData]);
 
+  // Fetch current round and keep it updated
+  useEffect(() => {
+    let mounted = true;
+    let timerId;
+    const fetchActive = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/round-state/active`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!mounted) return;
+        setActiveRound(data.round);
+      } catch {}
+    };
+    fetchActive();
+    timerId = setInterval(fetchActive, 5000);
+    return () => { mounted = false; if (timerId) clearInterval(timerId); };
+  }, []);
+
   if (loading) {
     return <div className="loading-state">Loading Dashboard...</div>;
   }
@@ -82,11 +101,16 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-container">
-      <div className="dashboard-header">
+      <div className="dashboard-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
         <h1>Team Dashboard</h1>
-        <Link to="/profile" className="profile-link">
-          Profile Settings
-        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div className="current-round" style={{ background: '#E5F5EC', color: '#1B4332', padding: '6px 12px', borderRadius: 8, fontWeight: 600 }}>
+            Current Round: {activeRound ? `Round ${activeRound}` : 'None'}
+          </div>
+          <Link to="/profile" className="profile-link">
+            Profile Settings
+          </Link>
+        </div>
       </div>
 
       <div className="dashboard-content">

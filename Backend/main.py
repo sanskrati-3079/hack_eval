@@ -6,7 +6,9 @@ from routes.admin import router as admin_router  # Unified admin router
 from routes.judge import router as judge_router
 from routes.judge_eval import router as judge_eval_router  # New judge evaluation routes
 from routes.user import router as user_router
+from routes.leaderboard import router as leaderboard_router
 from routes.team_ps_upload import router as team_ps_router
+from routes.round_state import router as round_state_router
 from routes.ppt_upload import router as ppt_upload_router
 
 
@@ -70,6 +72,8 @@ app.include_router(judge_eval_router, prefix="/judge/evaluation", tags=["Judge E
 app.include_router(user_router, prefix="/user", tags=["User / Teams"])
 app.include_router(team_ps_router, prefix="/team-ps", tags=["Team and Problem Statement Details"])
 app.include_router(ppt_upload_router, tags=["PPT Upload"])
+app.include_router(leaderboard_router)
+app.include_router(round_state_router)
 
 @app.get("/")
 async def root():

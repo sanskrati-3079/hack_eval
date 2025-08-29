@@ -23,6 +23,7 @@ const Dashboard = () => {
   const [teams, setTeams] = useState([]);
   const [teamsLoading, setTeamsLoading] = useState(true);
   const [judgeProfileError, setJudgeProfileError] = useState(false);
+  const [activeRound, setActiveRound] = useState(null);
   
   // Filtering and pagination states
   const [searchTerm, setSearchTerm] = useState('');
@@ -99,6 +100,24 @@ const Dashboard = () => {
     setCurrentPage(1);
   }, [searchTerm, selectedCategory]);
 
+  // Fetch current round and keep it updated
+  useEffect(() => {
+    let mounted = true;
+    let timerId;
+    const fetchActive = async () => {
+      try {
+        const res = await fetch('http://localhost:8000/round-state/active');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!mounted) return;
+        setActiveRound(data.round);
+      } catch {}
+    };
+    fetchActive();
+    timerId = setInterval(fetchActive, 5000);
+    return () => { mounted = false; if (timerId) clearInterval(timerId); };
+  }, []);
+
   const handleTeamSelect = (team) => {
     // Navigate to evaluation page with complete team data
     navigate('/evaluate', { 
@@ -166,12 +185,17 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard">
-      <div className="page-header">
-        <h1 className="page-title">Welcome back, {judgeName}</h1>
-        <p className="page-subtitle">Here's your evaluation overview.</p>
-        {judgeProfileError && (
-          <p className="page-error">Note: Using fallback profile data</p>
-        )}
+      <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <div>
+          <h1 className="page-title">Welcome back, {judgeName}</h1>
+          <p className="page-subtitle">Here's your evaluation overview.</p>
+          {judgeProfileError && (
+            <p className="page-error">Note: Using fallback profile data</p>
+          )}
+        </div>
+        <div className="current-round" style={{ background: '#E5F5EC', color: '#1B4332', padding: '8px 16px', borderRadius: 8, fontWeight: 600, fontSize: '14px' }}>
+          Current Round: {activeRound ? `Round ${activeRound}` : 'None'}
+        </div>
       </div>
 
       {/* Statistics Cards */}

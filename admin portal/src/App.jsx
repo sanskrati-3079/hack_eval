@@ -26,6 +26,26 @@ function App() {
     }
   });
 
+  // Active round (for Header display)
+  const [activeRound, setActiveRound] = useState(null);
+
+  useEffect(() => {
+    let timerId;
+    let mounted = true;
+    const fetchActive = async () => {
+      try {
+        const res = await fetch('http://localhost:8000/round-state/active');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!mounted) return;
+        setActiveRound(data.round);
+      } catch {}
+    };
+    fetchActive();
+    timerId = setInterval(fetchActive, 5000);
+    return () => { mounted = false; if (timerId) clearInterval(timerId); };
+  }, []);
+
   const handleLogin = (user) => {
     try {
       localStorage.setItem('authUser', JSON.stringify(user));
@@ -68,7 +88,7 @@ function App() {
         )}
         <div className="main-content">
           {isAuthenticated && (
-            <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} onLogout={handleLogout} />
+            <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} onLogout={handleLogout} activeRound={activeRound} />
           )}
           <main className="content">
             <Routes>

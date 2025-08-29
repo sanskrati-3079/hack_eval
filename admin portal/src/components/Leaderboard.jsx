@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Trophy, 
   TrendingUp, 
@@ -10,7 +10,8 @@ import {
   Award,
   Star,
   Users,
-  Calendar
+  Calendar,
+  Search
 } from 'lucide-react';
 
 const Leaderboard = () => {
@@ -19,73 +20,45 @@ const Leaderboard = () => {
   const [viewMode, setViewMode] = useState('overall'); // 'overall', 'category'
   const [isPublished, setIsPublished] = useState(false);
 
-  const teams = [
-    {
-      id: 1,
-      name: 'Team Alpha',
-      category: 'AI/ML',
-      round: 'Round 1',
-      totalScore: 32.0,
-      averageScore: 8.0,
-      rank: 1,
-      previousRank: 2,
-      qualified: true,
-      members: ['John Doe', 'Jane Smith', 'Mike Johnson'],
-      project: 'AI-powered healthcare diagnostics'
-    },
-    {
-      id: 2,
-      name: 'Team Gamma',
-      category: 'Mobile App',
-      round: 'Round 1',
-      totalScore: 32.0,
-      averageScore: 8.0,
-      rank: 2,
-      previousRank: 1,
-      qualified: true,
-      members: ['Carol Davis', 'David Miller', 'Eva Garcia'],
-      project: 'Sustainable living tracker'
-    },
-    {
-      id: 3,
-      name: 'Team Beta',
-      category: 'Web Development',
-      round: 'Round 1',
-      totalScore: 31.0,
-      averageScore: 7.75,
-      rank: 3,
-      previousRank: 3,
-      qualified: true,
-      members: ['Alice Brown', 'Bob Wilson'],
-      project: 'E-commerce platform for local businesses'
-    },
-    {
-      id: 4,
-      name: 'Team Delta',
-      category: 'AI/ML',
-      round: 'Round 1',
-      totalScore: 26.0,
-      averageScore: 6.5,
-      rank: 4,
-      previousRank: 4,
-      qualified: false,
-      members: ['Frank Lee', 'Grace Taylor'],
-      project: 'Smart traffic management system'
-    },
-    {
-      id: 5,
-      name: 'Team Echo',
-      category: 'IoT',
-      round: 'Round 1',
-      totalScore: 30.0,
-      averageScore: 7.5,
-      rank: 5,
-      previousRank: 6,
-      qualified: true,
-      members: ['Henry Adams', 'Ivy Chen'],
-      project: 'Smart home automation system'
-    }
-  ];
+  const [teams, setTeams] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [searchName, setSearchName] = useState('');
+  const [appliedSearch, setAppliedSearch] = useState('');
+  const [topN, setTopN] = useState(10);
+  const [showAll, setShowAll] = useState(true);
+
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const res = await fetch('http://localhost:8000/leaderboard/ppt');
+        if (!res.ok) throw new Error('Failed to load leaderboard');
+        const data = await res.json();
+        // Normalize into UI structure
+        const mapped = data.map((item) => ({
+          id: item.team_name,
+          name: item.team_name,
+          category: item.category || 'N/A',
+          round: 'PPT',
+          totalScore: item.total_score,
+          averageScore: Number(item.total_score) / 4,
+          rank: item.rank,
+          previousRank: item.rank,
+          qualified: true,
+          members: [],
+          project: ''
+        }));
+        setTeams(mapped);
+      } catch (e) {
+        setError(e.message || 'Error');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLeaderboard();
+  }, []);
 
   const categories = ['all', 'AI/ML', 'Web Development', 'Mobile App', 'IoT', 'Blockchain'];
   const rounds = ['all', 'Round 1', 'Round 2', 'Round 3'];
@@ -93,8 +66,19 @@ const Leaderboard = () => {
   const filteredTeams = teams.filter(team => {
     const matchesCategory = selectedCategory === 'all' || team.category === selectedCategory;
     const matchesRound = selectedRound === 'all' || team.round === selectedRound;
-    return matchesCategory && matchesRound;
+    const matchesSearch = appliedSearch === '' || (team.name || '').toLowerCase().includes(appliedSearch.toLowerCase());
+    return matchesCategory && matchesRound && matchesSearch;
   }).sort((a, b) => a.rank - b.rank);
+
+  const displayedTeams = showAll ? filteredTeams : filteredTeams.slice(0, Math.max(0, Number(topN) || 0));
+
+  const handleApplySearch = () => {
+    setAppliedSearch(searchName.trim());
+  };
+  const handleClearSearch = () => {
+    setSearchName('');
+    setAppliedSearch('');
+  };
 
   const getRankIcon = (rank) => {
     switch (rank) {
@@ -228,7 +212,8 @@ const Leaderboard = () => {
           </button>
         </div>
 
-        <div className="filters">
+        <div className="filters" style={{ background: '#F8FAFC', padding: '12px', borderRadius: '8px' }}>
+          <div style={{ fontWeight: 600, color: '#111827', marginBottom: '4px' }}>Filters</div>
           <div className="filter-group">
             <label className="form-label">Category</label>
             <select 
@@ -258,6 +243,57 @@ const Leaderboard = () => {
               ))}
             </select>
           </div>
+
+          <div className="filter-group">
+            <label className="form-label">Search by Team Name</label>
+            <div className="input-group">
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Enter team name"
+                value={searchName}
+                onChange={(e) => setSearchName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleApplySearch(); }}
+              />
+              <button className="btn btn-primary" onClick={handleApplySearch}>
+                <Search size={16} />
+                Search
+              </button>
+              {appliedSearch !== '' && (
+                <button className="btn btn-secondary" onClick={handleClearSearch}>
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="filter-group">
+            <label className="form-label">Show Top N</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input
+                type="range"
+                min="1"
+                max={Math.max(1, filteredTeams.length || 1)}
+                value={topN}
+                onChange={(e) => setTopN(Number(e.target.value))}
+                disabled={showAll}
+              />
+              <span>{showAll ? 'All' : topN}</span>
+            </div>
+          </div>
+
+          <div className="filter-group">
+            <label className="form-label">Display</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input
+                id="toggle-show-all"
+                type="checkbox"
+                checked={showAll}
+                onChange={(e) => setShowAll(e.target.checked)}
+              />
+              <label htmlFor="toggle-show-all">Show complete list</label>
+            </div>
+          </div>
         </div>
 
         <div className="action-buttons">
@@ -285,6 +321,8 @@ const Leaderboard = () => {
           </h3>
         </div>
         <div className="card-body">
+          {loading && <div className="info">Loading...</div>}
+          {error && <div className="error">{error}</div>}
           <div className="table-container">
             <table className="table leaderboard-table">
               <thead>
@@ -301,7 +339,7 @@ const Leaderboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredTeams.map((team) => (
+                {displayedTeams.map((team) => (
                   <tr key={team.id} className={team.rank <= 3 ? 'top-team' : ''}>
                     <td>
                       <div className="rank-cell">

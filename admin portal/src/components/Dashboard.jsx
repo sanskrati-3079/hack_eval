@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Users, 
   Calendar, 
@@ -21,6 +21,98 @@ const Dashboard = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [lastUpdate, setLastUpdate] = useState('Never');
   const fileInputRef = useRef(null);
+
+  // Active Round state
+  const [activeRound, setActiveRound] = useState(null);
+  const [roundBusy, setRoundBusy] = useState(false);
+
+  // PPT Leaderboard widget state
+  const [pptLeaders, setPptLeaders] = useState([]);
+  const [pptLoading, setPptLoading] = useState(false);
+  const [pptError, setPptError] = useState('');
+  const [pptSearch, setPptSearch] = useState('');
+  const [pptAppliedSearch, setPptAppliedSearch] = useState('');
+  const [pptTopN, setPptTopN] = useState(5);
+  const [pptShowAll, setPptShowAll] = useState(false);
+
+  useEffect(() => {
+    const fetchPPTLeaderboard = async () => {
+      try {
+        setPptLoading(true);
+        setPptError('');
+        const res = await fetch('http://localhost:8000/leaderboard/ppt');
+        if (!res.ok) throw new Error('Failed to load PPT leaderboard');
+        const data = await res.json();
+        setPptLeaders(data);
+      } catch (e) {
+        setPptError(e.message || 'Error loading leaderboard');
+      } finally {
+        setPptLoading(false);
+      }
+    };
+    fetchPPTLeaderboard();
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    let intervalId;
+
+    const fetchActiveRound = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('http://localhost:8000/round-state/active', {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : undefined
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!isMounted) return;
+        setActiveRound((prev) => (prev !== data.round ? data.round : prev));
+      } catch {}
+    };
+
+    // initial fetch
+    fetchActiveRound();
+    // poll every 5s
+    intervalId = setInterval(fetchActiveRound, 5000);
+
+    return () => {
+      isMounted = false;
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, []);
+
+  const setRound = async (round) => {
+    try {
+      setRoundBusy(true);
+      const token = localStorage.getItem('token');
+      const res = await fetch('http://localhost:8000/round-state/active', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ round })
+      });
+      if (!res.ok) throw new Error('Failed to set active round');
+      const data = await res.json();
+      setActiveRound(data.round);
+    } catch (e) {
+      // Optionally surface error UI later
+    } finally {
+      setRoundBusy(false);
+    }
+  };
+
+  const filteredPpt = pptLeaders
+    .filter((row) =>
+      pptAppliedSearch === '' || (row.team_name || '').toLowerCase().includes(pptAppliedSearch.toLowerCase())
+    )
+    .sort((a, b) => a.rank - b.rank);
+
+  const displayedPpt = pptShowAll ? filteredPpt : filteredPpt.slice(0, Math.max(0, Number(pptTopN) || 0));
+
+  const applyPptSearch = () => setPptAppliedSearch(pptSearch.trim());
+  const clearPptSearch = () => { setPptSearch(''); setPptAppliedSearch(''); };
 
   const stats = [
     {
@@ -181,9 +273,14 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard">
-      <div className="page-header">
-        <h1 className="page-title">Dashboard</h1>
-        <p className="page-subtitle">Welcome back! Here's what's happening with your hackathon.</p>
+      <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <div>
+          <h1 className="page-title">Dashboard</h1>
+          <p className="page-subtitle">Welcome back! Here's what's happening with your hackathon.</p>
+        </div>
+        <div className="current-round" style={{ background: '#E5F5EC', color: '#1B4332', padding: '8px 16px', borderRadius: 8, fontWeight: 600, fontSize: '14px' }}>
+          Current Round: {activeRound ? `Round ${activeRound}` : 'None'}
+        </div>
       </div>
 
       {/* PPT Report Update Section */}
@@ -271,6 +368,134 @@ const Dashboard = () => {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Active Round Controls */}
+      <div className="content-card" style={{ marginTop: '16px' }}>
+        <div className="card-header">
+          <h3 className="card-title">
+            <Calendar className="card-icon" />
+            Active Round Control
+          </h3>
+          <div style={{ fontWeight: 600 }}>
+            Current: {activeRound ? `Round ${activeRound}` : 'None'}
+          </div>
+        </div>
+        <div className="card-content">
+          <div className="action-buttons" style={{ gap: 8, flexWrap: 'wrap' }}>
+            <button className={`btn ${activeRound === 1 ? 'btn-success' : 'btn-secondary'}`} disabled={roundBusy} onClick={() => setRound(1)}>
+              Round 1 {activeRound === 1 ? '(Active)' : ''}
+            </button>
+            <button className={`btn ${activeRound === 2 ? 'btn-success' : 'btn-secondary'}`} disabled={roundBusy} onClick={() => setRound(2)}>
+              Round 2 {activeRound === 2 ? '(Active)' : ''}
+            </button>
+            <button className={`btn ${activeRound === 3 ? 'btn-success' : 'btn-secondary'}`} disabled={roundBusy} onClick={() => setRound(3)}>
+              Round 3 {activeRound === 3 ? '(Active)' : ''}
+            </button>
+            <button className="btn btn-warning" disabled={roundBusy} onClick={() => setRound(null)}>
+              Clear Active
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* PPT Leaderboard (compact) */}
+      <div className="content-card" style={{ marginTop: '16px' }}>
+        <div className="card-header">
+          <h3 className="card-title">
+            <Trophy className="card-icon" />
+            Top PPT Leaderboard
+          </h3>
+        </div>
+        <div className="card-content">
+          {/* Controls for widget */}
+          <div className="filters" style={{ background: '#F8FAFC', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
+            <div className="filter-group">
+              <label className="form-label">Search by Team Name</label>
+              <div className="input-group">
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Enter team name"
+                  value={pptSearch}
+                  onChange={(e) => setPptSearch(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') applyPptSearch(); }}
+                />
+                <button className="btn btn-primary" onClick={applyPptSearch}>Search</button>
+                {pptAppliedSearch !== '' && (
+                  <button className="btn btn-secondary" onClick={clearPptSearch}>Clear</button>
+                )}
+              </div>
+            </div>
+            <div className="filter-group">
+              <label className="form-label">Show Top N</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <input
+                  type="range"
+                  min="1"
+                  max={Math.max(1, filteredPpt.length || 1)}
+                  value={pptTopN}
+                  onChange={(e) => setPptTopN(Number(e.target.value))}
+                  disabled={pptShowAll}
+                />
+                <span>{pptShowAll ? 'All' : pptTopN}</span>
+              </div>
+            </div>
+            <div className="filter-group">
+              <label className="form-label">Display</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <input
+                  id="ppt-toggle-show-all"
+                  type="checkbox"
+                  checked={pptShowAll}
+                  onChange={(e) => setPptShowAll(e.target.checked)}
+                />
+                <label htmlFor="ppt-toggle-show-all">Show complete list</label>
+              </div>
+            </div>
+          </div>
+          {pptLoading && <div className="activity-item info">Loading...</div>}
+          {pptError && <div className="activity-item error">{pptError}</div>}
+          {!pptLoading && !pptError && (
+            <div className="table-container">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th style={{ width: '64px' }}>Rank</th>
+                    <th>Team</th>
+                    <th style={{ textAlign: 'right' }}>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {displayedPpt.map((row) => (
+                    <tr key={`${row.team_name}-${row.rank}`}>
+                      <td>
+                        {row.rank <= 3 ? (
+                          <span title={`Rank ${row.rank}`}>
+                            <Trophy size={16} style={{ color: row.rank === 1 ? '#FFD700' : row.rank === 2 ? '#C0C0C0' : '#CD7F32' }} />
+                          </span>
+                        ) : (
+                          <span>{row.rank}</span>
+                        )}
+                      </td>
+                      <td>
+                        <strong>{row.team_name}</strong>
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        {row.total_score}
+                      </td>
+                    </tr>
+                  ))}
+                  {displayedPpt.length === 0 && (
+                    <tr>
+                      <td colSpan={3} style={{ textAlign: 'center', color: 'var(--muted)' }}>No data</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Content Grid */}

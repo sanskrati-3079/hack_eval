@@ -135,6 +135,25 @@
   min-width: 200px;
 }
 
+/* Inputs and groups (for Leaderboard filters) */
+.input-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-input {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--gray-300);
+  border-radius: 0.5rem;
+  min-width: 220px;
+}
+
+/* Range slider styling */
+input[type="range"] {
+  width: 200px;
+}
+
 /* Status indicators */
 .status-indicator {
   display: inline-flex;
