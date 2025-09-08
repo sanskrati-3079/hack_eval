@@ -5,24 +5,19 @@
     padding: 1rem 2rem;
     background-color: var(--white);
     box-shadow: var(--shadow);
-    border-bottom: 1px solid var(--gray-200);
+    border-bottom: 1px solid var(--gray-100);
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 1000;
-    height: 100px;
+    height: 80px; /* Reduced height */
 }
 
 .header-left {
     display: flex;
     align-items: center;
-    gap: 8px; /* Adjusted gap to 8px */
-}
-
-.header-logo {
-    height: 80px;
-    width: auto;
+    gap: 1.5rem;
 }
 
 .menu-icon {
@@ -38,7 +33,7 @@
 }
 
 .menu-icon:hover {
-    background-color: var(--gray-100);
+    background-color: var(--gray-50);
 }
 
 .hamburger-line {
@@ -51,18 +46,7 @@
 .header-right {
     display: flex;
     align-items: center;
-    gap: 5px; /* Reduced from 1rem to 5px */
-}
-
-.header-right-logo {
-    height: 70px;
-    width: auto;
-    border-radius: 0.25rem;
-}
-
-.dc-logo {
-    height: 170px; /* Increase the size of the DC logo */
-    width: auto;
+    gap: 1rem;
 }
 
 /* Logout button styles */

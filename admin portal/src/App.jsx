@@ -82,7 +82,7 @@ function App() {
 
   return (
     <Router>
-      <div className={`app ${sidebarOpen ? 'sidebar-opened' : ''}`}>
+      <div className={`app ${sidebarOpen ? 'sidebar-opened' : ''} animate-fadeIn`}>
         {isAuthenticated && (
           <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
         )}

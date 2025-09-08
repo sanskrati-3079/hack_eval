@@ -355,7 +355,7 @@ const Dashboard = () => {
       {/* Stats Grid */}
       <div className="stats-grid">
         {stats.map((stat, index) => (
-          <div key={index} className="stat-card" style={{ borderLeftColor: stat.color }}>
+          <div key={index} className="stat-card animate-slideInUp" style={{ borderLeftColor: stat.color, animationDelay: `${index * 100}ms` }}>
             <div className="stat-icon" style={{ color: stat.color }}>
               <stat.icon size={24} />
             </div>
@@ -501,7 +501,7 @@ const Dashboard = () => {
       {/* Content Grid */}
       <div className="content-grid">
         {/* Recent Activities */}
-        <div className="content-card">
+        <div className="content-card animate-slideInUp" style={{ animationDelay: '400ms' }}>
           <div className="card-header">
             <h3 className="card-title">
               <Clock className="card-icon" />
@@ -519,7 +519,7 @@ const Dashboard = () => {
         </div>
 
         {/* Upcoming Events */}
-        <div className="content-card">
+        <div className="content-card animate-slideInUp" style={{ animationDelay: '500ms' }}>
           <div className="card-header">
             <h3 className="card-title">
               <Calendar className="card-icon" />

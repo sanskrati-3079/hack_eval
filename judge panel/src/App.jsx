@@ -23,7 +23,7 @@ function Layout({ children }) {
   };
 
   return (
-    <div className="app">
+    <div className="app animate-fadeIn">
       {!isAuthPage && <Header onMenuClick={handleMenuClick} />}
       {!isAuthPage && <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />}
       <main className={`main-content ${sidebarOpen ? '' : 'sidebar-hidden'}`}>

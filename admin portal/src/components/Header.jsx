@@ -9,16 +9,6 @@ const Header = ({ onMenuClick, onLogout, activeRound }) => {
         <button className="menu-toggle" onClick={onMenuClick}>
           <Menu size={24} />
         </button>
-        <img
-          src="/images/gla.png"
-          alt="GLA University"
-          className="header-logo-left"
-        />
-        <img
-          src="..\\..\\public\\images\\DC.png"
-          alt="GLA University"
-          className="header-logo-left-2"
-        />
       </div>
       
       <div className="header-right">
@@ -39,12 +29,6 @@ const Header = ({ onMenuClick, onLogout, activeRound }) => {
             <span>Logout</span>
           </button>
         </div>
-
-        <img
-          src="/images/sih.png"
-          alt="Smart India Hackathon 2022"
-          className="header-logo-right"
-        />
       </div>
     </header>
   );

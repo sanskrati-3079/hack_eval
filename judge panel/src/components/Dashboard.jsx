@@ -293,7 +293,7 @@ const Dashboard = () => {
       {/* Statistics Cards */}
       <div className="stats-grid">
         {stats.map((stat, index) => (
-          <div key={index} className={`stat-card stat-${stat.color}`}>
+          <div key={index} className={`stat-card stat-${stat.color} animate-slideInUp`} style={{ animationDelay: `${index * 100}ms` }}>
             <div className="stat-icon">
               {stat.icon}
             </div>

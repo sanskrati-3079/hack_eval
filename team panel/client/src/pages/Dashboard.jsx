@@ -115,7 +115,7 @@ const Dashboard = () => {
       </div>
 
       <div className="dashboard-content">
-        <div className="team-summary">
+        <div className="team-summary animate-slideInUp" style={{ animationDelay: '100ms' }}>
           <h2>Team Summary</h2>
           <div className="summary-content">
             <div className="summary-item">
@@ -148,7 +148,7 @@ const Dashboard = () => {
         </div>
 
         <div className="dashboard-grid">
-          <div className="team-members">
+          <div className="team-members animate-slideInUp" style={{ animationDelay: '200ms' }}>
             <h2>Team Members</h2>
             <div className="members-list">
               {/* Team Leader */}
@@ -182,7 +182,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="project-info">
+          <div className="project-info animate-slideInUp" style={{ animationDelay: '300ms' }}>
             <h2>Problem Statement</h2>
             <div className="info-grid">
               <div className="info-item">
