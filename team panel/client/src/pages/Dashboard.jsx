@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { TeamContext } from "../context/TeamContext";
 import { Link } from "react-router-dom";
 import { API_BASE_URL } from "../config";
+import "./Dashboard.css";
 
 const Dashboard = () => {
   const { team } = useContext(TeamContext);
@@ -102,14 +103,14 @@ const Dashboard = () => {
   return (
     <div className="dashboard-container">
       <div className="dashboard-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-        <h1>Team Dashboard</h1>
+        {/* <h1>Team Dashboard</h1> */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div className="current-round" style={{ background: '#E5F5EC', color: '#1B4332', padding: '6px 12px', borderRadius: 8, fontWeight: 600 }}>
             Current Round: {activeRound ? `Round ${activeRound}` : 'None'}
           </div>
-          <Link to="/profile" className="profile-link">
+          {/* <Link to="/profile" className="profile-link">
             Profile Settings
-          </Link>
+          </Link> */}
         </div>
       </div>
 
@@ -126,22 +127,22 @@ const Dashboard = () => {
               <span className="value">{dashboardData.team_id}</span>
             </div>
             <div className="summary-item">
-              <span className="label">Status:</span>
-              <span className="value status-active">
-                {dashboardData.status || "Active"}
-              </span>
+              <span className="label">Problem Statement ID:</span>
+              <span className="value">{dashboardData.problem_statement_id}</span>
             </div>
             <div className="summary-item">
-              <span className="label">College:</span>
-              <span className="value">{dashboardData.college}</span>
+              <span className="label">Category:</span>
+              <span className="value">{dashboardData.category || "N/A"}</span>
             </div>
+            {dashboardData.subcategory && (
+              <div className="summary-item">
+                <span className="label">Subcategory:</span>
+                <span className="value">{dashboardData.subcategory}</span>
+              </div>
+            )}
             <div className="summary-item">
-              <span className="label">Department:</span>
-              <span className="value">{dashboardData.department}</span>
-            </div>
-            <div className="summary-item">
-              <span className="label">Year:</span>
-              <span className="value">{dashboardData.year}</span>
+              <span className="label">University Roll No:</span>
+              <span className="value">{dashboardData.university_roll_no || "N/A"}</span>
             </div>
           </div>
         </div>
@@ -158,29 +159,26 @@ const Dashboard = () => {
                   </div>
                   <div className="member-info">
                     <h4>{dashboardData.team_leader.name}</h4>
-                    <p>
-                      Role: {dashboardData.team_leader.role || "Team Leader"}
-                    </p>
+                    <p>Role: Team Leader</p>
+                    {dashboardData.team_leader.roll_no && (
+                      <p>Roll No: {dashboardData.team_leader.roll_no}</p>
+                    )}
                     <p>Email: {dashboardData.team_leader.email}</p>
                     <p>Contact: {dashboardData.team_leader.contact}</p>
                   </div>
                 </div>
               )}
               {/* Team Members */}
-              {dashboardData.team_members &&
-                dashboardData.team_members.map((member, idx) => (
-                  <div key={idx} className="member-card">
-                    <div className="member-avatar">
-                      {member.name?.charAt(0) || "?"}
-                    </div>
-                    <div className="member-info">
-                      <h4>{member.name}</h4>
-                      <p>Role: {member.role || "Member"}</p>
-                      <p>Email: {member.email}</p>
-                      <p>Contact: {member.contact}</p>
-                    </div>
-                  </div>
-                ))}
+              {dashboardData.members && dashboardData.members.length > 0 && (
+                <div className="member-list">
+                  <h4>Team Members:</h4>
+                  <ul>
+                    {dashboardData.members.map((member, idx) => (
+                      <li key={idx}>{member}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
 
@@ -188,24 +186,8 @@ const Dashboard = () => {
             <h2>Problem Statement</h2>
             <div className="info-grid">
               <div className="info-item">
-                <label>PS ID:</label>
-                <p>{dashboardData.problem_statement?.ps_id || "N/A"}</p>
-              </div>
-              <div className="info-item">
-                <label>Title:</label>
-                <p>{dashboardData.problem_statement?.title || "N/A"}</p>
-              </div>
-              <div className="info-item">
-                <label>Description:</label>
-                <p>{dashboardData.problem_statement?.description || "N/A"}</p>
-              </div>
-              <div className="info-item">
-                <label>Category:</label>
-                <p>{dashboardData.problem_statement?.category || "N/A"}</p>
-              </div>
-              <div className="info-item">
-                <label>Difficulty:</label>
-                <p>{dashboardData.problem_statement?.difficulty || "N/A"}</p>
+                <label>Statement:</label>
+                <p>{dashboardData.statement || "No statement provided"}</p>
               </div>
             </div>
           </div>

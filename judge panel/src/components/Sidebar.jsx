@@ -7,6 +7,7 @@ import {
   Award,
   GraduationCap,
   UserPlus,
+  Trophy,
   X, // Import close icon
   LogOut // Import logout icon
 } from 'lucide-react';
@@ -34,6 +35,11 @@ const Sidebar = ({ isOpen, onClose }) => {
       path: '/my-evaluations',
       icon: <ClipboardList size={20} />,
       label: 'My Evaluations'
+    },
+    {
+      path: '/leaderboard',
+      icon: <Trophy size={20} />,
+      label: 'Leaderboard'
     },
     // {
     //   path: '/final-submissions',

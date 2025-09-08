@@ -14,11 +14,13 @@ class TeamLeader(BaseModel):
 class TeamMeta(BaseModel):
     team_id: str = Field(..., description="Unique team identifier")
     problem_statement_id: str = Field(..., description="Assigned problem statement ID")
+
     team_name: str = Field(..., description="Name of the team")
     team_leader: TeamLeader = Field(..., description="Details of the team leader")
     members: List[str] = Field(..., description="List of team member names or IDs")
     category: str = Field(..., description="Project category")
     statement: str = Field(..., description="Problem statement text")
+    university_roll_no: str = Field(..., description="University roll number")
 
 
 # === MongoDB Collection ===

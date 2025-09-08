@@ -8,22 +8,33 @@ import {
   FaUserTie, 
   FaChartBar, 
   FaBell,
-  FaTimes
+  FaTimes,
+  FaSignOutAlt
 } from 'react-icons/fa';
 import './Sidebar.css';
+
+
+
 
 const Sidebar = ({ isOpen, onClose }) => {
   const location = useLocation();
 
   const menuItems = [
     { path: '/', icon: FaHome, label: 'Dashboard' },
-    { path: '/team', icon: FaUsers, label: 'Team Info' },
+    // { path: '/team', icon: FaUsers, label: 'Team Info' },
     { path: '/submissions', icon: FaUpload, label: 'Submissions' },
     { path: '/leaderboard', icon: FaTrophy, label: 'Leaderboard' },
-    { path: '/mentors', icon: FaUserTie, label: 'Mentors' },
-    { path: '/analytics', icon: FaChartBar, label: 'Analytics' },
-    { path: '/notifications', icon: FaBell, label: 'Notifications' },
+    { path: '/program-schedule', icon: FaChartBar, label: 'Program Schedule' },
+    // { path: '/mentors', icon: FaUserTie, label: 'Mentors' },
+    // { path: '/analytics', icon: FaChartBar, label: 'Analytics' },
+    // { path: '/notifications', icon: FaBell, label: 'Notifications' },
   ];
+
+  const handleLogout = () => {
+    localStorage.removeItem('team');
+    localStorage.removeItem('token');
+    window.location.href = '/signin';
+  };
 
   return (
     <>
@@ -55,18 +66,12 @@ const Sidebar = ({ isOpen, onClose }) => {
           })}
         </nav>
 
-        {/* <div className="sidebar-footer">
-          <div className="quick-stats">
-            <div className="stat-item">
-              <span className="stat-label">Current Round</span>
-              <span className="stat-value">Round 1</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-label">Days Left</span>
-              <span className="stat-value">3</span>
-            </div>
-          </div>
-        </div> */}
+        <div className="sidebar-footer" style={{marginTop: 'auto', padding: '1rem'}}>
+          <button className="logout-btn" onClick={handleLogout} style={{width: '100%', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center'}}>
+            <FaSignOutAlt style={{fontSize:'1.2rem',verticalAlign:'middle'}} />
+            <span className="logout-text">Logout</span>
+          </button>
+        </div>
       </aside>
     </>
   );

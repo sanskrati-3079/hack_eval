@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import * as XLSX from "xlsx";
 import "./ExcelUpload.css";
+import { API_BASE_URL } from "../config";
 
 const ExcelUpload = () => {
   const [excelData, setExcelData] = useState([]);
@@ -31,6 +32,7 @@ const ExcelUpload = () => {
         h.trim().toLowerCase(),
       );
       const requiredColumns = [
+        "team id",
         "select category",
         "team name",
         "team leader name",
@@ -69,7 +71,7 @@ const ExcelUpload = () => {
       formData.append("file", file);
 
       const response = await fetch(
-        "http://localhost:8000/routes/upload_excel/",
+        `${API_BASE_URL}/routes/upload_excel/`,
         {
           method: "POST",
           body: formData,

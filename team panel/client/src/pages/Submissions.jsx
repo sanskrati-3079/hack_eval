@@ -1,159 +1,243 @@
-import React, { useContext, useState, useEffect, useCallback } from "react";
-import { TeamContext } from "../context/TeamContext";
-import { API_BASE_URL } from "../config";
+import React, { useState, useEffect } from "react";
+import "./Submission.css";
 
 const Submissions = () => {
-  // Assuming TeamContext provides the auth token
-  const { token } = useContext(TeamContext);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
 
-  // State for the submission form
-  const [submissionLink, setSubmissionLink] = useState("");
-  const [roundId, setRoundId] = useState(1); // Default to round 1
-
-  // State for displaying data and UI feedback
-  const [submissionHistory, setSubmissionHistory] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [uploading, setUploading] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-
-  // Function to fetch submission history
-  const fetchSubmissions = useCallback(async () => {
-    if (!token) return;
-    const response = await fetch(`${API_BASE_URL}/user/submissions`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const data = await response.json();
-    setSubmissionHistory(data);
-  }, [token]);
-
-  // Fetch data when the component mounts
   useEffect(() => {
-    fetchSubmissions();
-  }, [fetchSubmissions]);
+    // Trigger visibility for staggered animations
+    setIsVisible(true);
+  }, []);
 
-  // Handler for form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!submissionLink) {
-      setError("Please provide a round number and a GitHub link.");
-      return;
+  const handleGoogleForm = async () => {
+    setIsLoading(true);
+    
+    // Add a small delay for better UX
+    setTimeout(() => {
+      window.open("https://forms.gle/UmcmyMqyq5kZF7SD7", "_blank");
+      setIsLoading(false);
+      setShowSuccess(true);
+      
+      // Hide success message after 3 seconds
+      setTimeout(() => {
+        setShowSuccess(false);
+      }, 3000);
+    }, 500);
+  };
+
+  // Mock data for submission history (you can replace this with actual data)
+  const mockSubmissions = [
+    {
+      id: 1,
+      title: "Initial Project Proposal",
+      submittedAt: "2024-03-15 14:30",
+      status: "Reviewed",
+      feedback: "Great initial concept! Please expand on the technical implementation details in your next submission."
+    },
+    {
+      id: 2,
+      title: "Technical Documentation",
+      submittedAt: "2024-03-18 09:15",
+      status: "Pending Review",
+      feedback: null
+    },
+    {
+      id: 3,
+      title: "Prototype Demo",
+      submittedAt: "2024-03-20 16:45",
+      status: "Approved",
+      feedback: "Excellent work! The prototype demonstrates strong technical skills and innovation."
     }
+  ];
 
-    setUploading(true);
-    setError("");
-    setSuccessMessage("");
+  const getStatusColor = (status) => {
+    switch (status.toLowerCase()) {
+      case 'approved':
+        return '#22c55e';
+      case 'pending review':
+        return '#ffc107';
+      case 'reviewed':
+        return '#17a2b8';
+      default:
+        return '#6c757d';
+    }
+  };
 
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/user/submission/${roundId}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ submission_link: submissionLink }),
-        },
-      );
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.detail || "Failed to upload submission.");
-      }
-
-      setSuccessMessage("Submission uploaded successfully!");
-      setSubmissionLink(""); // Clear input on success
-      fetchSubmissions(); // Refresh history to show the new submission
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setUploading(false);
+  const getStatusEmoji = (status) => {
+    switch (status.toLowerCase()) {
+      case 'approved':
+        return '✅';
+      case 'pending review':
+        return '⏳';
+      case 'reviewed':
+        return '👁️';
+      default:
+        return '📄';
     }
   };
 
   return (
-    <div className="submissions-container">
+    <div className={`submissions-container ${isVisible ? 'visible' : ''}`}>
       <h1>Project Submissions</h1>
-
+      
       <div className="submission-upload">
-        <h2>Upload Submission</h2>
-        <form onSubmit={handleSubmit} className="submission-form">
-          <div className="form-group">
-            <label htmlFor="roundId">Round Number</label>
-            <input
-              type="number"
-              id="roundId"
-              value={roundId}
-              onChange={(e) => setRoundId(parseInt(e.target.value, 10))}
-              min="1"
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="githubLink">GitHub Repository Link</label>
-            <input
-              type="url"
-              id="githubLink"
-              placeholder="https://github.com/your-username/your-repo"
-              value={submissionLink}
-              onChange={(e) => setSubmissionLink(e.target.value)}
-              required
-            />
-          </div>
-          {error && <p className="error-message">{error}</p>}
-          {successMessage && (
-            <p className="success-message">{successMessage}</p>
+        <h2>Submit Your Project</h2>
+        <p className="upload-description">
+          Ready to submit your project? Click the button below to access our submission form.
+          Make sure you have all your project files and documentation ready!
+        </p>
+        
+        <button 
+          className={`google-form-btn ${isLoading ? 'loading' : ''}`} 
+          onClick={handleGoogleForm}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <>
+              <span className="loading"></span>
+              Opening Form...
+            </>
+          ) : (
+            <>
+              🚀 Go to Submission Form
+            </>
           )}
-          <button type="submit" disabled={uploading}>
-            {uploading ? "Submitting..." : "Submit Project"}
-          </button>
-        </form>
+        </button>
+        
+        {showSuccess && (
+          <div className="success-message">
+            ✨ Submission form opened successfully! Complete your submission there.
+          </div>
+        )}
+        
+        <div className="submission-info-cards">
+          <div className="info-card">
+            <div className="info-icon">📋</div>
+            <h4>Prepare Documents</h4>
+            <p>Have your project files, documentation, and presentation ready</p>
+          </div>
+          <div className="info-card">
+            <div className="info-icon">⚡</div>
+            <h4>Quick Submission</h4>
+            <p>Our streamlined form makes submission fast and easy</p>
+          </div>
+          <div className="info-card">
+            <div className="info-icon">🔒</div>
+            <h4>Secure Upload</h4>
+            <p>All submissions are securely stored and processed</p>
+          </div>
+        </div>
       </div>
 
       <div className="submission-history">
         <h2>Submission History</h2>
-        {isLoading ? (
-          <p>Loading submission history...</p>
-        ) : submissionHistory.length > 0 ? (
-          <div className="submissions-list">
-            {submissionHistory.map((submission) => (
+        <p className="history-description">
+          Track all your project submissions and their review status below.
+        </p>
+        
+        <div className="submissions-list">
+          {mockSubmissions.length > 0 ? (
+            mockSubmissions.map((submission) => (
               <div key={submission.id} className="submission-card">
                 <div className="submission-info">
-                  <h3>Round #{submission.round_id}</h3>
+                  <h3>{submission.title}</h3>
+                  <p><strong>Submitted:</strong> {submission.submittedAt}</p>
                   <p>
-                    Date: {new Date(submission.submitted_at).toLocaleString()}
-                  </p>
-                  <p>
-                    Status:{" "}
-                    <span className={`status-${submission.status}`}>
-                      {submission.status}
+                    <strong>Status:</strong> 
+                    <span 
+                      className="status-badge" 
+                      style={{ 
+                        color: getStatusColor(submission.status),
+                        backgroundColor: `${getStatusColor(submission.status)}15`,
+                        padding: '4px 12px',
+                        borderRadius: '20px',
+                        marginLeft: '8px',
+                        fontWeight: '600'
+                      }}
+                    >
+                      {getStatusEmoji(submission.status)} {submission.status}
                     </span>
                   </p>
+                  
                   {submission.feedback && (
                     <div className="feedback">
-                      <h4>Feedback:</h4>
+                      <h4>Reviewer Feedback</h4>
                       <p>{submission.feedback}</p>
                     </div>
                   )}
                 </div>
+                
                 <div className="submission-actions">
-                  <a
-                    href={submission.submission_link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="download-btn" // Re-using class name from original code
+                  <button 
+                    className="download-btn"
+                    onClick={() => alert('Download feature will be implemented soon!')}
                   >
-                    View on GitHub
-                  </a>
+                    Download
+                  </button>
+                  {submission.status === 'Pending Review' && (
+                    <button 
+                      className="edit-btn"
+                      onClick={() => alert('Edit feature will be implemented soon!')}
+                    >
+                      ✏️ Edit
+                    </button>
+                  )}
                 </div>
               </div>
-            ))}
+            ))
+          ) : (
+            <div className="no-submissions">
+              <div className="no-submissions-icon">📭</div>
+              <h3>No Submissions Yet</h3>
+              <p>You haven't made any submissions yet. Click the button above to get started!</p>
+            </div>
+          )}
+        </div>
+        
+        {mockSubmissions.length > 0 && (
+          <div className="submission-stats">
+            <div className="stat-card">
+              <div className="stat-number">{mockSubmissions.length}</div>
+              <div className="stat-label">Total Submissions</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-number">
+                {mockSubmissions.filter(s => s.status === 'Approved').length}
+              </div>
+              <div className="stat-label">Approved</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-number">
+                {mockSubmissions.filter(s => s.status === 'Pending Review').length}
+              </div>
+              <div className="stat-label">Pending</div>
+            </div>
           </div>
-        ) : (
-          <p>No submissions yet.</p>
         )}
+      </div>
+      
+      <div className="submission-tips">
+        <h3>💡 Submission Tips</h3>
+        <div className="tips-grid">
+          <div className="tip-item">
+            <span className="tip-icon">📝</span>
+            <p><strong>Clear Documentation:</strong> Include comprehensive project documentation with your submission.</p>
+          </div>
+          <div className="tip-item">
+            <span className="tip-icon">🎥</span>
+            <p><strong>Demo Video:</strong> Consider including a demo video to showcase your project's functionality.</p>
+          </div>
+          <div className="tip-item">
+            <span className="tip-icon">🔍</span>
+            <p><strong>Review Guidelines:</strong> Make sure your submission meets all the competition requirements.</p>
+          </div>
+          <div className="tip-item">
+            <span className="tip-icon">⏰</span>
+            <p><strong>Submit Early:</strong> Don't wait until the last minute - submit early to avoid technical issues.</p>
+          </div>
+        </div>
       </div>
     </div>
   );

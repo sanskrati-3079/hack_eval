@@ -11,11 +11,13 @@ import {
   ChevronLeft,
   ChevronRight,
   Eye,
-  Play
+  Play,
+  RefreshCw
 } from 'lucide-react';
-import { getJudgeProfile, getAllTeams } from '../utils/api.js';
+import { getJudgeProfile, getAllTeams, getMyEvaluations } from '../utils/api.js';
 import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
+import { API_BASE_URL } from '../config.js';
 
 const Dashboard = () => {
   const [judgeName, setJudgeName] = useState('Judge');
@@ -24,6 +26,9 @@ const Dashboard = () => {
   const [teamsLoading, setTeamsLoading] = useState(true);
   const [judgeProfileError, setJudgeProfileError] = useState(false);
   const [activeRound, setActiveRound] = useState(null);
+  const [evaluatedCount, setEvaluatedCount] = useState(0);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [statsLoading, setStatsLoading] = useState(false);
   
   // Filtering and pagination states
   const [searchTerm, setSearchTerm] = useState('');
@@ -71,16 +76,37 @@ const Dashboard = () => {
       }
     };
 
+    const fetchEvaluationStats = async () => {
+      try {
+        setStatsLoading(true);
+        const myEvaluations = await getMyEvaluations();
+        setEvaluatedCount(myEvaluations.length);
+        
+        // Calculate pending count (total teams - evaluated teams)
+        const totalTeams = teams.length;
+        setPendingCount(Math.max(0, totalTeams - myEvaluations.length));
+      } catch (error) {
+        console.error('Failed to fetch evaluation stats:', error);
+        setEvaluatedCount(0);
+        setPendingCount(0);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
     // Try to fetch teams first since that's the main requirement
     fetchTeams();
     // Then try to fetch judge profile (this might fail due to schema issues)
     fetchJudgeProfile();
+    // Fetch evaluation statistics
+    fetchEvaluationStats();
   }, []);
 
   // Filter teams based on search term and category
   const filteredTeams = teams.filter(team => {
     const matchesSearch = team.team_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         team.college?.toLowerCase().includes(searchTerm.toLowerCase());
+                         team.college?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         team.team_leader?.name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || 
                            team.problem_statement?.category === selectedCategory;
     return matchesSearch && matchesCategory;
@@ -100,13 +126,37 @@ const Dashboard = () => {
     setCurrentPage(1);
   }, [searchTerm, selectedCategory]);
 
+  // Update evaluation stats when teams are loaded
+  useEffect(() => {
+    if (teams.length > 0) {
+      const fetchEvaluationStats = async () => {
+        try {
+          setStatsLoading(true);
+          const myEvaluations = await getMyEvaluations();
+          setEvaluatedCount(myEvaluations.length);
+          
+          // Calculate pending count (total teams - evaluated teams)
+          setPendingCount(Math.max(0, teams.length - myEvaluations.length));
+        } catch (error) {
+          console.error('Failed to fetch evaluation stats:', error);
+          setEvaluatedCount(0);
+          setPendingCount(0);
+        } finally {
+          setStatsLoading(false);
+        }
+      };
+      
+      fetchEvaluationStats();
+    }
+  }, [teams]);
+
   // Fetch current round and keep it updated
   useEffect(() => {
     let mounted = true;
     let timerId;
     const fetchActive = async () => {
       try {
-        const res = await fetch('http://localhost:8000/round-state/active');
+        const res = await fetch(`${API_BASE_URL}/round-state/active`);
         if (!res.ok) return;
         const data = await res.json();
         if (!mounted) return;
@@ -117,6 +167,20 @@ const Dashboard = () => {
     timerId = setInterval(fetchActive, 5000);
     return () => { mounted = false; if (timerId) clearInterval(timerId); };
   }, []);
+
+  // Refresh stats when component becomes visible (user navigates back)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && teams.length > 0) {
+        refreshEvaluationStats();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [teams]);
 
   const handleTeamSelect = (team) => {
     // Navigate to evaluation page with complete team data
@@ -131,24 +195,40 @@ const Dashboard = () => {
     // You can implement a modal or expand the card to show more details
   };
 
+  const refreshEvaluationStats = async () => {
+    try {
+      setStatsLoading(true);
+      const myEvaluations = await getMyEvaluations();
+      setEvaluatedCount(myEvaluations.length);
+      setPendingCount(Math.max(0, teams.length - myEvaluations.length));
+    } catch (error) {
+      console.error('Failed to refresh evaluation stats:', error);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
   const stats = [
     {
       title: 'Total Teams',
       value: teamsLoading ? '...' : teams.length.toString(),
       icon: <Users size={24} />,
       color: 'blue',
+      subtitle: 'Available for evaluation'
     },
     {
       title: 'Evaluated',
-      value: '18',
+      value: statsLoading ? '...' : evaluatedCount.toString(),
       icon: <CheckCircle size={24} />,
       color: 'green',
+      subtitle: 'Completed evaluations'
     },
     {
       title: 'Pending Review',
-      value: '6',
+      value: statsLoading ? '...' : pendingCount.toString(),
       icon: <Clock size={24} />,
       color: 'orange',
+      subtitle: 'Awaiting evaluation'
     },
     // {
     //   title: 'Average Score',
@@ -193,8 +273,20 @@ const Dashboard = () => {
             <p className="page-error">Note: Using fallback profile data</p>
           )}
         </div>
-        <div className="current-round" style={{ background: '#E5F5EC', color: '#1B4332', padding: '8px 16px', borderRadius: 8, fontWeight: 600, fontSize: '14px' }}>
-          Current Round: {activeRound ? `Round ${activeRound}` : 'None'}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button 
+            className="btn btn-secondary" 
+            onClick={refreshEvaluationStats}
+            disabled={statsLoading}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 12px' }}
+            title="Refresh evaluation statistics"
+          >
+            <RefreshCw size={16} className={statsLoading ? 'loading-spinner' : ''} />
+            {statsLoading ? 'Refreshing...' : 'Refresh Stats'}
+          </button>
+          <div className="current-round" style={{ background: '#E5F5EC', color: '#1B4332', padding: '8px 16px', borderRadius: 8, fontWeight: 600, fontSize: '14px' }}>
+            Current Round: {activeRound ? `Round ${activeRound}` : 'None'}
+          </div>
         </div>
       </div>
 
@@ -208,7 +300,8 @@ const Dashboard = () => {
             <div className="stat-content">
               <h3 className="stat-value">{stat.value}</h3>
               <p className="stat-title">{stat.title}</p>
-              <p className="stat-change">{stat.change}</p>
+              {stat.subtitle && <p className="stat-subtitle">{stat.subtitle}</p>}
+              {stat.change && <p className="stat-change">{stat.change}</p>}
             </div>
           </div>
         ))}
@@ -226,7 +319,7 @@ const Dashboard = () => {
                   <Search size={18} className="search-icon" />
                   <input
                     type="text"
-                    placeholder="Search teams or colleges..."
+                    placeholder="Search teams, colleges, or team leaders..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="search-input"
@@ -285,21 +378,14 @@ const Dashboard = () => {
                     <div className="team-info">
                       <h4>{team.team_name}</h4>
                       <p className="team-category">Category: {team.problem_statement?.category || 'N/A'}</p>
-                      <p className="team-domain">Domain: {team.problem_statement?.domain || 'N/A'}</p>
+                      {/* <p className="team-domain">Domain: {team.problem_statement?.domain || 'N/A'}</p> */}
+                      <p className="team-leader">Leader: {team.team_leader?.name || 'N/A'}</p>
                     </div>
                     <div className="team-details">
                       <div className="college-badge">{team.college}</div>
-                      {/* <div className="difficulty-badge">{team.problem_statement?.difficulty || 'N/A'}</div> */}
+                      <div className="team-id-badge">ID: {team.team_id}</div>
                     </div>
                     <div className="team-actions">
-                      {/* <button 
-                        className="btn btn-secondary btn-sm"
-                        onClick={() => handleViewTeam(team)}
-                        title="View Team Details"
-                      >
-                        <Eye size={16} />
-                        View
-                      </button> */}
                       <button 
                         className="btn btn-primary btn-sm"
                         onClick={() => handleTeamSelect(team)}

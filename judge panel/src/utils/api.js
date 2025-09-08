@@ -1,4 +1,5 @@
-const API_BASE_URL = 'http://localhost:8000';
+import { API_BASE_URL, API_BASE_URL } from "../config";
+const AAPI_BASE_URL = API_BASE_URL;
 
 // Helper function to get auth headers
 export const getAuthHeaders = () => {
@@ -17,9 +18,9 @@ export const judgeLogin = async (username, password) => {
         formData.append('password', password);
 
         console.log('Attempting login with:', { username, password: '***' });
-        console.log('API URL:', `${API_BASE_URL}/auth/judge/login`);
+        console.log('API URL:', `${AAPI_BASE_URL}/auth/judge/login`);
 
-        const response = await fetch(`${API_BASE_URL}/auth/judge/login`, {
+        const response = await fetch(`${AAPI_BASE_URL}/auth/judge/login`, {
             method: 'POST',
             body: formData,
         });
@@ -47,7 +48,7 @@ export const judgeLogin = async (username, password) => {
 
 // Get judge profile
 export const getJudgeProfile = async () => {
-    const response = await fetch(`${API_BASE_URL}/judge/profile`, {
+    const response = await fetch(`${AAPI_BASE_URL}/judge/profile`, {
         headers: getAuthHeaders(),
     });
 
@@ -79,7 +80,7 @@ export const getAssignedTeams = async (roundId = null) => {
 
 // Submit evaluation
 export const submitEvaluation = async (teamId, evaluation) => {
-    const response = await fetch(`${API_BASE_URL}/judge/evaluate/${teamId}`, {
+    const response = await fetch(`${AAPI_BASE_URL}/judge/evaluate/${teamId}`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify(evaluation),
@@ -119,7 +120,7 @@ export const getEvaluations = async (roundId = null, teamId = null) => {
 
 // Get judge's own evaluations
 export const getMyEvaluations = async () => {
-    const response = await fetch(`${API_BASE_URL}/judge/evaluation/my-evaluations`, {
+    const response = await fetch(`${AAPI_BASE_URL}/judge/evaluation/my-evaluations`, {
         headers: getAuthHeaders(),
     });
 
@@ -133,7 +134,7 @@ export const getMyEvaluations = async () => {
 
 // Get team details by team ID
 export const getTeamDetails = async (teamId) => {
-    const response = await fetch(`${API_BASE_URL}/team-ps/teams/${teamId}`, {
+    const response = await fetch(`${AAPI_BASE_URL}/team-ps/teams/${teamId}`, {
         headers: getAuthHeaders(),
     });
 
@@ -147,7 +148,7 @@ export const getTeamDetails = async (teamId) => {
 
 // Get all teams with problem statement details
 export const getAllTeams = async () => {
-    const response = await fetch(`${API_BASE_URL}/judge/all-teams`, {
+    const response = await fetch(`${AAPI_BASE_URL}/judge/all-teams`, {
         headers: getAuthHeaders(),
     });
 
@@ -161,7 +162,7 @@ export const getAllTeams = async () => {
 
 // Count evaluations by team name
 export const countEvaluationsByTeamName = async (teamName) => {
-    const response = await fetch(`${API_BASE_URL}/judge/evaluation/count-by-team-name/${encodeURIComponent(teamName)}`, {
+    const response = await fetch(`${AAPI_BASE_URL}/judge/evaluation/count-by-team-name/${encodeURIComponent(teamName)}`, {
         headers: getAuthHeaders(),
     });
 

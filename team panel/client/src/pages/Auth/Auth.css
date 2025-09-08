@@ -5,6 +5,7 @@
   min-height: calc(100vh - 64px);
   padding: 2rem;
   background-color: var(--bg-color);
+  padding-top: 90px; /* ensures content is below the fixed header */
 }
 
 .auth-card {
@@ -97,10 +98,10 @@
   transition: all 0.2s ease;
 }
 
-.auth-button:hover {
+/* .auth-button:hover {
   background: var(--primary-color-dark);
   transform: translateY(-1px);
-}
+} */
 
 .auth-button:active {
   transform: translateY(0);
@@ -126,7 +127,7 @@
   font-weight: 500;
 }
 
-.demo-credentials {
+/* .demo-credentials {
   margin-top: 2rem;
   padding: 1.5rem;
   background: var(--bg-color);
@@ -151,7 +152,7 @@
 .demo-credentials strong {
   color: var(--primary-color);
   margin-right: 0.5rem;
-}
+} */
 
 @media (max-width: 768px) {
   .auth-container {

@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import './EvaluateSubmission.css';
+import { API_BASE_URL } from '../config.js';
 
 const EvaluateSubmission = () => {
   const location = useLocation();
@@ -12,24 +13,29 @@ const EvaluateSubmission = () => {
   const selectedTeam = location.state?.selectedTeam;
   
   const [evaluation, setEvaluation] = useState({
-    innovation: 5,
-    problemRelevance: 5,
-    feasibility: 5,
-    techStackJustification: 5,
-    clarityOfSolution: 5,
-    presentationQuality: 5,
-    teamUnderstanding: 5,
+    problem_solution_fit: 5,
+    functionality_features: 5,
+    technical_feasibility: 5,
+    innovation_creativity: 5,
+    user_experience: 5,
+    impact_value: 5,
+    presentation_demo_quality: 5,
+    team_collaboration: 5,
     finalRecommendation: '',
     feedback: ''
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState('');
+  const [pptEvaluation, setPptEvaluation] = useState(null);
+  const [loadingPptData, setLoadingPptData] = useState(false);
 
+   
   // Load existing evaluation if available
   useEffect(() => {
     if (selectedTeam) {
       loadExistingEvaluation(selectedTeam.team_id);
+      loadPptEvaluation(selectedTeam.team_name);
     }
   }, [selectedTeam]);
 
@@ -47,19 +53,46 @@ const EvaluateSubmission = () => {
       if (response.ok) {
         const existingEval = await response.json();
         setEvaluation({
-          innovation: existingEval.innovation || 5,
-          problemRelevance: existingEval.problem_relevance || 5,
-          feasibility: existingEval.feasibility || 5,
-          techStackJustification: existingEval.tech_stack_justification || 5,
-          clarityOfSolution: existingEval.clarity_of_solution || 5,
-          presentationQuality: existingEval.presentation_quality || 5,
-          teamUnderstanding: existingEval.team_understanding || 5,
+          problem_solution_fit: existingEval.problem_solution_fit || 5,
+          functionality_features: existingEval.functionality_features || 5,
+          technical_feasibility: existingEval.technical_feasibility || 5,
+          innovation_creativity: existingEval.innovation_creativity || 5,
+          user_experience: existingEval.user_experience || 5,
+          impact_value: existingEval.impact_value || 5,
+          presentation_demo_quality: existingEval.presentation_demo_quality || 5,
+          team_collaboration: existingEval.team_collaboration || 5,
           finalRecommendation: existingEval.final_recommendation || '',
           feedback: existingEval.personalized_feedback || ''
         });
       }
     } catch (error) {
       console.log('No existing evaluation found or error loading it');
+    }
+  };
+
+  const loadPptEvaluation = async (teamName) => {
+    if (!teamName) return;
+    
+    console.log('Loading PPT evaluation for team:', teamName);
+    setLoadingPptData(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/team-evaluation/${encodeURIComponent(teamName)}`);
+
+      console.log('PPT API Response status:', response.status);
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('PPT API Response data:', result);
+        setPptEvaluation(result.data);
+      } else {
+        console.log('No PPT evaluation data found for team:', teamName);
+        const errorText = await response.text();
+        console.log('Error response:', errorText);
+      }
+    } catch (error) {
+      console.error('Error loading PPT evaluation data:', error);
+    } finally {
+      setLoadingPptData(false);
     }
   };
 
@@ -84,6 +117,8 @@ const EvaluateSubmission = () => {
   // Debug: Log the team data structure
   console.log('Selected Team Data:', selectedTeam);
   console.log('Problem Statement Object:', selectedTeam.problem_statement);
+  console.log('PPT Evaluation State:', pptEvaluation);
+  console.log('Loading PPT Data:', loadingPptData);
 
   const handleSliderChange = (parameter, value) => {
     setEvaluation(prev => ({
@@ -118,13 +153,14 @@ const EvaluateSubmission = () => {
         problem_statement: selectedTeam.problem_statement?.title || 'No problem statement',
         category: selectedTeam.problem_statement?.category || 'General',
         round_id: 1,
-        innovation: evaluation.innovation,
-        problem_relevance: evaluation.problemRelevance,
-        feasibility: evaluation.feasibility,
-        tech_stack_justification: evaluation.techStackJustification,
-        clarity_of_solution: evaluation.clarityOfSolution,
-        presentation_quality: evaluation.presentationQuality,
-        team_understanding: evaluation.teamUnderstanding,
+        problem_solution_fit: evaluation.problem_solution_fit,
+        functionality_features: evaluation.functionality_features,
+        technical_feasibility: evaluation.technical_feasibility,
+        innovation_creativity: evaluation.innovation_creativity,
+        user_experience: evaluation.user_experience,
+        impact_value: evaluation.impact_value,
+        presentation_demo_quality: evaluation.presentation_demo_quality,
+        team_collaboration: evaluation.team_collaboration,
         personalized_feedback: evaluation.feedback
       };
 
@@ -132,8 +168,8 @@ const EvaluateSubmission = () => {
 
       // Get judge token from localStorage or context
       const judgeToken = localStorage.getItem('judgeToken') || 'your_judge_token_here';
-      
-      const response = await fetch('http://localhost:8000/judge/evaluation/submit', {
+
+      const response = await fetch(`${API_BASE_URL}/judge/evaluation/submit`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -187,19 +223,20 @@ const EvaluateSubmission = () => {
         problem_statement: selectedTeam.problem_statement?.title || 'No problem statement',
         category: selectedTeam.problem_statement?.category || 'General',
         round_id: 1,
-        innovation: evaluation.innovation,
-        problem_relevance: evaluation.problemRelevance,
-        feasibility: evaluation.feasibility,
-        tech_stack_justification: evaluation.techStackJustification,
-        clarity_of_solution: evaluation.clarityOfSolution,
-        presentation_quality: evaluation.presentationQuality,
-        team_understanding: evaluation.teamUnderstanding,
+        problem_solution_fit: evaluation.problem_solution_fit,
+        functionality_features: evaluation.functionality_features,
+        technical_feasibility: evaluation.technical_feasibility,
+        innovation_creativity: evaluation.innovation_creativity,
+        user_experience: evaluation.user_experience,
+        impact_value: evaluation.impact_value,
+        presentation_demo_quality: evaluation.presentation_demo_quality,
+        team_collaboration: evaluation.team_collaboration,
         personalized_feedback: evaluation.feedback
       };
 
       const judgeToken = localStorage.getItem('judgeToken') || 'your_judge_token_here';
-      
-      const response = await fetch('http://localhost:8000/judge/evaluation/save-draft', {
+
+      const response = await fetch(`${API_BASE_URL}/judge/evaluation/save-draft`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -259,6 +296,13 @@ const EvaluateSubmission = () => {
         <button className="btn btn-secondary back-btn" onClick={() => navigate('/dashboard')}>
           ← Back to Teams
         </button>
+        <button 
+          className="btn btn-primary" 
+          onClick={() => loadPptEvaluation(selectedTeam.team_name)}
+          style={{ marginLeft: '10px' }}
+        >
+          🔄 Reload PPT Data
+        </button>
       </div>
 
       <div className="evaluation-container">
@@ -287,21 +331,6 @@ const EvaluateSubmission = () => {
             </div>
 
             <div className="metadata-item">
-              <h3>Team Information</h3>
-              <div className="team-details-grid">
-                <div className="detail-item">
-                  <strong>Department:</strong> {selectedTeam.department || 'Not specified'}
-                </div>
-                <div className="detail-item">
-                  <strong>Year:</strong> {selectedTeam.year || 'Not specified'}
-                </div>
-                <div className="detail-item">
-                  <strong>Status:</strong> <span className={`status-badge ${selectedTeam.status || 'inactive'}`}>{selectedTeam.status || 'Inactive'}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="metadata-item">
               <h3>Team Leader</h3>
               {selectedTeam.team_leader ? (
                 <div className="team-leader-info">
@@ -326,11 +355,6 @@ const EvaluateSubmission = () => {
                         <h4>{member.name}</h4>
                         <span className="member-role">{member.role}</span>
                       </div>
-                      <div className="member-details">
-                        <p><strong>Roll No:</strong> {member.roll_no}</p>
-                        <p><strong>Email:</strong> {member.email}</p>
-                        <p><strong>Contact:</strong> {member.contact}</p>
-                      </div>
                     </div>
                   ))}
                 </div>
@@ -346,22 +370,160 @@ const EvaluateSubmission = () => {
                   <strong>Category:</strong> {selectedTeam.problem_statement?.category || 'Not specified'}
                 </div>
                 <div className="detail-row">
-                  <strong>Domain:</strong> {selectedTeam.problem_statement?.domain || 'Not specified'}
-                </div>
-                
-                <div className="detail-row">
                   <strong>Problem ID:</strong> {selectedTeam.problem_statement?.ps_id || 'Not specified'}
                 </div>
               </div>
             </div>
 
-
-           
-
             {/* Debug: Show raw data for development */}
             
           </div>
         </div>
+
+        {/* PPT Evaluation by AI Section */}
+        {loadingPptData && (
+          <div className="ppt-evaluation-section card">
+            <div className="section-header">
+              <h2>PPT Evaluation by AI</h2>
+              <div className="loading-indicator">Loading AI evaluation data...</div>
+            </div>
+          </div>
+        )}
+
+        {!loadingPptData && !pptEvaluation && (
+          <div className="ppt-evaluation-section card">
+            <div className="section-header">
+              <h2>PPT Evaluation by AI</h2>
+              <div className="loading-indicator">No PPT evaluation data found. Click "Reload PPT Data" to try again.</div>
+            </div>
+          </div>
+        )}
+
+        {pptEvaluation && (
+          <div className="ppt-evaluation-section card">
+            <div className="section-header">
+              <h2>PPT Evaluation by AI</h2>
+              <div className="evaluation-meta">
+                <span className="evaluation-date">
+                  Evaluated: {new Date(pptEvaluation.upload_timestamp).toLocaleDateString()}
+                </span>
+                <span className="evaluation-score">
+                  Total Score: {pptEvaluation.total_weighted_score}/100
+                </span>
+              </div>
+            </div>
+
+            <div className="ppt-evaluation-content">
+              {/* Debug: Show raw data */}
+              {/* <div className="debug-section" style={{ background: '#f8f9fa', padding: '1rem', marginBottom: '1rem', borderRadius: '0.5rem' }}>
+                <h3>🔍 Debug: Raw Data</h3>
+                <pre style={{ fontSize: '0.75rem', overflow: 'auto' }}>
+                  {JSON.stringify(pptEvaluation, null, 2)}
+                </pre>
+              </div> */}
+
+              {/* AI Evaluation Scores */}
+              <div className="ai-scores-section">
+                <h3>AI Evaluation Scores</h3>
+                <div className="ai-scores-grid">
+                  {Object.entries(pptEvaluation.evaluation_scores).map(([parameter, score]) => (
+                    <div key={parameter} className="ai-score-item">
+                      <div className="ai-score-header">
+                        <span className="ai-parameter-name">{parameter}</span>
+                        <span className={`ai-score-value score-${getScoreColor(score)}`}>
+                          {score}/10
+                        </span>
+                      </div>
+                      <div className="ai-score-bar">
+                        <div 
+                          className="ai-score-fill" 
+                          style={{ 
+                            width: `${(score / 10) * 100}%`,
+                            backgroundColor: score >= 8 ? '#10b981' : score >= 6 ? '#f59e0b' : '#ef4444'
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Raw Score Summary */}
+              <div className="raw-score-summary">
+                <h3>Score Summary</h3>
+                <div className="score-summary-grid">
+                  <div className="score-item">
+                    <span className="score-label">Total Raw Score:</span>
+                    <span className="score-value">{pptEvaluation.total_raw_score}/70</span>
+                  </div>
+                  <div className="score-item">
+                    <span className="score-label">Total Weighted Score:</span>
+                    <span className="score-value">{pptEvaluation.total_weighted_score}/100</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* AI Summary */}
+              {pptEvaluation.summary && (
+                <div className="ai-summary-section">
+                  <h3>AI Project Summary</h3>
+                  <div className="ai-summary-content">
+                    <p>{pptEvaluation.summary}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* AI Workflow Analysis */}
+              {pptEvaluation.workflow_overall && (
+                <div className="ai-workflow-section">
+                  <h3>AI Workflow Analysis</h3>
+                  <div className="ai-workflow-content">
+                    <p>{pptEvaluation.workflow_overall}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* AI Feedback Sections */}
+              <div className="ai-feedback-sections">
+                {pptEvaluation.feedback_positive && (
+                  <div className="ai-feedback-section positive">
+                    <h3>✅ Positive Aspects</h3>
+                    <div className="ai-feedback-content">
+                      <p>{pptEvaluation.feedback_positive}</p>
+                    </div>
+                  </div>
+                )}
+
+                {pptEvaluation.feedback_criticism && (
+                  <div className="ai-feedback-section criticism">
+                    <h3>⚠️ Areas for Improvement</h3>
+                    <div className="ai-feedback-content">
+                      <p>{pptEvaluation.feedback_criticism}</p>
+                    </div>
+                  </div>
+                )}
+
+                {pptEvaluation.feedback_technical && (
+                  <div className="ai-feedback-section technical">
+                    <h3>🔧 Technical Analysis</h3>
+                    <div className="ai-feedback-content">
+                      <p>{pptEvaluation.feedback_technical}</p>
+                    </div>
+                  </div>
+                )}
+
+                {pptEvaluation.feedback_suggestions && (
+                  <div className="ai-feedback-section suggestions">
+                    <h3>💡 Recommendations</h3>
+                    <div className="ai-feedback-content">
+                      <p>{pptEvaluation.feedback_suggestions}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Evaluation Form */}
         <form className="evaluation-form card" onSubmit={handleSubmit}>
@@ -372,20 +534,64 @@ const EvaluateSubmission = () => {
 
           <div className="parameters-grid">
             {[
-              { key: 'innovation', label: 'Innovation', description: 'Originality and creativity of the solution' },
-              { key: 'problemRelevance', label: 'Problem Relevance', description: 'How well the solution addresses the problem' },
-              { key: 'feasibility', label: 'Feasibility', description: 'Practical implementation potential' },
-              { key: 'techStackJustification', label: 'Tech Stack Justification', description: 'Appropriateness of chosen technologies' },
-              { key: 'clarityOfSolution', label: 'Clarity of Solution', description: 'How well the solution is explained' },
-              { key: 'presentationQuality', label: 'Presentation Quality', description: 'Professionalism and clarity of presentation' },
-              { key: 'teamUnderstanding', label: 'Team Understanding', description: 'Depth of team knowledge and expertise' }
+              { 
+                key: 'problem_solution_fit', 
+                label: 'Problem-Solution Fit', 
+                description: 'How well the prototype addresses the problem statement; alignment with ideation phase.',
+                weightage: '10%'
+              },
+              { 
+                key: 'functionality_features', 
+                label: 'Functionality & Features', 
+                description: 'Prototype actually works; number of implemented features; handling of real-world cases.',
+                weightage: '20%'
+              },
+              { 
+                key: 'technical_feasibility', 
+                label: 'Technical Feasibility & Robustness', 
+                description: 'System design, architecture, performance, scalability, basic security.',
+                weightage: '20%'
+              },
+              { 
+                key: 'innovation_creativity', 
+                label: 'Innovation & Creativity', 
+                description: 'Unique features, creative use of technology, disruptive potential.',
+                weightage: '15%'
+              },
+              { 
+                key: 'user_experience', 
+                label: 'User Experience (UI/UX)', 
+                description: 'Prototype is easy to use, visually clear, accessible, intuitive.',
+                weightage: '15%'
+              },
+              { 
+                key: 'impact_value', 
+                label: 'Impact & Value Proposition', 
+                description: 'Social/economic/environmental benefits; practical usefulness.',
+                weightage: '10%'
+              },
+              { 
+                key: 'presentation_demo_quality', 
+                label: 'Presentation & Demo Quality', 
+                description: 'Clarity of demo, ability to answer judges\' questions, professional presentation.',
+                weightage: '5%'
+              },
+              { 
+                key: 'team_collaboration', 
+                label: 'Team Collaboration', 
+                description: 'How well the team executed roles, solved challenges, and collaborated.',
+                weightage: '5%'
+              }
             ].map((param) => (
               <div key={param.key} className="parameter-item">
                 <div className="parameter-header">
                   <label className="parameter-label">{param.label}</label>
-                  <span className={`parameter-score score-${getScoreColor(evaluation[param.key])}`}>
-                    {evaluation[param.key]}/10
-                  </span>
+                  <div className="parameter-meta">
+                    <span className="parameter-weightage">{param.weightage}</span>
+                    <span className={`parameter-score score-${getScoreColor(evaluation[param.key])}`}>
+                      {evaluation[param.key]}/10
+                    </span>
+                  </div>
                 </div>
                 <p className="parameter-description">{param.description}</p>
                 <div className="slider-container">

@@ -176,12 +176,55 @@ async def get_team_ps_details(
     Get specific team details by team ID
     """
     try:
-        team = await db.team_ps_details.find_one({"team_id": team_id})
+        # Fetch from FinalTeamandpsdetails collection instead of team_ps_details
+        team = await db.FinalTeamandpsdetails.find_one({"Team ID": team_id})
         if not team:
             raise HTTPException(status_code=404, detail="Team not found")
         
-        team["_id"] = str(team["_id"])
-        return team
+        # Transform the data to match the expected frontend structure
+        team_members = []
+        for i in range(1, 6):  # Check for members 1-5
+            member_name = team.get(f'Team member-{i} name')
+            if member_name and str(member_name).strip() and str(member_name).lower() != 'nan':
+                team_members.append({
+                    "name": str(member_name).strip(),
+                    "roll_no": "N/A",
+                    "email": "N/A", 
+                    "contact": "N/A",
+                    "role": f"Member {i}"
+                })
+        
+        # Create problem statement object
+        problem_statement = {
+            "ps_id": str(team.get('PSID', 'N/A')),
+            "title": str(team.get('Problem Statement Name', 'N/A')),
+            "description": str(team.get('Problem Statement Description as it is in SIH Website', 'N/A')),
+            "category": str(team.get('Select Category ', 'N/A')),
+            "difficulty": "N/A",
+            "domain": "N/A"
+        }
+        
+        # Create transformed team object
+        transformed_team = {
+            "team_id": str(team.get('Team ID', 'N/A')),
+            "team_name": str(team.get('Team Name', 'N/A')),
+            "college": "GLA University",  # Default since not in FinalTeamandpsdetails
+            "department": "N/A",
+            "year": "N/A",
+            "team_leader": {
+                "name": str(team.get('Team Leader Name', 'N/A')),
+                "roll_no": str(team.get('University Roll No', 'N/A')),
+                "email": str(team.get('Team Leader Email id (gla email id only)', 'N/A')),
+                "contact": str(team.get('Team Leader Contact No.', 'N/A')),
+                "role": "Team Leader"
+            },
+            "team_members": team_members,
+            "problem_statement": problem_statement,
+            "mentor": None,
+            "status": "active"
+        }
+        
+        return transformed_team
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching team: {str(e)}")
 

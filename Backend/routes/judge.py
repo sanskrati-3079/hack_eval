@@ -71,13 +71,63 @@ async def get_assigned_teams(
 async def get_all_teams(current_judge = Depends(get_current_judge)):
     """Get all teams with their problem statement details for judges to view"""
     try:
-        teams = await db.team_ps_details.find({"status": "active"}).to_list(None)
+        # Fetch from FinalTeamandpsdetails collection instead of team_ps_details
+        teams = await db.FinalTeamandpsdetails.find({}).to_list(None)
+        
+        # Transform the data to match the expected frontend structure
+        transformed_teams = []
+        for team in teams:
+            # Create team members array from individual member fields
+            team_members = []
+            for i in range(1, 6):  # Check for members 1-5
+                member_name = team.get(f'Team member-{i} name')
+                if member_name and str(member_name).strip() and str(member_name).lower() != 'nan':
+                    team_members.append({
+                        "name": str(member_name).strip(),
+                        "roll_no": "N/A",
+                        "email": "N/A", 
+                        "contact": "N/A",
+                        "role": f"Member {i}"
+                    })
+            
+            # Create problem statement object
+            problem_statement = {
+                "ps_id": str(team.get('PSID', 'N/A')),
+                "title": str(team.get('Problem Statement Name', 'N/A')),
+                "description": str(team.get('Problem Statement Description as it is in SIH Website', 'N/A')),
+                "category": str(team.get('Select Category ', 'N/A')),
+                "difficulty": "N/A",
+                "domain": "N/A"
+            }
+            
+            # Create transformed team object
+            transformed_team = {
+                "team_id": str(team.get('Team ID', 'N/A')),
+                "team_name": str(team.get('Team Name', 'N/A')),
+                "college": "GLA University",  # Default since not in FinalTeamandpsdetails
+                "department": "N/A",
+                "year": "N/A",
+                "team_leader": {
+                    "name": str(team.get('Team Leader Name', 'N/A')),
+                    "roll_no": str(team.get('University Roll No', 'N/A')),
+                    "email": str(team.get('Team Leader Email id (gla email id only)', 'N/A')),
+                    "contact": str(team.get('Team Leader Contact No.', 'N/A')),
+                    "role": "Team Leader"
+                },
+                "team_members": team_members,
+                "problem_statement": problem_statement,
+                "mentor": None,
+                "status": "active"
+            }
+            
+            transformed_teams.append(transformed_team)
         
         # Convert ObjectId to string for JSON serialization
-        for team in teams:
-            team["_id"] = str(team["_id"])
+        for team in transformed_teams:
+            if "_id" in team:
+                team["_id"] = str(team["_id"])
         
-        return teams
+        return transformed_teams
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

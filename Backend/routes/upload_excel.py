@@ -109,18 +109,20 @@ async def upload_excel(file: UploadFile = File(...)):
             members = [str(row.get(col)).strip() for col in member_columns if pd.notna(row.get(col)) and str(row.get(col)).strip()]
 
             team_data = {
-                "team_id": COL_TEAM_ID,
-                # Assuming 'Problem Statement Id' is not in the new file, you can assign it or remove it
-                "problem_statement_id": None,
+                "team_id": str(row.get(COL_TEAM_ID)),  # Get the actual team ID from the row
+                "problem_statement_id": str(row.get(COL_PSID)),  # Get the actual PSID from the row
                 "team_name": team_name,
                 "team_leader": {
-                    "name": row.get(COL_LEADER_NAME),
+                    "name": str(row.get(COL_LEADER_NAME)),
+                    "roll_no": str(row.get(COL_ROLL_NO)),  # Add roll_no to team_leader object
                     "email": leader_email,
-                    "contact": row.get(COL_LEADER_CONTACT)
+                    "contact": str(row.get(COL_LEADER_CONTACT))
                 },
                 "members": members,
-                "category": row.get(COL_CATEGORY),
-                "subcategory": row.get(COL_SUBCATEGORY)
+                "category": str(row.get(COL_CATEGORY)),
+                "subcategory": str(row.get(COL_SUBCATEGORY)) if COL_SUBCATEGORY in row else None,
+                "statement": str(row.get(COL_STATEMENT)),
+                "university_roll_no": str(row.get(COL_ROLL_NO))
             }
 
             # Insert into MongoDB
@@ -133,14 +135,16 @@ async def upload_excel(file: UploadFile = File(...)):
 
             # Store plain text password for export
             credentials_store.append({
-                "team_id": COL_TEAM_ID,
+                "team_id": str(row.get(COL_TEAM_ID)),
                 "team_name": team_name,
                 "email": leader_email,
                 "password": password
             })
 
             # Send email with credentials
-            send_email(to_email=leader_email, team_id=COL_TEAM_ID, password=password)
+            send_email(to_email=leader_email, team_id=str(row.get(COL_TEAM_ID)), password=password)
+            if send_email(to_email=leader_email, team_id=str(row.get(COL_TEAM_ID)), password=password):
+                print(f"Email sent successfully to {leader_email}") 
 
             inserted_teams.append(team_data)
 

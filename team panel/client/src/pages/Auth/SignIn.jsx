@@ -4,6 +4,7 @@ import { TeamContext } from "../../context/TeamContext";
 import toast from "react-hot-toast";
 import "./Auth.css";
 import { API_BASE_URL } from "../../config";
+import HeaderSignIn from "./Header_SignIn";
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -15,12 +16,7 @@ const SignIn = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    // If team is set, redirect to dashboard
-    if (team) {
-      navigate("/");
-    }
-  }, [team, navigate]);
+  // Remove useEffect navigation to avoid double navigation or redirect loop
 
   const handleChange = (e) => {
     setFormData({
@@ -60,10 +56,9 @@ const SignIn = () => {
       // 4. Save to localStorage and context
       localStorage.setItem("team", JSON.stringify(data.team));
       localStorage.setItem("token", data.access_token);
-      setTeam(data.team);
-
-      toast.success("Signed in successfully");
-      // useEffect will redirect to dashboard
+  setTeam(data.team);
+  toast.success("Signed in successfully");
+  navigate("/");
     } catch (err) {
       setError(err.message);
       toast.error(err.message);
@@ -73,54 +68,57 @@ const SignIn = () => {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <h2>Team Sign In</h2>
-        {error && <div className="error-message">{error}</div>}
-        <form onSubmit={handleSubmit}>
-          <div className="form-section">
-            <div className="form-group">
-              <label>Email ID</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="Enter your official team leader email id"
-                required
-                disabled={loading}
-              />
+    <>
+      <HeaderSignIn />
+      <div className="auth-container">
+        <div className="auth-card">
+          <h2>Team Sign In</h2>
+          {error && <div className="error-message">{error}</div>}
+          <form onSubmit={handleSubmit}>
+            <div className="form-section">
+              <div className="form-group">
+                <label>Email ID</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="Enter your official team leader email id"
+                  required
+                  disabled={loading}
+                />
+              </div>
+              <div className="form-group">
+                <label>Password</label>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Enter your password"
+                  required
+                  disabled={loading}
+                />
+              </div>
             </div>
-            <div className="form-group">
-              <label>Password</label>
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Enter your password"
-                required
-                disabled={loading}
-              />
-            </div>
-          </div>
 
-          <button type="submit" className="auth-button" disabled={loading}>
-            {loading ? "Signing In..." : "Sign In"}
-          </button>
+            <button type="submit" className="auth-button" disabled={loading}>
+              {loading ? "Signing In..." : "Sign In"}
+            </button>
 
-          <div className="demo-credentials">
-            <h3>Demo Credentials</h3>
-            <p>
-              <strong>Team ID:</strong> TC-2024-001
-            </p>
-            <p>
-              <strong>Password:</strong> hackathon
-            </p>
-          </div>
-        </form>
+            {/* <div className="demo-credentials">
+              <h3>Demo Credentials</h3>
+              <p>
+                <strong>Team ID:</strong> TC-2024-001
+              </p>
+              <p>
+                <strong>Password:</strong> hackathon
+              </p>
+            </div> */}
+          </form>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

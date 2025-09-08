@@ -22,7 +22,7 @@ function SignIn() {
             // Store the token in localStorage
             localStorage.setItem('judgeToken', data.access_token);
             localStorage.setItem('judgeUsername', username);
-            alert("Login successful!");
+            // alert("Login successful!");
             navigate("/dashboard");
         } catch (err) {
             setError(err.message || "Login failed. Please check your credentials.");

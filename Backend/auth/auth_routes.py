@@ -44,7 +44,7 @@ async def health_check():
 
 @router.on_event("startup")
 async def startup_db_client():
-    global client, db, logins_collection, admin_collection, team_ps_details
+    global client, db, logins_collection, admin_collection, teams_meta
     try:
         # Connect with increased timeout and retry settings
         client = AsyncIOMotorClient(
@@ -61,7 +61,7 @@ async def startup_db_client():
         # Initialize database and collections
         db = client[MONGO_DB]
         logins_collection = db["team_login"]
-        team_ps_details = db["team_ps_details"]
+        teams_meta = db["teams_meta"]
         admin_collection = db["admin_users"]
 
         # Create indexes for better performance
@@ -75,7 +75,7 @@ async def startup_db_client():
         client = None
         db = None
         logins_collection = None
-        team_ps_details = None
+        teams_meta = None
         admin_collection = None
 
 @router.post("/judge/login")
@@ -280,9 +280,9 @@ async def team_login(payload: LoginRequest):
 
     # Try to find team meta by team_id first
     team_id = user.get("team_id")
-    team_data = await db["team_ps_details"].find_one({"team_id": team_id})
+    team_data = await db["teams_meta"].find_one({"team_id": team_id})
     if not team_data:
-        team_data = await db["team_ps_details"].find_one({"team_leader.email": payload.email})
+        team_data = await db["teams_meta"].find_one({"team_leader.email": payload.email})
 
     if not team_data:
         raise HTTPException(status_code=404, detail=f"Team data not found for team_id {team_id} or email {payload.email}")

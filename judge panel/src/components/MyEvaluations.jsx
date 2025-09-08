@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { getMyEvaluations, getTeamDetails } from '../utils/api';
 import './MyEvaluations.css';
+import { API_BASE_URL } from '../config';
 
 const MyEvaluations = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -243,7 +244,7 @@ const MyEvaluations = () => {
               <div className="evaluation-score">
                 <div className={`score-badge score-${getScoreColor(evaluation.totalScore)}`}>
                   <Star size={16} />
-                  {evaluation.totalScore}/10
+                  {evaluation.totalScore}/100
                 </div>
                 <div className={`status-badge status-${getStatusColor(evaluation.status)}`}>
                   {evaluation.status}
@@ -343,7 +344,7 @@ const MyEvaluations = () => {
 
               <div className="metadata-item">
                 <h3>Evaluation Summary</h3>
-                <p className="abstract">Status: {selectedEvaluation.status} • Score: {selectedEvaluation.totalScore}/10</p>
+                <p className="abstract">Status: {selectedEvaluation.status} • Score: {selectedEvaluation.totalScore}/100</p>
                 {selectedEvaluation.recommendation && (
                   <p className="abstract">Recommendation: {selectedEvaluation.recommendation}</p>
                 )}
