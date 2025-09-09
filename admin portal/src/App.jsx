@@ -14,10 +14,7 @@ import FinalSubmissionList from './components/FinalSubmissionList.jsx';
 import './App.css';
 
 function App() {
-  const [sidebarOpen, setSidebarOpen] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return window.innerWidth >= 1024; // default open on desktop
-  });
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Always start closed
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     try {
       return Boolean(localStorage.getItem('authUser'));
@@ -51,6 +48,8 @@ function App() {
       localStorage.setItem('authUser', JSON.stringify(user));
     } catch {}
     setIsAuthenticated(true);
+    // Keep sidebar closed on login
+    setSidebarOpen(false);
   };
 
   const handleLogout = () => {
@@ -58,16 +57,18 @@ function App() {
       localStorage.removeItem('authUser');
     } catch {}
     setIsAuthenticated(false);
+    setSidebarOpen(false); // Close sidebar on logout
   };
 
-  // Keep behavior consistent on resize: open on desktop, closed on mobile
+  // Optional: Auto-open sidebar on desktop screens when user manually opens it
+  // Remove this useEffect if you want the sidebar to stay closed until manually opened
   useEffect(() => {
     const onResize = () => {
-      if (window.innerWidth >= 1024) {
-        setSidebarOpen(true);
-      } else {
+      // Only auto-close on mobile, don't auto-open on desktop
+      if (window.innerWidth < 1024) {
         setSidebarOpen(false);
       }
+      // Remove the auto-open logic for desktop
     };
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
