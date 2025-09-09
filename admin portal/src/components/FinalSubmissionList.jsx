@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { 
   Search, 
-  Award,
+  Trophy,
   Users,
   Star,
   ExternalLink,
   Download,
-  TrendingUp
+  TrendingUp,
+  Calendar,
+  FileText
 } from 'lucide-react';
 import './FinalSubmissionList.css';
 
@@ -23,8 +25,8 @@ const FinalSubmissionList = () => {
       category: 'Smart Cities',
       averageScore: 8.7,
       totalEvaluators: 3,
-      uniquenessScore: 85,
-      plagiarismScore: 12,
+      // uniquenessScore: 85,
+      // plagiarismScore: 12,
       submissionDate: '2024-01-15',
       pptLink: 'https://docs.google.com/presentation/d/example1',
       abstract: 'An intelligent waste management system using IoT sensors and AI to optimize collection routes and reduce environmental impact. The system reduces operational costs by 30% and improves collection efficiency by 45%.',
@@ -37,8 +39,8 @@ const FinalSubmissionList = () => {
       category: 'Healthcare',
       averageScore: 9.1,
       totalEvaluators: 3,
-      uniquenessScore: 92,
-      plagiarismScore: 8,
+      // uniquenessScore: 92,
+      // plagiarismScore: 8,
       submissionDate: '2024-01-13',
       pptLink: 'https://docs.google.com/presentation/d/example2',
       abstract: 'A comprehensive healthcare monitoring platform that provides real-time patient data analysis and predictive health insights.',
@@ -51,8 +53,8 @@ const FinalSubmissionList = () => {
       category: 'Data Science',
       averageScore: 8.3,
       totalEvaluators: 3,
-      uniquenessScore: 78,
-      plagiarismScore: 15,
+      // uniquenessScore: 78,
+      // plagiarismScore: 15,
       submissionDate: '2024-01-14',
       pptLink: 'https://docs.google.com/presentation/d/example3',
       abstract: 'Advanced analytics dashboard for business intelligence with predictive modeling capabilities.',
@@ -65,8 +67,8 @@ const FinalSubmissionList = () => {
       category: 'Sustainability',
       averageScore: 8.9,
       totalEvaluators: 3,
-      uniquenessScore: 88,
-      plagiarismScore: 10,
+      // uniquenessScore: 88,
+      // plagiarismScore: 10,
       submissionDate: '2024-01-12',
       pptLink: 'https://docs.google.com/presentation/d/example4',
       abstract: 'AI-powered system for optimizing renewable energy production and distribution in smart grids.',
@@ -104,8 +106,8 @@ const FinalSubmissionList = () => {
       <div className="stats-section">
         <div className="stats-grid">
           <div className="stat-card">
-            <div className="stat-icon">
-              <Award size={24} />
+            <div className="stat-icon" >
+              <FileText size={24} />
             </div>
             <div className="stat-content">
               <h3>{finalSubmissions.length}</h3>
@@ -198,7 +200,7 @@ const FinalSubmissionList = () => {
                 </div>
               </div>
 
-              <div className="metrics-section">
+              {/* <div className="metrics-section">
                 <div className="metric">
                   <span className="metric-label">Uniqueness</span>
                   <div className="metric-value">
@@ -223,7 +225,7 @@ const FinalSubmissionList = () => {
                     <span className="metric-score">{submission.plagiarismScore}%</span>
                   </div>
                 </div>
-              </div>
+              </div> */}
             </div>
 
             <div className="submission-actions">
@@ -236,7 +238,7 @@ const FinalSubmissionList = () => {
                 Download
               </button>
               <button className="btn btn-primary">
-                <Award size={16} />
+                <Trophy size={16} />
                 View Details
               </button>
             </div>
@@ -255,6 +257,3 @@ const FinalSubmissionList = () => {
 };
 
 export default FinalSubmissionList;
-
-
-
