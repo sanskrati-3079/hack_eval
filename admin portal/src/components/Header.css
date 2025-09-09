@@ -13,6 +13,8 @@
   --gray-900: #111827;
   --primary-50: #eff6ff;
   --primary-100: #dbeafe;
+  --primary-200: #bfdbfe;
+  --primary-300: #93c5fd;
   --primary-500: #3b82f6;
   --primary-600: #2563eb;
   --primary-700: #1d4ed8;
@@ -72,6 +74,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.brand-logo img {
+  width: 90px;
+  height: 90px;
+  border-radius: 0.5rem;
+  object-fit: contain;
+  background: var(--white);
 }
 
 .logo-circle {
@@ -227,6 +237,7 @@
 
 .nav-item {
   flex-shrink: 0;
+  position: relative;
 }
 
 .nav-link {
@@ -250,11 +261,14 @@
   border-color: var(--gray-200);
 }
 
+/* Enhanced active state styling */
 .nav-link.active {
   color: var(--primary-600);
   background-color: var(--white);
   border-color: var(--primary-200);
   font-weight: 600;
+  position: relative;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
 .nav-link.active::before {
@@ -263,21 +277,16 @@
   bottom: -1px;
   left: 0;
   right: 0;
-  height: 2px;
-  background: var(--primary-500);
-  border-radius: 1px 1px 0 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary-500), var(--primary-600));
+  border-radius: 2px 2px 0 0;
 }
 
-.nav-item {
-  position: relative;
-}
-
-.brand-logo img {
-  width: 90px;
-  height: 90px;
-  border-radius: 0.5rem;
-  object-fit: contain;
-  background: var(--white);
+/* Add active state hover effect */
+.nav-link.active:hover {
+  color: var(--primary-700);
+  background-color: var(--primary-50);
+  border-color: var(--primary-300);
 }
 
 /* Mobile Navigation Overlay */
@@ -324,6 +333,11 @@
   
   .brand-info {
     display: none;
+  }
+  
+  .brand-logo img {
+    width: 60px;
+    height: 60px;
   }
   
   .logo-circle {
@@ -401,6 +415,11 @@
 @media (max-width: 480px) {
   .header-top {
     padding: 0.75rem;
+  }
+  
+  .brand-logo img {
+    width: 50px;
+    height: 50px;
   }
   
   .logo-circle {

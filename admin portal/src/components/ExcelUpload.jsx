@@ -113,7 +113,7 @@ const ExcelUpload = () => {
             </li>
             <li>
               Ensure all required columns are present with the exact names:
-              <ul className="instructions-sublist">
+              <ul className="instructions-sublist"><b>
                 <li>Select Category</li>
                 <li>Team Name</li>
                 <li>Team Leader Name</li>
@@ -127,6 +127,7 @@ const ExcelUpload = () => {
                 <li>Team_Memeber_5</li>
                 <li>PSID</li>
                 <li>Statement</li>
+                </b>
               </ul>
             </li>
             <li>

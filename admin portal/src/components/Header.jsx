@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Menu, 
   Bell, 
@@ -15,8 +15,19 @@ import {
 } from 'lucide-react';
 import './Header.css';
 
-const Header = ({ onMenuClick, onLogout, activeRound }) => {
+const Header = ({ 
+  onMenuClick, 
+  onLogout, 
+  activeRound, 
+  currentPath = window.location.pathname // Get current path
+}) => {
   const [isNavOpen, setIsNavOpen] = useState(false);
+  const [activePath, setActivePath] = useState(currentPath);
+
+  // Update active path when currentPath prop changes
+  useEffect(() => {
+    setActivePath(currentPath);
+  }, [currentPath]);
 
   const navigationItems = [
     { path: '/dashboard', icon: Home, label: 'Dashboard' },
@@ -29,24 +40,44 @@ const Header = ({ onMenuClick, onLogout, activeRound }) => {
     { path: '/final-submissions', icon: FileText, label: 'Final Submissions' }
   ];
 
+  // Function to check if a path is active
+  const isActiveLink = (itemPath) => {
+    return activePath === itemPath || activePath.startsWith(itemPath + '/');
+  };
+
+  const handleNavClick = (path, e) => {
+    // If you're using a router, prevent default and use router navigation
+    // e.preventDefault();
+    // router.push(path); // Example for Next.js
+    // navigate(path); // Example for React Router
+    
+    setActivePath(path);
+    setIsNavOpen(false);
+  };
+
   return (
     <header className="header">
       {/* Top Header Row */}
       <div className="header-top">
         <div className="header-left">
+          <button 
+            className="menu-toggle"
+            onClick={() => setIsNavOpen(!isNavOpen)}
+            aria-label="Toggle navigation menu"
+          >
+            <Menu size={24} />
+          </button>
+          
           <div className="brand-text">
             <div className="brand-logo">
-              {/* Fixed image path - moved from public folder path to relative path */}
               <img 
                 src="/images/codoraai.png" 
                 alt="CodoraAI Logo" 
                 onError={(e) => {
-                  // Fallback to logo circle if image fails to load
                   e.target.style.display = 'none';
                   e.target.nextElementSibling.style.display = 'flex';
                 }}
               />
-              {/* Fallback logo circle - hidden by default, shown if image fails */}
               <div className="logo-circle" style={{display: 'none'}}>
                 CA
               </div>
@@ -85,11 +116,10 @@ const Header = ({ onMenuClick, onLogout, activeRound }) => {
           <ul className="nav-list">
             {navigationItems.map(({ path, icon: Icon, label }) => (
               <li key={path} className="nav-item">
-                {/* You'll need to replace this with your router's Link component */}
                 <a 
                   href={path} 
-                  className="nav-link"
-                  onClick={() => setIsNavOpen(false)}
+                  className={`nav-link ${isActiveLink(path) ? 'active' : ''}`}
+                  onClick={(e) => handleNavClick(path, e)}
                 >
                   <Icon size={16} />
                   <span>{label}</span>
