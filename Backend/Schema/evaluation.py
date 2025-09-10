@@ -1,7 +1,7 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional, Dict
 from datetime import datetime
-from db.mongo import db  # ✅ MongoDB instance
+from db.mongo import get_database  # ✅ Import the function instead of direct db
 
 # ------------------ ✅ Pydantic Schemas ------------------
 
@@ -9,7 +9,7 @@ class EvaluationCriteria(BaseModel):
     criteria_id: str
     name: str
     weight: float
-    description: Optional[str]
+    description: Optional[str] = None
 
 class JudgeEvaluationScore(BaseModel):
     problem_solution_fit: float = Field(..., ge=1, le=10, description="Problem-Solution Fit (1-10)")
@@ -37,10 +37,13 @@ class TeamEvaluation(BaseModel):
     evaluated_at: datetime = Field(default_factory=datetime.utcnow, description="When evaluation was performed")
     submitted_at: Optional[datetime] = Field(None, description="When evaluation was submitted")
     
-    class Config:
-        json_encoders = {
+    # ✅ Pydantic V2 config
+    model_config = ConfigDict(
+        json_encoders={
             datetime: lambda v: v.isoformat()
-        }
+        },
+        validate_by_name=True
+    )
 
 class EvaluationSummary(BaseModel):
     team_id: str
@@ -65,15 +68,38 @@ class JudgeEvaluationHistory(BaseModel):
     average_scores_given: float
     evaluations: List[TeamEvaluation]
 
-# ------------------ 🔌 MongoDB Collections ------------------
+# ------------------ 🔌 MongoDB Collection Getters ------------------
 
-# Create collections if they don't exist
-evaluation_criteria_collection = db["evaluation_criteria"]
-team_evaluations_collection = db["team_evaluations"]
-evaluation_summary_collection = db["evaluation_summary"]
-judge_evaluation_history_collection = db["judge_evaluation_history"]
+def get_evaluation_criteria_collection():
+    """Get evaluation_criteria collection with lazy initialization"""
+    db = get_database()
+    if db is None:
+        raise RuntimeError("Database not initialized. Call connect_to_mongo() first.")
+    return db["evaluation_criteria"]
 
-# Initialize default evaluation criteria
+def get_team_evaluations_collection():
+    """Get team_evaluations collection with lazy initialization"""
+    db = get_database()
+    if db is None:
+        raise RuntimeError("Database not initialized. Call connect_to_mongo() first.")
+    return db["team_evaluations"]
+
+def get_evaluation_summary_collection():
+    """Get evaluation_summary collection with lazy initialization"""
+    db = get_database()
+    if db is None:
+        raise RuntimeError("Database not initialized. Call connect_to_mongo() first.")
+    return db["evaluation_summary"]
+
+def get_judge_evaluation_history_collection():
+    """Get judge_evaluation_history collection with lazy initialization"""
+    db = get_database()
+    if db is None:
+        raise RuntimeError("Database not initialized. Call connect_to_mongo() first.")
+    return db["judge_evaluation_history"]
+
+# ------------------ 🔄 Initialize Default Criteria (Moved to startup) ------------------
+
 default_criteria = [
     {
         "criteria_id": "problem_solution_fit",
@@ -115,7 +141,7 @@ default_criteria = [
         "criteria_id": "presentation_demo_quality",
         "name": "Presentation & Demo Quality",
         "weight": 5.0,
-        "description": "Clarity of demo, ability to answer judges’ questions, professional presentation."
+        "description": "Clarity of demo, ability to answer judges' questions, professional presentation."
     },
     {
         "criteria_id": "team_collaboration",
@@ -125,7 +151,14 @@ default_criteria = [
     }
 ]
 
-# Insert default criteria if collection is empty
-if evaluation_criteria_collection.count_documents({}) == 0:
-    evaluation_criteria_collection.insert_many(default_criteria)
-
+async def initialize_default_criteria():
+    """Initialize default evaluation criteria after database connection is established"""
+    try:
+        collection = get_evaluation_criteria_collection()
+        if await collection.count_documents({}) == 0:
+            await collection.insert_many(default_criteria)
+            print("✅ Default evaluation criteria initialized")
+        else:
+            print("✅ Evaluation criteria already exists")
+    except Exception as e:
+        print(f"❌ Error initializing default criteria: {e}")
