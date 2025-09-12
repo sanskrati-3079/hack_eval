@@ -1,0 +1,159 @@
+.round-scheduler {
+  padding: 2rem;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.page-subtitle {
+  color: #666;
+}
+
+.action-bar {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+.view-controls {
+  display: flex;
+  gap: 1rem;
+}
+
+.rounds-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.round-card {
+  border: 1px solid #ddd;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  background-color: white;
+}
+
+.round-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.round-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.round-description {
+  color: #666;
+}
+
+.round-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.round-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  justify-content: flex-end;
+}
+
+.badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.badge-warning {
+  background-color: #fff7ed;
+  color: #c2410c;
+}
+
+.badge-success {
+  background-color: #f0fdf4;
+  color: #15803d;
+}
+
+.badge-info {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background-color: #2563eb;
+  color: white;
+  border: none;
+}
+
+.btn-primary:hover {
+  background-color: #1d4ed8;
+}
+
+.btn-secondary {
+  background-color: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+}
+
+.btn-secondary:hover {
+  background-color: #e5e7eb;
+}
+
+.btn-error {
+  background-color: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.btn-error:hover {
+  background-color: #fecaca;
+}
+
+.calendar-view {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  border: 2px dashed #e5e7eb;
+  border-radius: 0.5rem;
+}
+
+.calendar-placeholder {
+  text-align: center;
+  color: #6b7280;
+}
+
+.calendar-placeholder h3 {
+  margin: 1rem 0 0.5rem;
+}

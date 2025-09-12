@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hackathon Team Dashboard - GLA University</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-code"></i>
+                    <h1>Hackathon Dashboard</h1>
+                </div>
+                <div class="current-round">
+                    <span class="round-label">Current Round:</span>
+                    <span class="round-name">Round 1</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Team Info Card -->
+        <section class="team-info-card">
+            <div class="card-header">
+                <h2><i class="fas fa-users"></i> Team Information</h2>
+            </div>
+            <div class="team-details">
+                <div class="team-basic">
+                    <div class="team-name">
+                        <h3>Team: <span class="highlight">CodeCrafters</span></h3>
+                        <span class="team-id">ID: TC-2024-001</span>
+                    </div>
+                    <div class="problem-info">
+                        <h4>Problem Statement</h4>
+                        <p>Develop an AI-powered waste management system for smart cities</p>
+                        <span class="category">Category: <span class="highlight">AI/ML</span></span>
+                    </div>
+                </div>
+                <div class="team-members">
+                    <h4>Team Members</h4>
+                    <div class="members-list">
+                        <div class="member">
+                            <div class="member-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <span>Rahul Sharma (Lead)</span>
+                        </div>
+                        <div class="member">
+                            <div class="member-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <span>Priya Patel</span>
+                        </div>
+                        <div class="member">
+                            <div class="member-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <span>Amit Kumar</span>
+                        </div>
+                        <div class="member">
+                            <div class="member-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <span>Neha Singh</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Countdown Timer -->
+        <section class="countdown-section">
+            <div class="countdown-card">
+                <div class="countdown-header">
+                    <h3><i class="fas fa-clock"></i> Submission Deadline</h3>
+                    <span class="round-info">Round 1</span>
+                </div>
+                <div class="countdown-timer" id="countdown">
+                    <div class="time-unit">
+                        <span class="time-value" id="days">00</span>
+                        <span class="time-label">Days</span>
+                    </div>
+                    <div class="time-unit">
+                        <span class="time-value" id="hours">00</span>
+                        <span class="time-label">Hours</span>
+                    </div>
+                    <div class="time-unit">
+                        <span class="time-value" id="minutes">00</span>
+                        <span class="time-label">Minutes</span>
+                    </div>
+                    <div class="time-unit">
+                        <span class="time-value" id="seconds">00</span>
+                        <span class="time-label">Seconds</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Submissions Section -->
+        <section class="submissions-section">
+            <h2><i class="fas fa-upload"></i> Submissions</h2>
+            <div class="submissions-grid">
+                <!-- IST Submission -->
+                <div class="submission-card">
+                    <div class="submission-header">
+                        <h3>IST Submission</h3>
+                        <span class="status uploaded">
+                            <i class="fas fa-check-circle"></i> Uploaded
+                        </span>
+                    </div>
+                    <div class="submission-content">
+                        <p>Initial project proposal and team details</p>
+                        <div class="submission-actions">
+                            <button class="btn btn-secondary">
+                                <i class="fas fa-download"></i> Download
+                            </button>
+                            <button class="btn btn-primary">
+                                <i class="fas fa-upload"></i> Update
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Round 1 Submission -->
+                <div class="submission-card">
+                    <div class="submission-header">
+                        <h3>Round 1 Submission</h3>
+                        <span class="status pending">
+                            <i class="fas fa-clock"></i> Pending
+                        </span>
+                    </div>
+                    <div class="submission-content">
+                        <p>Prototype and technical documentation</p>
+                        <div class="submission-actions">
+                            <button class="btn btn-primary upload-btn">
+                                <i class="fas fa-upload"></i> Upload Files
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Round 2 Submission -->
+                <div class="submission-card">
+                    <div class="submission-header">
+                        <h3>Round 2 Submission</h3>
+                        <span class="status locked">
+                            <i class="fas fa-lock"></i> Locked
+                        </span>
+                    </div>
+                    <div class="submission-content">
+                        <p>Final presentation and demo video</p>
+                        <div class="submission-actions">
+                            <button class="btn btn-disabled" disabled>
+                                <i class="fas fa-lock"></i> Locked
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Leaderboard Section -->
+        <section class="leaderboard-section">
+            <h2><i class="fas fa-trophy"></i> Leaderboard</h2>
+            <div class="leaderboard-tabs">
+                <button class="tab-btn active" data-tab="overall">Overall Ranking</button>
+                <button class="tab-btn" data-tab="category">Category-wise</button>
+            </div>
+            
+            <div class="leaderboard-content">
+                <!-- Overall Leaderboard -->
+                <div class="leaderboard-tab active" id="overall">
+                    <div class="leaderboard-table">
+                        <div class="table-header">
+                            <span class="rank-col">Rank</span>
+                            <span class="team-col">Team Name</span>
+                            <span class="score-col">Score</span>
+                            <span class="category-col">Category</span>
+                        </div>
+                        <div class="table-body">
+                            <div class="table-row current-team">
+                                <span class="rank">#3</span>
+                                <span class="team-name">CodeCrafters</span>
+                                <span class="score">92.5</span>
+                                <span class="category">AI/ML</span>
+                            </div>
+                            <div class="table-row">
+                                <span class="rank">#1</span>
+                                <span class="team-name">TechWizards</span>
+                                <span class="score">95.8</span>
+                                <span class="category">Web Dev</span>
+                            </div>
+                            <div class="table-row">
+                                <span class="rank">#2</span>
+                                <span class="team-name">InnovateLab</span>
+                                <span class="score">94.2</span>
+                                <span class="category">Mobile</span>
+                            </div>
+                            <div class="table-row">
+                                <span class="rank">#4</span>
+                                <span class="team-name">DataMasters</span>
+                                <span class="score">89.7</span>
+                                <span class="category">AI/ML</span>
+                            </div>
+                            <div class="table-row">
+                                <span class="rank">#5</span>
+                                <span class="team-name">CyberSec</span>
+                                <span class="score">87.3</span>
+                                <span class="category">Security</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category Leaderboard -->
+                <div class="leaderboard-tab" id="category">
+                    <div class="category-selector">
+                        <select id="categorySelect">
+                            <option value="ai-ml">AI/ML</option>
+                            <option value="web-dev">Web Development</option>
+                            <option value="mobile">Mobile Development</option>
+                            <option value="security">Cybersecurity</option>
+                        </select>
+                    </div>
+                    <div class="leaderboard-table">
+                        <div class="table-header">
+                            <span class="rank-col">Rank</span>
+                            <span class="team-col">Team Name</span>
+                            <span class="score-col">Score</span>
+                        </div>
+                        <div class="table-body">
+                            <div class="table-row current-team">
+                                <span class="rank">#1</span>
+                                <span class="team-name">CodeCrafters</span>
+                                <span class="score">92.5</span>
+                            </div>
+                            <div class="table-row">
+                                <span class="rank">#2</span>
+                                <span class="team-name">DataMasters</span>
+                                <span class="score">89.7</span>
+                            </div>
+                            <div class="table-row">
+                                <span class="rank">#3</span>
+                                <span class="team-name">AITeam</span>
+                                <span class="score">85.2</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Notifications Panel -->
+        <section class="notifications-section">
+            <h2><i class="fas fa-bell"></i> Notifications</h2>
+            <div class="notifications-list">
+                <div class="notification-item success">
+                    <div class="notification-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="notification-content">
+                        <h4>Submission Confirmed</h4>
+                        <p>Your IST submission has been successfully uploaded and confirmed.</p>
+                        <span class="notification-time">2 hours ago</span>
+                    </div>
+                </div>
+
+                <div class="notification-item info">
+                    <div class="notification-icon">
+                        <i class="fas fa-info-circle"></i>
+                    </div>
+                    <div class="notification-content">
+                        <h4>Round 1 Deadline</h4>
+                        <p>Round 1 submission deadline is approaching. Please submit your prototype soon.</p>
+                        <span class="notification-time">1 day ago</span>
+                    </div>
+                </div>
+
+                <div class="notification-item warning">
+                    <div class="notification-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="notification-content">
+                        <h4>Judge Feedback</h4>
+                        <p>Your IST submission received positive feedback. Consider improving the UI/UX design.</p>
+                        <span class="notification-time">3 days ago</span>
+                    </div>
+                </div>
+
+                <div class="notification-item success">
+                    <div class="notification-icon">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="notification-content">
+                        <h4>Qualified for Round 1</h4>
+                        <p>Congratulations! Your team has qualified for Round 1 of the hackathon.</p>
+                        <span class="notification-time">1 week ago</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="modal" id="uploadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Upload Submission</h3>
+                <button class="close-btn" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="upload-area">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Drag and drop files here or click to browse</p>
+                    <input type="file" id="fileInput" multiple>
+                    <button class="btn btn-primary">Choose Files</button>
+                </div>
+                <div class="upload-list" id="uploadList"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelUpload">Cancel</button>
+                <button class="btn btn-primary" id="submitUpload">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
