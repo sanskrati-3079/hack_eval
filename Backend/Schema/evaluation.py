@@ -1,9 +1,9 @@
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional, Dict
 from datetime import datetime
-from db.mongo import get_database  # ✅ Import the function instead of direct db
+from db.mongo import get_database  # Import the function instead of direct db
 
-# ------------------ ✅ Pydantic Schemas ------------------
+# ------------------ Pydantic Schemas ------------------
 
 class EvaluationCriteria(BaseModel):
     criteria_id: str

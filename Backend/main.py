@@ -1,4 +1,3 @@
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from auth.auth_routes import router as auth_router
@@ -12,11 +11,29 @@ from routes.team_ps_upload import router as team_ps_router
 from routes.round_state import router as round_state_router
 from routes.ppt_upload import router as ppt_upload_router
 from datetime import datetime
+from contextlib import asynccontextmanager
+from db.mongo import connect_to_mongo, close_mongo_connection, get_database
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    success = await connect_to_mongo()
+    if success:
+        print("✅ Database connection established during startup")
+    else:
+        print("⚠️ Database connection failed during startup")
+    
+    yield
+    
+    # Shutdown
+    await close_mongo_connection()
+    print("✅ MongoDB connection closed during shutdown")
 
 app = FastAPI(
     title="Hackathon Evaluation Backend",
     description="Backend API for GLA University Hackathon Evaluation System",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 origin = [
@@ -36,27 +53,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Add startup event to connect to MongoDB
-@app.on_event("startup")
-async def startup_event():
-    """Initialize database connection on startup"""
-    from db.mongo import connect_to_mongo
-    success = await connect_to_mongo()
-    if success:
-        print("✅ Database connection established during startup")
-    else:
-        print("⚠️ Database connection failed during startup")
-
-# Add shutdown event to close MongoDB connection
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Close database connection on shutdown"""
-    from db.mongo import close_mongo_connection
-    await close_mongo_connection()
-    print("✅ MongoDB connection closed during shutdown")
-
 # Include routers
-app.include_router(auth_router, prefix="/auth", tags=["Team Auth"])
+# app.include_router(auth_router, prefix="/auth", tags=["Team Auth"])
 app.include_router(upload_router, prefix="/routes", tags=["Excel Upload"])
 app.include_router(admin_router, prefix="/admin", tags=["Admin"])
 app.include_router(judge_router, prefix="/judge", tags=["Judge"])
@@ -82,7 +80,6 @@ async def root():
 async def test_database():
     """Test database connection"""
     try:
-        from db.mongo import get_database
         db = get_database()
         if db is not None:
             judge_count = await db.judges.count_documents({})

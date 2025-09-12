@@ -1,4 +1,4 @@
-import { API_BASE_URL, API_BASE_URL } from "../config";
+import { API_BASE_URL} from "../config";
 const AAPI_BASE_URL = API_BASE_URL;
 
 // Helper function to get auth headers
