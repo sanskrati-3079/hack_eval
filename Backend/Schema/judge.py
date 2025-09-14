@@ -4,7 +4,7 @@ from datetime import datetime
 
 class JudgeProfile(BaseModel):
     id: str
-    name: str
+    username: str
     email: EmailStr
     expertise: List[str]
     bio: Optional[str] = None
@@ -13,7 +13,7 @@ class JudgeProfile(BaseModel):
 
 class JudgeModel(BaseModel):
     id: str
-    name: str
+    username: str
     email: EmailStr
     password: str
     expertise: List[str]
@@ -34,7 +34,7 @@ class JudgeLogin(BaseModel):
 
 class JudgeResponse(BaseModel):
     id: str
-    name: str
+    username: str
     email: EmailStr
     expertise: List[str]
     assigned_teams: List[str]

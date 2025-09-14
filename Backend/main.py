@@ -12,7 +12,7 @@ from routes.round_state import router as round_state_router
 from routes.ppt_upload import router as ppt_upload_router
 from datetime import datetime
 from contextlib import asynccontextmanager
-from db.mongo import connect_to_mongo, close_mongo_connection, get_database
+from db.mongo import connect_to_mongo, close_mongo_connection, get_database_async
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -54,7 +54,7 @@ app.add_middleware(
 )
 
 # Include routers
-# app.include_router(auth_router, prefix="/auth", tags=["Team Auth"])
+app.include_router(auth_router, tags=["Team Auth"])
 app.include_router(upload_router, prefix="/routes", tags=["Excel Upload"])
 app.include_router(admin_router, prefix="/admin", tags=["Admin"])
 app.include_router(judge_router, prefix="/judge", tags=["Judge"])
@@ -80,27 +80,45 @@ async def root():
 async def test_database():
     """Test database connection"""
     try:
-        db = get_database()
-        if db is not None:
-            judge_count = await db.judges.count_documents({})
-            return {
-                "status": "success",
-                "message": "Database connection working",
-                "judge_count": judge_count,
-                "database": "connected"
-            }
-        else:
+        db = await get_database_async()
+        if db is None:
             return {
                 "status": "error",
                 "message": "Database connection not available",
                 "database": "disconnected"
             }
+            
+        judge_count = await db.judges.count_documents({})
+        return {
+            "status": "success",
+            "message": "Database connection working",
+            "judge_count": judge_count,
+            "database": "connected"
+        }
     except Exception as e:
         return {
             "status": "error",
             "message": f"Database test failed: {str(e)}",
             "database": "error"
         }
+
+@app.get("/test-db-connection")
+async def test_db_connection():
+    """Test database connection"""
+    try:
+        db = await get_database_async()
+        if db is None:
+            return {"status": "error", "message": "Database connection failed"}
+        
+        # Test by counting documents in rounds collection
+        count = await db.rounds.count_documents({})
+        return {
+            "status": "success", 
+            "message": "Database connection working",
+            "rounds_count": count
+        }
+    except Exception as e:
+        return {"status": "error", "message": f"Database test failed: {str(e)}"}
 
 if __name__ == "__main__":
     import uvicorn

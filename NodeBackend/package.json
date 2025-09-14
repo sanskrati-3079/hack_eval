@@ -1,0 +1,11 @@
+{
+  "name": "hackathon-evaluation-backend",
+  "version": "1.0.0",
+  "description": "Hackathon Evaluation Backend",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Aryan Tiwari",
+  "license": "ISC"
+}

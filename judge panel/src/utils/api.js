@@ -18,9 +18,9 @@ export const judgeLogin = async (username, password) => {
         formData.append('password', password);
 
         console.log('Attempting login with:', { username, password: '***' });
-        console.log('API URL:', `${AAPI_BASE_URL}/auth/judge/login`);
+        console.log('API URL:', `${AAPI_BASE_URL}/judge/login`);
 
-        const response = await fetch(`${AAPI_BASE_URL}/auth/judge/login`, {
+        const response = await fetch(`${AAPI_BASE_URL}/judge/login`, {
             method: 'POST',
             body: formData,
         });

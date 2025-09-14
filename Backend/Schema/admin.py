@@ -15,6 +15,8 @@ class Round(BaseModel):
     status: str = "scheduled"
     judges_required: int
 
+    
+
 class MentorAvailability(BaseModel):
     mentor_id: str
     name: str

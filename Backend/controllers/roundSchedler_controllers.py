@@ -1,214 +1,427 @@
-# routes/rounds.py
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from typing import Optional, List
+# from typing import List, Optional, Dict, Any
+# from datetime import datetime
+# from bson import ObjectId
+# import logging
+
+# from Schema.admin_schema import Round, RoundCreate, RoundUpdate 
+# from db.mongo import db
+
+# logger = logging.getLogger(__name__)
+
+# class RoundController:
+#     """Business logic controller for round operations"""
+    
+#     @staticmethod
+#     async def get_rounds(
+#         skip: int = 0,
+#         limit: int = 10,
+#         status: Optional[str] = None
+#     ) -> List[Round]:
+#         """
+#         Get rounds with pagination and optional status filter
+#         """
+#         try:
+#             query = {}
+#             if status:
+#                 query["status"] = status
+
+#             rounds_cursor = db.rounds.find(query).skip(skip).limit(limit)
+#             rounds = await rounds_cursor.to_list(length=limit)
+            
+#             return [Round(**round) for round in rounds]
+            
+#         except Exception as e:
+#             logger.error(f"Error fetching rounds: {str(e)}")
+#             raise Exception("Failed to fetch rounds")
+
+#     @staticmethod
+#     async def get_round_by_id(round_id: int) -> Optional[Round]:
+#         """
+#         Get a single round by round_id
+#         """
+#         try:
+#             round_data = await db.rounds.find_one({"round_id": round_id})
+#             if round_data:
+#                 return Round(**round_data)
+#             return None
+            
+#         except Exception as e:
+#             logger.error(f"Error fetching round {round_id}: {str(e)}")
+#             raise Exception(f"Failed to fetch round {round_id}")
+
+#     @staticmethod
+#     async def create_round(round_data: RoundCreate, created_by: str) -> Round:
+#         """
+#         Create a new round with validation and business rules
+#         """
+#         try:
+#             # Validate round dates
+#             if round_data.start_time >= round_data.end_time:
+#                 raise ValueError("End time must be after start time")
+            
+#             if round_data.start_time < datetime.utcnow():
+#                 raise ValueError("Start time cannot be in the past")
+
+#             # Check for overlapping rounds
+#             overlap = await db.rounds.find_one({
+#                 "$or": [
+#                     {
+#                         "start_time": {"$lt": round_data.end_time},
+#                         "end_time": {"$gt": round_data.start_time}
+#                     },
+#                     {
+#                         "category": round_data.category,
+#                         "status": {"$in": ["scheduled", "ongoing"]}
+#                     }
+#                 ]
+#             })
+            
+#             if overlap:
+#                 raise ValueError("Round overlaps with existing round or category is already active")
+
+#             # Generate round_id (get the highest round_id and increment)
+#             last_round = await db.rounds.find_one(
+#                 {}, 
+#                 sort=[("round_id", -1)]
+#             )
+#             next_round_id = (last_round["round_id"] + 1) if last_round else 1
+
+#             # Create round document
+#             round_dict = round_data.dict()
+#             round_dict.update({
+#                 "round_id": next_round_id,
+#                 "status": "scheduled",
+#                 "created_at": datetime.utcnow(),
+#                 "created_by": created_by,
+#                 "updated_at": datetime.utcnow()
+#             })
+
+#             # Insert into database
+#             result = await db.rounds.insert_one(round_dict)
+            
+#             if result.inserted_id:
+#                 round_dict["_id"] = result.inserted_id
+#                 return Round(**round_dict)
+#             else:
+#                 raise Exception("Failed to create round")
+
+#         except ValueError as e:
+#             raise e
+#         except Exception as e:
+#             logger.error(f"Error creating round: {str(e)}")
+#             raise Exception("Failed to create round")
+
+#     @staticmethod
+#     async def update_round(round_id: int, update_data: RoundUpdate) -> Optional[Round]:
+#         """
+#         Update an existing round
+#         """
+#         try:
+#             # Check if round exists
+#             existing_round = await db.rounds.find_one({"round_id": round_id})
+#             if not existing_round:
+#                 return None
+
+#             # Prepare update data
+#             update_dict = update_data.dict(exclude_unset=True)
+#             update_dict["updated_at"] = datetime.utcnow()
+
+#             # Validate if updating times
+#             if update_data.start_time or update_data.end_time:
+#                 current_start = update_data.start_time or existing_round["start_time"]
+#                 current_end = update_data.end_time or existing_round["end_time"]
+                
+#                 if current_end <= current_start:
+#                     raise ValueError("End time must be after start time")
+
+#             # Update in database
+#             result = await db.rounds.update_one(
+#                 {"round_id": round_id},
+#                 {"$set": update_dict}
+#             )
+
+#             if result.modified_count > 0:
+#                 updated_round = await db.rounds.find_one({"round_id": round_id})
+#                 return Round(**updated_round)
+#             return None
+
+#         except ValueError as e:
+#             raise e
+#         except Exception as e:
+#             logger.error(f"Error updating round {round_id}: {str(e)}")
+#             raise Exception(f"Failed to update round {round_id}")
+
+#     @staticmethod
+#     async def delete_round(round_id: int) -> bool:
+#         """
+#         Delete a round
+#         """
+#         try:
+#             result = await db.rounds.delete_one({"round_id": round_id})
+#             return result.deleted_count > 0
+            
+#         except Exception as e:
+#             logger.error(f"Error deleting round {round_id}: {str(e)}")
+#             raise Exception(f"Failed to delete round {round_id}")
+
+#     @staticmethod
+#     async def start_round(round_id: int) -> Optional[Round]:
+#         """
+#         Start a round (change status to ongoing)
+#         """
+#         try:
+#             result = await db.rounds.update_one(
+#                 {"round_id": round_id, "status": "scheduled"},
+#                 {"$set": {"status": "ongoing", "updated_at": datetime.utcnow()}}
+#             )
+            
+#             if result.modified_count > 0:
+#                 updated_round = await db.rounds.find_one({"round_id": round_id})
+#                 return Round(**updated_round)
+#             return None
+            
+#         except Exception as e:
+#             logger.error(f"Error starting round {round_id}: {str(e)}")
+#             raise Exception(f"Failed to start round {round_id}")
+
+#     @staticmethod
+#     async def complete_round(round_id: int) -> Optional[Round]:
+#         """
+#         Complete a round (change status to completed)
+#         """
+#         try:
+#             result = await db.rounds.update_one(
+#                 {"round_id": round_id, "status": "ongoing"},
+#                 {"$set": {"status": "completed", "updated_at": datetime.utcnow()}}
+#             )
+            
+#             if result.modified_count > 0:
+#                 updated_round = await db.rounds.find_one({"round_id": round_id})
+#                 return Round(**updated_round)
+#             return None
+            
+#         except Exception as e:
+#             logger.error(f"Error completing round {round_id}: {str(e)}")
+#             raise Exception(f"Failed to complete round {round_id}")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+from typing import List, Optional, Dict, Any
 from datetime import datetime
 from bson import ObjectId
+import logging
 
-from db.mongo import get_database
+from Schema.admin_schema import Round, RoundCreate, RoundUpdate
+from db.mongo import db
 
-router = APIRouter(prefix="/rounds", tags=["Rounds"])
+logger = logging.getLogger(__name__)
 
-# Pydantic models
-class RoundBase(BaseModel):
-    name: str
-    description: str
-    start_time: datetime
-    end_time: datetime
-    upload_deadline: datetime
-    status: str  # draft, live, completed
+class RoundController:
+    """Business logic controller for round operations"""
+    
+    @staticmethod
+    async def get_rounds(
+        skip: int = 0,
+        limit: int = 10,
+        status: Optional[str] = None
+    ) -> List[Round]:
+        """
+        Get rounds with pagination and optional status filter
+        """
+        try:
+            query = {}
+            if status:
+                query["status"] = status
 
-class RoundCreate(RoundBase):
-    pass
+            rounds_cursor = db.rounds.find(query).skip(skip).limit(limit)
+            rounds = await rounds_cursor.to_list(length=limit)
+            
+            return [Round(**round) for round in rounds]
+            
+        except Exception as e:
+            logger.error(f"Error fetching rounds: {str(e)}")
+            raise Exception("Failed to fetch rounds")
 
-class RoundUpdate(BaseModel):
-    name: Optional[str] = None
-    description: Optional[str] = None
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
-    upload_deadline: Optional[datetime] = None
-    status: Optional[str] = None
+    @staticmethod
+    async def get_round_by_id(round_id: int) -> Optional[Round]:
+        """
+        Get a single round by round_id
+        """
+        try:
+            round_data = await db.rounds.find_one({"round_id": round_id})
+            if round_data:
+                return Round(**round_data)
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error fetching round {round_id}: {str(e)}")
+            raise Exception(f"Failed to fetch round {round_id}")
 
-class RoundResponse(RoundBase):
-    id: str
-    created_at: datetime
-    updated_at: datetime
+    @staticmethod
+    async def create_round(round_data: RoundCreate, created_by: str) -> Round:
+        """
+        Create a new round with validation and business rules
+        """
+        try:
+            # Validate round dates
+            if round_data.start_time >= round_data.end_time:
+                raise ValueError("End time must be after start time")
+            
+            if round_data.start_time < datetime.utcnow():
+                raise ValueError("Start time cannot be in the past")
 
-    class Config:
-        json_encoders = {ObjectId: str}
+            # Check for overlapping rounds
+            overlap = await db.rounds.find_one({
+                "$or": [
+                    {
+                        "start_time": {"$lt": round_data.end_time},
+                        "end_time": {"$gt": round_data.start_time}
+                    },
+                    {
+                        "category": round_data.category,
+                        "status": {"$in": ["scheduled", "ongoing"]}
+                    }
+                ]
+            })
+            
+            if overlap:
+                raise ValueError("Round overlaps with existing round or category is already active")
 
-# Utility functions
-async def get_round_by_id(db, round_id: str):
-    try:
-        round_obj = await db.rounds.find_one({"_id": ObjectId(round_id)})
-        if round_obj:
-            round_obj["id"] = str(round_obj["_id"])
-            return round_obj
-        return None
-    except:
-        return None
+            # Generate round_id (get the highest round_id and increment)
+            last_round = await db.rounds.find_one(
+                {}, 
+                sort=[("round_id", -1)]
+            )
+            next_round_id = (last_round["round_id"] + 1) if last_round else 1
 
-async def validate_round_data(db, round_data, exclude_id=None):
-    # Check if status is valid
-    if round_data.status and round_data.status not in ["draft", "live", "completed"]:
-        raise HTTPException(status_code=400, detail="Status must be 'draft', 'live', or 'completed'")
-    
-    # Check if end time is after start time
-    if round_data.start_time and round_data.end_time:
-        if round_data.end_time <= round_data.start_time:
-            raise HTTPException(status_code=400, detail="End time must be after start time")
-    
-    # Check if upload deadline is between start and end times
-    if (round_data.start_time and round_data.end_time and round_data.upload_deadline):
-        if not (round_data.start_time <= round_data.upload_deadline <= round_data.end_time):
-            raise HTTPException(status_code=400, detail="Upload deadline must be between start and end times")
-    
-    return True
+            # Create round document
+            round_dict = round_data.dict()
+            round_dict.update({
+                "round_id": next_round_id,
+                "status": "scheduled",
+                "created_at": datetime.utcnow(),
+                "created_by": created_by,
+                "updated_at": datetime.utcnow()
+            })
 
-# Routes
-@router.get("/", response_model=List[RoundResponse])
-async def get_all_rounds():
-    db = await get_database()
-    if db is None:
-        raise HTTPException(
-            status_code=503,
-            detail="Database connection not available. Please check MongoDB connection."
-        )
-    
-    try:
-        rounds = []
-        async for round_obj in db.rounds.find().sort("start_time", 1):
-            round_obj["id"] = str(round_obj["_id"])
-            rounds.append(round_obj)
-        return rounds
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error accessing database: {str(e)}"
-        )
+            # Insert into database
+            result = await db.rounds.insert_one(round_dict)
+            
+            if result.inserted_id:
+                round_dict["_id"] = result.inserted_id
+                return Round(**round_dict)
+            else:
+                raise Exception("Failed to create round")
 
-@router.get("/{round_id}", response_model=RoundResponse)
-async def get_round(round_id: str):
-    db = await get_database()
-    if db is None:
-        raise HTTPException(
-            status_code=503,
-            detail="Database connection not available. Please check MongoDB connection."
-        )
-    
-    round_obj = await get_round_by_id(db, round_id)
-    if not round_obj:
-        raise HTTPException(status_code=404, detail="Round not found")
-    
-    return round_obj
+        except ValueError as e:
+            raise e
+        except Exception as e:
+            logger.error(f"Error creating round: {str(e)}")
+            raise Exception("Failed to create round")
 
-@router.post("/", response_model=RoundResponse,methods=['POST'])
-async def create_round(round_data: RoundCreate):
-    db = await get_database()
-    if db is None:
-        raise HTTPException(
-            status_code=503,
-            detail="Database connection not available. Please check MongoDB connection."
-        )
-    
-    # Validate round data
-    await validate_round_data(db, round_data)
-    
-    try:
-        now = datetime.utcnow()
-        round_dict = round_data.dict()
-        round_dict["created_at"] = now
-        round_dict["updated_at"] = now
-        
-        result = await db.rounds.insert_one(round_dict)
-        
-        # Get the created round
-        created_round = await get_round_by_id(db, str(result.inserted_id))
-        return created_round
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error creating round: {str(e)}"
-        )
+    @staticmethod
+    async def update_round(round_id: int, update_data: RoundUpdate) -> Optional[Round]:
+        """
+        Update an existing round
+        """
+        try:
+            # Check if round exists
+            existing_round = await db.rounds.find_one({"round_id": round_id})
+            if not existing_round:
+                return None
 
-@router.put("/{round_id}", response_model=RoundResponse)
-async def update_round(round_id: str, round_data: RoundUpdate):
-    db = await get_database()
-    if db is None:
-        raise HTTPException(
-            status_code=503,
-            detail="Database connection not available. Please check MongoDB connection."
-        )
-    
-    # Check if round exists
-    existing_round = await get_round_by_id(db, round_id)
-    if not existing_round:
-        raise HTTPException(status_code=404, detail="Round not found")
-    
-    # Validate round data
-    await validate_round_data(db, round_data, exclude_id=round_id)
-    
-    try:
-        update_data = {k: v for k, v in round_data.dict().items() if v is not None}
-        update_data["updated_at"] = datetime.utcnow()
-        
-        await db.rounds.update_one(
-            {"_id": ObjectId(round_id)},
-            {"$set": update_data}
-        )
-        
-        # Get the updated round
-        updated_round = await get_round_by_id(db, round_id)
-        return updated_round
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error updating round: {str(e)}"
-        )
+            # Prepare update data
+            update_dict = update_data.dict(exclude_unset=True)
+            update_dict["updated_at"] = datetime.utcnow()
 
-@router.delete("/{round_id}")
-async def delete_round(round_id: str):
-    db = await get_database()
-    if db is None:
-        raise HTTPException(
-            status_code=503,
-            detail="Database connection not available. Please check MongoDB connection."
-        )
-    
-    # Check if round exists
-    existing_round = await get_round_by_id(db, round_id)
-    if not existing_round:
-        raise HTTPException(status_code=404, detail="Round not found")
-    
-    try:
-        await db.rounds.delete_one({"_id": ObjectId(round_id)})
-        return {"message": "Round deleted successfully"}
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error deleting round: {str(e)}"
-        )
+            # Validate if updating times
+            if update_data.start_time or update_data.end_time:
+                current_start = update_data.start_time or existing_round["start_time"]
+                current_end = update_data.end_time or existing_round["end_time"]
+                
+                if current_end <= current_start:
+                    raise ValueError("End time must be after start time")
 
-@router.get("/status/{status}", response_model=List[RoundResponse])
-async def get_rounds_by_status(status: str):
-    if status not in ["draft", "live", "completed"]:
-        raise HTTPException(status_code=400, detail="Status must be 'draft', 'live', or 'completed'")
-    
-    db = await get_database()
-    if db is None:
-        raise HTTPException(
-            status_code=503,
-            detail="Database connection not available. Please check MongoDB connection."
-        )
-    
-    try:
-        rounds = []
-        async for round_obj in db.rounds.find({"status": status}).sort("start_time", 1):
-            round_obj["id"] = str(round_obj["_id"])
-            rounds.append(round_obj)
-        return rounds
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error accessing database: {str(e)}"
-        )
+            # Update in database
+            result = await db.rounds.update_one(
+                {"round_id": round_id},
+                {"$set": update_dict}
+            )
+
+            if result.modified_count > 0:
+                updated_round = await db.rounds.find_one({"round_id": round_id})
+                return Round(**updated_round)
+            return None
+
+        except ValueError as e:
+            raise e
+        except Exception as e:
+            logger.error(f"Error updating round {round_id}: {str(e)}")
+            raise Exception(f"Failed to update round {round_id}")
+
+    @staticmethod
+    async def delete_round(round_id: int) -> bool:
+        """
+        Delete a round
+        """
+        try:
+            result = await db.rounds.delete_one({"round_id": round_id})
+            return result.deleted_count > 0
+            
+        except Exception as e:
+            logger.error(f"Error deleting round {round_id}: {str(e)}")
+            raise Exception(f"Failed to delete round {round_id}")
+
+    @staticmethod
+    async def start_round(round_id: int) -> Optional[Round]:
+        """
+        Start a round (change status to ongoing)
+        """
+        try:
+            result = await db.rounds.update_one(
+                {"round_id": round_id, "status": "scheduled"},
+                {"$set": {"status": "ongoing", "updated_at": datetime.utcnow()}}
+            )
+            
+            if result.modified_count > 0:
+                updated_round = await db.rounds.find_one({"round_id": round_id})
+                return Round(**updated_round)
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error starting round {round_id}: {str(e)}")
+            raise Exception(f"Failed to start round {round_id}")
+
+    @staticmethod
+    async def complete_round(round_id: int) -> Optional[Round]:
+        """
+        Complete a round (change status to completed)
+        """
+        try:
+            result = await db.rounds.update_one(
+                {"round_id": round_id, "status": "ongoing"},
+                {"$set": {"status": "completed", "updated_at": datetime.utcnow()}}
+            )
+            
+            if result.modified_count > 0:
+                updated_round = await db.rounds.find_one({"round_id": round_id})
+                return Round(**updated_round)
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error completing round {round_id}: {str(e)}")
+            raise Exception(f"Failed to complete round {round_id}")
