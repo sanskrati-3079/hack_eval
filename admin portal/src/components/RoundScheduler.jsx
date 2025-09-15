@@ -54,11 +54,13 @@ const RoundScheduler = () => {
       }
       
       if (!response.ok) {
-        throw new Error(`Failed to fetch rounds: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to fetch rounds: ${response.status}`);
       }
       
       const data = await response.json();
-      setRounds(data);
+      // Use data.data which contains the array of rounds from ApiResponse
+      setRounds(data.data || []);
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -91,9 +93,8 @@ const RoundScheduler = () => {
   const getStatusBadge = (status) => {
     switch (status) {
       case 'draft': return <span className="badge badge-warning">Draft</span>;
-      case 'scheduled': return <span className="badge badge-info">Scheduled</span>;
-      case 'ongoing': return <span className="badge badge-success">Live</span>;
-      case 'completed': return <span className="badge badge-secondary">Completed</span>;
+      case 'live': return <span className="badge badge-success">Live</span>;
+      case 'completed': return <span className="badge badge-info">Completed</span>;
       default: return <span className="badge badge-warning">Draft</span>;
     }
   };
@@ -119,7 +120,7 @@ const RoundScheduler = () => {
   };
 
   const handleDeleteRound = async (roundId) => {
-    const round = rounds.find((r) => r.round_id === roundId);
+    const round = rounds.find((r) => r._id === roundId);
     const name = round ? round.name : 'this round';
     
     if (!window.confirm(`Delete ${name}? This action cannot be undone.`)) return;
@@ -140,7 +141,8 @@ const RoundScheduler = () => {
       }
       
       if (!response.ok) {
-        throw new Error(`Failed to delete round: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to delete round: ${response.status}`);
       }
       
       await fetchRounds();
@@ -153,42 +155,31 @@ const RoundScheduler = () => {
 
   const handleSaveRound = async (roundData) => {
     try {
-      // Convert to proper format for backend
-      const submitData = {
-        ...roundData,
-        start_time: roundData.start_time,
-        end_time: roundData.end_time,
-        judges_required: parseInt(roundData.judges_required),
-      };
-      
       const token = getAuthToken();
-      const response = await fetch(`${API_BASE_URL}/admin/rounds`, {
-        method: 'POST',
+      const url = selectedRound 
+        ? `${API_BASE_URL}/admin/rounds/${selectedRound._id}`
+        : `${API_BASE_URL}/admin/rounds`;
+        
+      const method = selectedRound ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(submitData),
+        body: JSON.stringify(roundData),
       });
       
       if (!response.ok) {
-        const errorText = await response.text();
-        
-        let errorMessage = `Failed to save round: ${response.status}`;
-        try {
-          const errorData = JSON.parse(errorText);
-          errorMessage = errorData.detail || errorMessage;
-        } catch (e) {
-          errorMessage = errorText || errorMessage;
-        }
-        
-        throw new Error(errorMessage);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to save round: ${response.status}`);
       }
       
       await fetchRounds();
       setShowModal(false);
       setSelectedRound(null);
-      showMessage('Round created successfully!', 'success');
+      showMessage(`Round ${selectedRound ? 'updated' : 'created'} successfully!`, 'success');
     } catch (err) {
       showMessage(`Failed to save round: ${err.message}`);
       console.error('Error saving round:', err);
@@ -252,13 +243,6 @@ const RoundScheduler = () => {
             <Eye size={16} />
             List View
           </button>
-          <button 
-            className={`btn ${viewMode === 'calendar' ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => setViewMode('calendar')}
-          >
-            <Calendar size={16} />
-            Calendar View
-          </button>
         </div>
         <button className="btn btn-primary" onClick={handleAddRound}>
           <Plus size={16} />
@@ -271,7 +255,7 @@ const RoundScheduler = () => {
           {rounds.length === 0 ? (
             <div className="empty-state">
               <Calendar size={48} />
-              <h3>No Rounds Scheduled</h3>
+              <h3>No Rounds Scheduled Yet</h3>
               <p>Get started by creating your first hackathon round</p>
               <button className="btn btn-primary" onClick={handleAddRound}>
                 <Plus size={16} />
@@ -280,7 +264,7 @@ const RoundScheduler = () => {
             </div>
           ) : (
             rounds.map((round) => (
-              <div key={round.round_id} className="round-card card">
+              <div key={round._id} className="round-card card">
                 <div className="card-body">
                   <div className="round-header">
                     <div className="round-info">
@@ -295,18 +279,15 @@ const RoundScheduler = () => {
                   <div className="round-details">
                     <div className="detail-item">
                       <Clock size={16} />
-                      <div><strong>Start:</strong> {formatDateTime(round.start_time)}</div>
+                      <div><strong>Start:</strong> {formatDateTime(round.startTime)}</div>
                     </div>
                     <div className="detail-item">
                       <Clock size={16} />
-                      <div><strong>End:</strong> {formatDateTime(round.end_time)}</div>
+                      <div><strong>End:</strong> {formatDateTime(round.endTime)}</div>
                     </div>
                     <div className="detail-item">
                       <Upload size={16} />
-                      <div><strong>Category:</strong> {round.category}</div>
-                    </div>
-                    <div className="detail-item">
-                      <strong>Judges Required:</strong> {round.judges_required}
+                      <div><strong>Upload Deadline:</strong> {formatDateTime(round.uploadDeadline)}</div>
                     </div>
                   </div>
 
@@ -319,7 +300,7 @@ const RoundScheduler = () => {
                     </button>
                     <button 
                       className="btn btn-error" 
-                      onClick={() => handleDeleteRound(round.round_id)}
+                      onClick={() => handleDeleteRound(round._id)}
                     >
                       <Trash2 size={16} /> Delete
                     </button>
@@ -359,20 +340,10 @@ const RoundModal = ({ round, onClose, onSave }) => {
   const [formData, setFormData] = useState({
     name: round?.name || '',
     description: round?.description || '',
-    start_time: round?.start_time ? new Date(round.start_time).toISOString().slice(0, 16) : '',
-    end_time: round?.end_time ? new Date(round.end_time).toISOString().slice(0, 16) : '',
-    category: round?.category || '',
-    judges_required: round?.judges_required || 3,
-    evaluation_criteria: round?.evaluation_criteria || [
-      { "problem_solution_fit": 10 },
-      { "functionality_features": 20 },
-      { "technical_feasibility": 20 },
-      { "innovation_creativity": 15 },
-      { "user_experience": 15 },
-      { "impact_value": 10 },
-      { "presentation_demo_quality": 5 },
-      { "team_collaboration": 5 }
-    ]
+    startTime: round?.startTime ? new Date(round.startTime).toISOString().slice(0, 16) : '',
+    endTime: round?.endTime ? new Date(round.endTime).toISOString().slice(0, 16) : '',
+    uploadDeadline: round?.uploadDeadline ? new Date(round.uploadDeadline).toISOString().slice(0, 16) : '',
+    status: round?.status || 'draft'
   });
 
   const [saving, setSaving] = useState(false);
@@ -383,14 +354,17 @@ const RoundModal = ({ round, onClose, onSave }) => {
     
     if (!formData.name.trim()) newErrors.name = 'Round name is required';
     if (!formData.description.trim()) newErrors.description = 'Description is required';
-    if (!formData.start_time) newErrors.start_time = 'Start time is required';
-    if (!formData.end_time) newErrors.end_time = 'End time is required';
-    if (new Date(formData.end_time) <= new Date(formData.start_time)) {
-      newErrors.end_time = 'End time must be after start time';
+    if (!formData.startTime) newErrors.startTime = 'Start time is required';
+    if (!formData.endTime) newErrors.endTime = 'End time is required';
+    if (!formData.uploadDeadline) newErrors.uploadDeadline = 'Upload deadline is required';
+    
+    if (new Date(formData.endTime) <= new Date(formData.startTime)) {
+      newErrors.endTime = 'End time must be after start time';
     }
-    if (!formData.category.trim()) newErrors.category = 'Category is required';
-    if (!formData.judges_required || formData.judges_required < 1) {
-      newErrors.judges_required = 'At least one judge is required';
+    
+    if (new Date(formData.uploadDeadline) < new Date(formData.startTime) || 
+        new Date(formData.uploadDeadline) > new Date(formData.endTime)) {
+      newErrors.uploadDeadline = 'Upload deadline must be between start and end time';
     }
     
     setErrors(newErrors);
@@ -408,10 +382,9 @@ const RoundModal = ({ round, onClose, onSave }) => {
       // Convert datetime strings to proper format
       const submitData = {
         ...formData,
-        start_time: new Date(formData.start_time).toISOString(),
-        end_time: new Date(formData.end_time).toISOString(),
-        judges_required: parseInt(formData.judges_required),
-        evaluation_criteria: formData.evaluation_criteria
+        startTime: new Date(formData.startTime).toISOString(),
+        endTime: new Date(formData.endTime).toISOString(),
+        uploadDeadline: new Date(formData.uploadDeadline).toISOString()
       };
       
       await onSave(submitData);
@@ -449,7 +422,7 @@ const RoundModal = ({ round, onClose, onSave }) => {
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
             <div className="form-group">
-              <label className="form-label">Round Name *</label>
+              <label className="form-label">Round Name</label>
               <input
                 type="text"
                 name="name"
@@ -462,7 +435,7 @@ const RoundModal = ({ round, onClose, onSave }) => {
             </div>
             
             <div className="form-group">
-              <label className="form-label">Description *</label>
+              <label className="form-label">Description</label>
               <textarea
                 name="description"
                 className={`form-input ${errors.description ? 'error' : ''}`}
@@ -476,57 +449,56 @@ const RoundModal = ({ round, onClose, onSave }) => {
             
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">Start Time *</label>
+                <label className="form-label">Start Time</label>
                 <input
                   type="datetime-local"
-                  name="start_time"
-                  className={`form-input ${errors.start_time ? 'error' : ''}`}
-                  value={formData.start_time}
+                  name="startTime"
+                  className={`form-input ${errors.startTime ? 'error' : ''}`}
+                  value={formData.startTime}
                   onChange={handleChange}
                   required
                 />
-                {errors.start_time && <span className="error-text">{errors.start_time}</span>}
+                {errors.startTime && <span className="error-text">{errors.startTime}</span>}
               </div>
               <div className="form-group">
-                <label className="form-label">End Time *</label>
+                <label className="form-label">End Time</label>
                 <input
                   type="datetime-local"
-                  name="end_time"
-                  className={`form-input ${errors.end_time ? 'error' : ''}`}
-                  value={formData.end_time}
+                  name="endTime"
+                  className={`form-input ${errors.endTime ? 'error' : ''}`}
+                  value={formData.endTime}
                   onChange={handleChange}
                   required
                 />
-                {errors.end_time && <span className="error-text">{errors.end_time}</span>}
+                {errors.endTime && <span className="error-text">{errors.endTime}</span>}
               </div>
             </div>
             
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">Category *</label>
-                <input
-                  type="text"
-                  name="category"
-                  className={`form-input ${errors.category ? 'error' : ''}`}
-                  value={formData.category}
-                  onChange={handleChange}
-                  required
-                />
-                {errors.category && <span className="error-text">{errors.category}</span>}
-              </div>
-              <div className="form-group">
-                <label className="form-label">Judges Required *</label>
-                <input
-                  type="number"
-                  name="judges_required"
-                  className={`form-input ${errors.judges_required ? 'error' : ''}`}
-                  value={formData.judges_required}
-                  onChange={handleChange}
-                  min="1"
-                  required
-                />
-                {errors.judges_required && <span className="error-text">{errors.judges_required}</span>}
-              </div>
+            <div className="form-group">
+              <label className="form-label">Upload Deadline</label>
+              <input
+                type="datetime-local"
+                name="uploadDeadline"
+                className={`form-input ${errors.uploadDeadline ? 'error' : ''}`}
+                value={formData.uploadDeadline}
+                onChange={handleChange}
+                required
+              />
+              {errors.uploadDeadline && <span className="error-text">{errors.uploadDeadline}</span>}
+            </div>
+            
+            <div className="form-group">
+              <label className="form-label">Status</label>
+              <select
+                name="status"
+                className="form-select"
+                value={formData.status}
+                onChange={handleChange}
+              >
+                <option value="draft">Draft</option>
+                <option value="live">Live</option>
+                <option value="completed">Completed</option>
+              </select>
             </div>
           </div>
 

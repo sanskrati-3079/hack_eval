@@ -1,50 +1,51 @@
-import express from 'express'
-import cors from "cors"
-import cookieParser from 'cookie-parser'
+import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
 
-const app = express()
+const app = express();
 
-app.use(cors({
-    origin:process.env.CORS_ORIGIN,
-    credentials:true
-})) // (app.use) this is use for middleware and configurations(like cors) 
-
-
-// json accept karne ke liye ham modify kar sakte hai ki kitna json lena hai or more
-app.use(express.json({ limit: "16kb" })) // Middleware for parsing JSON data
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN,
+    credentials: true,
+  }),
+);
 
 
-// ye url ke special char bagera handle karne ke liye - like -- %20 , extended object ke object bhi de sako
-app.use(express.urlencoded({extended:true,limit:"16kb"}))
+app.use(express.json({ limit: "16kb" })); 
 
 
-// store pdf and folder which is like public assets koi bhi access kar leta hai
-app.use(express.static("public"))// public folder name hai 
+app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 
 
-app.use(cookieParser()) // server hi karta hai iska kaam to lena dena
+app.use(express.static("public"));
+
+app.use(cookieParser());
+
+app.get("/",(req,res)=>{
+    return res.json({"Welcome Message":"Welcome to Hackathon Evaluation Backend"});
+})
 
 
-// routes import
-import userRouter from './routes/user.routes.js'
-import videoRouter from './routes/video.routes.js'
-
-
-// routes declaration 
-// achi practice ye hoti hai ki jab bhi ham api define kare to kuch is tarah se kare ---> /api/v1/users intead of /users
-app.use("/api/v1/users",userRouter) // ham pehle direct app.get use kar rahe the par router ko lane ke liye middleware use karna padega to uske liye app.use
-
-app.use("/api/v1/videos",videoRouter)
-
-export {app}
+import adminRouter from "./routes/admin/user.route.js";
+import roundRouter from "./routes/admin/round.route.js";
+import judgeRouter from "./routes/judge/user.route.js";
+import teamRouter from "./routes/team/user.route.js";
+import judgeEvaluation from "./routes/judge/evaluation.route.js"
+import adminEvaluation from "./routes/admin/evaluation.route.js"
+import teamEvaluation from "./routes/judge/teamEvaluation.route.js"
+import mentorRouter  from "./routes/admin/mentor.route.js";
 
 
 
+app.use("/admin", adminRouter); 
+app.use("/admin/rounds", roundRouter);
+app.use("/judge", judgeRouter);
+app.use("/judge/evaluation", judgeEvaluation);
+app.use("/admin/evaluation", adminEvaluation);
+app.use("/team", teamRouter);
+app.use("/judge/team-evaluation", teamEvaluation);
+app.use("/mentor", mentorRouter);
 
-// NOTES 
+export { app };
 
-
-// middlewares :
-// use to check the thinks in between like check login when you are trying to get chat history and others 
-
-// update your knowledge -- in call back -- 4 prameters come (err,req,res,next) // next is for middleware it is just a flag 

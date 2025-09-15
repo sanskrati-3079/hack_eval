@@ -1,16 +1,14 @@
 // const asyncHandler = ()=>{}
 
-// making wrapper which you can use to other files 
+// making wrapper which you can use to other files
 
-const asyncHandler =(requestHandler)=>{
-    return (req,res,next)=>{
-        Promise.resolve(requestHandler(req,res,next)).catch((err)=>next(err));
-    }
-}
+const asyncHandler = (requestHandler) => {
+  return (req, res, next) => {
+    Promise.resolve(requestHandler(req, res, next)).catch((err) => next(err));
+  };
+};
 
-export {asyncHandler}
-
-
+export { asyncHandler };
 
 // function in function (one way)
 // const asyncHandler = (fn) => async (req,res,next) => {
@@ -22,14 +20,7 @@ export {asyncHandler}
 //             message:error.message
 //         })
 //     }
-// } 
-
-
-
-
-
-
-
+// }
 
 // NOTES
 
@@ -37,6 +28,4 @@ export {asyncHandler}
 // const asyncHandler = (func) => () => {}
 // const asyncHandler = (func) => async () => {}
 
-
-
-    // Calling next(err) tells Express that an error has occurred, so it moves to the error-handling middleware.
+// Calling next(err) tells Express that an error has occurred, so it moves to the error-handling middleware.

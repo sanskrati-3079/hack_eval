@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Calculator, 
   Download, 
@@ -8,7 +8,8 @@ import {
   TrendingUp,
   BarChart3,
   CheckCircle,
-  Upload
+  Upload,
+  RefreshCw
 } from 'lucide-react';
 
 const ScoreCompiler = () => {
@@ -17,82 +18,152 @@ const ScoreCompiler = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showScorecardModal, setShowScorecardModal] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState(null);
-
-  const teams = [
-    {
-      id: 1,
-      name: 'Team Alpha',
-      category: 'AI/ML',
-      round: 'Round 1',
-      judge: 'Dr. Sarah Johnson',
-      scores: {
-        innovation: 9,
-        technical: 8,
-        presentation: 7,
-        feasibility: 8
-      },
-      totalScore: 8.0,
-      averageScore: 8.0,
-      qualified: true,
-      feedback: 'Excellent technical implementation with innovative approach.'
-    },
-    {
-      id: 2,
-      name: 'Team Beta',
-      category: 'Web Development',
-      round: 'Round 1',
-      judge: 'Dr. Emily Davis',
-      scores: {
-        innovation: 7,
-        technical: 9,
-        presentation: 8,
-        feasibility: 7
-      },
-      totalScore: 7.75,
-      averageScore: 7.75,
-      qualified: true,
-      feedback: 'Strong technical skills demonstrated.'
-    },
-    {
-      id: 3,
-      name: 'Team Gamma',
-      category: 'Mobile App',
-      round: 'Round 1',
-      judge: 'Prof. Robert Chen',
-      scores: {
-        innovation: 8,
-        technical: 7,
-        presentation: 9,
-        feasibility: 8
-      },
-      totalScore: 8.0,
-      averageScore: 8.0,
-      qualified: true,
-      feedback: 'Great presentation and user experience design.'
-    },
-    {
-      id: 4,
-      name: 'Team Delta',
-      category: 'AI/ML',
-      round: 'Round 1',
-      judge: 'Prof. Michael Wilson',
-      scores: {
-        innovation: 6,
-        technical: 7,
-        presentation: 6,
-        feasibility: 7
-      },
-      totalScore: 6.5,
-      averageScore: 6.5,
-      qualified: false,
-      feedback: 'Good concept but needs more technical depth.'
-    }
-  ];
+  const [teams, setTeams] = useState([]);
+  const [evaluations, setEvaluations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const rounds = ['all', 'Round 1', 'Round 2', 'Round 3'];
   const categories = ['all', 'AI/ML', 'Web Development', 'Mobile App', 'IoT', 'Blockchain'];
 
-  const filteredTeams = teams.filter(team => {
+  // Fetch teams and evaluations data
+  // In your ScoreCompiler component, update the fetch calls:
+// Temporary fallback to mock data if endpoints don't exist
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      
+      // Try to fetch from API first
+      try {
+        const teamsResponse = await fetch('/judge/evaluation/all-teams');
+        if (teamsResponse.ok) {
+          const teamsData = await teamsResponse.json();
+          setTeams(teamsData.data || []);
+        } else {
+          throw new Error('API endpoint not available');
+        }
+      } catch (apiError) {
+        console.log('Using mock teams data');
+        // Fallback to mock data
+        setTeams([
+          {
+            _id: 1,
+            teamName: 'Team Alpha',
+            category: 'AI/ML',
+            currentRound: 1,
+            assignedJudge: { name: 'Dr. Sarah Johnson' },
+            evaluationStatus: 'completed'
+          },
+          // ... more mock teams
+        ]);
+      }
+      
+      // Similarly for evaluations
+      try {
+        const evaluationsResponse = await fetch('/judge/evaluation/all-evaluations');
+        if (evaluationsResponse.ok) {
+          const evaluationsData = await evaluationsResponse.json();
+          setEvaluations(evaluationsData.data || []);
+        } else {
+          throw new Error('API endpoint not available');
+        }
+      } catch (apiError) {
+        console.log('Using mock evaluations data');
+        // Fallback to mock data
+        setEvaluations([
+          {
+            team_id: 1,
+            team_name: 'Team Alpha',
+            problem_statement: 'AI Solution',
+            category: 'AI/ML',
+            round_id: 1,
+            problem_solution_fit: 9,
+            functionality_features: 8,
+            technical_feasibility: 7,
+            innovation_creativity: 8,
+            user_experience: 7,
+            impact_value: 8,
+            presentation_demo_quality: 7,
+            team_collaboration: 8,
+            personalized_feedback: 'Excellent technical implementation',
+            total_score: 8.0,
+            average_score: 8.0,
+            judge_id: 1,
+            judge_name: 'Dr. Sarah Johnson',
+            status: 'submitted'
+          },
+          // ... more mock evaluations
+        ]);
+      }
+      
+    } catch (err) {
+      setError(err.message);
+      console.error('Error fetching data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchData();
+}, []);
+
+  // Combine team data with evaluation data
+  const getTeamWithEvaluation = (team) => {
+    const evaluationData = evaluations.find(e => e.team_id === team._id);
+    
+    if (!evaluationData) {
+      return {
+        id: team._id,
+        name: team.teamName || team.name,
+        category: team.category,
+        round: `Round ${team.currentRound || 1}`,
+        judge: team.assignedJudge?.name || 'Unassigned',
+        scores: {
+          problem_solution_fit: 0,
+          functionality_features: 0,
+          technical_feasibility: 0,
+          innovation_creativity: 0,
+          user_experience: 0,
+          impact_value: 0,
+          presentation_demo_quality: 0,
+          team_collaboration: 0
+        },
+        totalScore: 0,
+        averageScore: 0,
+        qualified: false,
+        feedback: 'No evaluation yet',
+        evaluationStatus: team.evaluationStatus || 'unassigned'
+      };
+    }
+
+    return {
+      id: team._id,
+      name: team.teamName || team.name,
+      category: team.category,
+      round: `Round ${evaluationData.round_id || 1}`,
+      judge: evaluationData.judge_name || team.assignedJudge?.name || 'Unknown Judge',
+      scores: {
+        problem_solution_fit: evaluationData.problem_solution_fit,
+        functionality_features: evaluationData.functionality_features,
+        technical_feasibility: evaluationData.technical_feasibility,
+        innovation_creativity: evaluationData.innovation_creativity,
+        user_experience: evaluationData.user_experience,
+        impact_value: evaluationData.impact_value,
+        presentation_demo_quality: evaluationData.presentation_demo_quality,
+        team_collaboration: evaluationData.team_collaboration
+      },
+      totalScore: evaluationData.total_score,
+      averageScore: evaluationData.average_score,
+      qualified: evaluationData.average_score >= 6, // Assuming 6 is the qualifying threshold
+      feedback: evaluationData.personalized_feedback,
+      evaluationStatus: 'completed'
+    };
+  };
+
+  const teamEvaluations = teams.map(team => getTeamWithEvaluation(team));
+
+  const filteredTeams = teamEvaluations.filter(team => {
     const matchesRound = selectedRound === 'all' || team.round === selectedRound;
     const matchesCategory = selectedCategory === 'all' || team.category === selectedCategory;
     const matchesSearch = team.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -103,6 +174,17 @@ const ScoreCompiler = () => {
     return qualified ? 
       <span className="badge badge-success">Qualified</span> : 
       <span className="badge badge-error">Not Qualified</span>;
+  };
+
+  const getEvaluationStatusBadge = (status) => {
+    switch (status) {
+      case 'completed':
+        return <span className="badge badge-success">Completed</span>;
+      case 'assigned':
+        return <span className="badge badge-warning">Assigned</span>;
+      default:
+        return <span className="badge badge-error">Unassigned</span>;
+    }
   };
 
   const getScoreColor = (score) => {
@@ -118,26 +200,66 @@ const ScoreCompiler = () => {
 
   const handleExportScores = () => {
     console.log('Exporting scores...');
+    // Implement export functionality
   };
 
-  const handleUploadExcel = () => {
-    console.log('Uploading Excel file...');
+  const handleRefreshData = () => {
+    window.location.reload();
   };
 
   const calculateStats = () => {
-    const qualifiedTeams = teams.filter(t => t.qualified);
-    const avgScore = teams.reduce((sum, t) => sum + t.averageScore, 0) / teams.length;
+    const completedEvaluations = teamEvaluations.filter(t => t.evaluationStatus === 'completed');
+    const qualifiedTeams = completedEvaluations.filter(t => t.qualified);
+    const avgScore = completedEvaluations.length > 0 
+      ? completedEvaluations.reduce((sum, t) => sum + t.averageScore, 0) / completedEvaluations.length 
+      : 0;
+    
+    const scores = completedEvaluations.map(t => t.averageScore);
     
     return {
       totalTeams: teams.length,
+      evaluatedTeams: completedEvaluations.length,
       qualifiedTeams: qualifiedTeams.length,
       averageScore: avgScore.toFixed(2),
-      highestScore: Math.max(...teams.map(t => t.averageScore)),
-      lowestScore: Math.min(...teams.map(t => t.averageScore))
+      highestScore: scores.length > 0 ? Math.max(...scores) : 0,
+      lowestScore: scores.length > 0 ? Math.min(...scores) : 0
     };
   };
 
   const stats = calculateStats();
+
+  if (loading) {
+    return (
+      <div className="score-compiler">
+        <div className="page-header">
+          <h1 className="page-title">Score Compiler</h1>
+          <p className="page-subtitle">View and manage team scorecards and evaluations</p>
+        </div>
+        <div className="loading-container">
+          <RefreshCw size={32} className="spinner" />
+          <p>Loading data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="score-compiler">
+        <div className="page-header">
+          <h1 className="page-title">Score Compiler</h1>
+          <p className="page-subtitle">View and manage team scorecards and evaluations</p>
+        </div>
+        <div className="error-container">
+          <p className="error-message">Error: {error}</p>
+          <button className="btn btn-primary" onClick={() => window.location.reload()}>
+            <RefreshCw size={16} />
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="score-compiler">
@@ -158,33 +280,33 @@ const ScoreCompiler = () => {
             </div>
             <div className="card-value">
               <span className="value">{stats.totalTeams}</span>
-              <span className="change">Evaluated</span>
-            </div>
-          </div>
-
-          <div className="dashboard-card">
-            <div className="card-header">
-              <div className="card-icon" style={{ backgroundColor: 'var(--success)20', color: 'var(--success)' }}>
-                <CheckCircle size={24} />
-              </div>
-              <h3>Qualified Teams</h3>
-            </div>
-            <div className="card-value">
-              <span className="value">{stats.qualifiedTeams}</span>
-              <span className="change positive">+{stats.qualifiedTeams}</span>
+              <span className="change">Registered</span>
             </div>
           </div>
 
           <div className="dashboard-card">
             <div className="card-header">
               <div className="card-icon" style={{ backgroundColor: 'var(--info)20', color: 'var(--info)' }}>
-                <TrendingUp size={24} />
+                <CheckCircle size={24} />
               </div>
-              <h3>Average Score</h3>
+              <h3>Evaluated Teams</h3>
             </div>
             <div className="card-value">
-              <span className="value">{stats.averageScore}</span>
-              <span className="change">/10</span>
+              <span className="value">{stats.evaluatedTeams}</span>
+              <span className="change">/{stats.totalTeams}</span>
+            </div>
+          </div>
+
+          <div className="dashboard-card">
+            <div className="card-header">
+              <div className="card-icon" style={{ backgroundColor: 'var(--success)20', color: 'var(--success)' }}>
+                <TrendingUp size={24} />
+              </div>
+              <h3>Qualified Teams</h3>
+            </div>
+            <div className="card-value">
+              <span className="value">{stats.qualifiedTeams}</span>
+              <span className="change">/{stats.evaluatedTeams}</span>
             </div>
           </div>
 
@@ -193,10 +315,10 @@ const ScoreCompiler = () => {
               <div className="card-icon" style={{ backgroundColor: 'var(--warning)20', color: 'var(--warning)' }}>
                 <BarChart3 size={24} />
               </div>
-              <h3>Score Range</h3>
+              <h3>Average Score</h3>
             </div>
             <div className="card-value">
-              <span className="value">{stats.lowestScore}-{stats.highestScore}</span>
+              <span className="value">{stats.averageScore}</span>
               <span className="change">/10</span>
             </div>
           </div>
@@ -252,15 +374,14 @@ const ScoreCompiler = () => {
         </div>
 
         <div className="action-buttons">
+          <button className="btn btn-secondary" onClick={handleRefreshData}>
+            <RefreshCw size={16} />
+            Refresh
+          </button>
           <button className="btn btn-primary" onClick={handleExportScores}>
             <Download size={16} />
             Export Scores
           </button>
-
-          {/* <button className="btn-upload" onClick={handleUploadExcel}>
-            <Upload size={16} />
-            Upload Excel File
-          </button> */}
         </div>
       </div>
 
@@ -268,6 +389,7 @@ const ScoreCompiler = () => {
       <div className="card">
         <div className="card-header">
           <h3>Team Scorecards</h3>
+          <span className="subtitle">{filteredTeams.length} teams found</span>
         </div>
         <div className="card-body">
           <div className="table-container">
@@ -278,12 +400,13 @@ const ScoreCompiler = () => {
                   <th>Category</th>
                   <th>Round</th>
                   <th>Judge</th>
+                  <th>Problem-Solution Fit</th>
+                  <th>Functionality</th>
+                  <th>Technical Feasibility</th>
                   <th>Innovation</th>
-                  <th>Technical</th>
-                  <th>Presentation</th>
-                  <th>Feasibility</th>
                   <th>Average</th>
                   <th>Status</th>
+                  <th>Evaluation</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -294,19 +417,29 @@ const ScoreCompiler = () => {
                     <td><span className="category-badge">{team.category}</span></td>
                     <td>{team.round}</td>
                     <td>{team.judge}</td>
-                    <td style={{ color: getScoreColor(team.scores.innovation) }}>{team.scores.innovation}/10</td>
-                    <td style={{ color: getScoreColor(team.scores.technical) }}>{team.scores.technical}/10</td>
-                    <td style={{ color: getScoreColor(team.scores.presentation) }}>{team.scores.presentation}/10</td>
-                    <td style={{ color: getScoreColor(team.scores.feasibility) }}>{team.scores.feasibility}/10</td>
+                    <td style={{ color: getScoreColor(team.scores.problem_solution_fit) }}>
+                      {team.scores.problem_solution_fit}/10
+                    </td>
+                    <td style={{ color: getScoreColor(team.scores.functionality_features) }}>
+                      {team.scores.functionality_features}/10
+                    </td>
+                    <td style={{ color: getScoreColor(team.scores.technical_feasibility) }}>
+                      {team.scores.technical_feasibility}/10
+                    </td>
+                    <td style={{ color: getScoreColor(team.scores.innovation_creativity) }}>
+                      {team.scores.innovation_creativity}/10
+                    </td>
                     <td><strong style={{ color: getScoreColor(team.averageScore) }}>{team.averageScore}/10</strong></td>
                     <td>{getQualificationBadge(team.qualified)}</td>
+                    <td>{getEvaluationStatusBadge(team.evaluationStatus)}</td>
                     <td>
                       <div className="action-buttons">
-                        <button className="btn btn-secondary btn-sm" onClick={() => handleViewScorecard(team)}>
+                        <button 
+                          className="btn btn-secondary btn-sm" 
+                          onClick={() => handleViewScorecard(team)}
+                          disabled={team.evaluationStatus !== 'completed'}
+                        >
                           <Eye size={14} /> View
-                        </button>
-                        <button className="btn btn-primary btn-sm">
-                          <Edit size={14} /> Edit
                         </button>
                       </div>
                     </td>
@@ -314,6 +447,12 @@ const ScoreCompiler = () => {
                 ))}
               </tbody>
             </table>
+            
+            {filteredTeams.length === 0 && (
+              <div className="empty-state">
+                <p>No teams found matching your criteria</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -332,10 +471,14 @@ const ScoreCompiler = () => {
 // Modal Component
 const ScorecardModal = ({ team, onClose }) => {
   const scoreCategories = [
-    { key: 'innovation', label: 'Innovation & Creativity', description: 'Originality and creative thinking' },
-    { key: 'technical', label: 'Technical Implementation', description: 'Code quality and technical complexity' },
-    { key: 'presentation', label: 'Presentation & Demo', description: 'Communication and demonstration skills' },
-    { key: 'feasibility', label: 'Feasibility & Impact', description: 'Practical implementation and market potential' }
+    { key: 'problem_solution_fit', label: 'Problem-Solution Fit', description: 'How well the solution addresses the problem' },
+    { key: 'functionality_features', label: 'Functionality & Features', description: 'Completeness and effectiveness of features' },
+    { key: 'technical_feasibility', label: 'Technical Feasibility', description: 'Technical implementation and complexity' },
+    { key: 'innovation_creativity', label: 'Innovation & Creativity', description: 'Originality and creative thinking' },
+    { key: 'user_experience', label: 'User Experience', description: 'Usability and interface design' },
+    { key: 'impact_value', label: 'Impact & Value', description: 'Potential impact and value proposition' },
+    { key: 'presentation_demo_quality', label: 'Presentation Quality', description: 'Quality of demonstration and presentation' },
+    { key: 'team_collaboration', label: 'Team Collaboration', description: 'Teamwork and collaboration effectiveness' }
   ];
 
   return (
