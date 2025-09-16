@@ -1,342 +1,150 @@
-// import React, { useContext, useEffect, useState } from "react";
-// import { TeamContext } from "../context/TeamContext";
-// import { Link } from "react-router-dom";
-// import { API_BASE_URL } from "../config";
-// import "./Dashboard.css";
-
-// const Dashboard = () => {
-//   const { team } = useContext(TeamContext);
-//   const [dashboardData, setDashboardData] = useState(null);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState("");
-//   const token = localStorage.getItem("token");
-//   const [activeRound, setActiveRound] = useState(null);
-
-//   useEffect(() => {
-//     async function fetchTeam() {
-//       console.log("DEBUG: Context team:", team);
-//       console.log("DEBUG: Token:", token);
-//       const teamFromStorage = localStorage.getItem("team");
-//       console.log("DEBUG: localStorage team:", teamFromStorage);
-
-//       if (!team && token) {
-//         let teamId = null;
-//         try {
-//           teamId = JSON.parse(teamFromStorage)?.team_id;
-//         } catch (e) {
-//           console.log("DEBUG: Error parsing team from localStorage:", e);
-//         }
-//         console.log("DEBUG: teamId to fetch:", teamId);
-
-//         if (teamId) {
-//           try {
-//             const response = await fetch(`${API_BASE_URL}/teams/${teamId}`, {
-//               headers: { Authorization: `Bearer ${token}` },
-//             });
-//             const data = await response.json();
-//             console.log("DEBUG: Fetched team data from backend:", data);
-//             setDashboardData(data);
-//           } catch (err) {
-//             console.log("DEBUG: Error fetching team from backend:", err);
-//             setError("Failed to fetch team data from backend.");
-//             setDashboardData(null);
-//           }
-//         } else {
-//           setError("No teamId found in localStorage.");
-//           setDashboardData(null);
-//         }
-//       } else if (team) {
-//         console.log("DEBUG: Using context team for dashboardData:", team);
-//         setDashboardData(team);
-//       }
-//       setLoading(false);
-//     }
-//     fetchTeam();
-//   }, [team, token]);
-
-//   useEffect(() => {
-//     console.log("DEBUG: dashboardData after fetch:", dashboardData);
-//   }, [dashboardData]);
-
-//   // Fetch current round and keep it updated
-//   useEffect(() => {
-//     let mounted = true;
-//     let timerId;
-//     const fetchActive = async () => {
-//       try {
-//         const res = await fetch(`${API_BASE_URL}/round-state/active`);
-//         if (!res.ok) return;
-//         const data = await res.json();
-//         if (!mounted) return;
-//         setActiveRound(data.round);
-//       } catch {}
-//     };
-//     fetchActive();
-//     timerId = setInterval(fetchActive, 5000);
-//     return () => { mounted = false; if (timerId) clearInterval(timerId); };
-//   }, []);
-
-//   if (loading) {
-//     return <div className="loading-state">Loading Dashboard...</div>;
-//   }
-
-//   if (error) {
-//     return (
-//       <div className="dashboard-container">
-//         <h1>Team Dashboard</h1>
-//         <p style={{ color: "red" }}>Error: {error}</p>
-//       </div>
-//     );
-//   }
-
-//   if (!dashboardData) {
-//     return (
-//       <div className="dashboard-container">
-//         <h1>Team Dashboard</h1>
-//         <p>
-//           No team data found. Please <Link to="/signin">sign in</Link>.
-//         </p>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="dashboard-container">
-//       <div className="dashboard-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-//         {/* <h1>Team Dashboard</h1> */}
-//         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-//           <div className="current-round" style={{ background: '#E5F5EC', color: '#1B4332', padding: '6px 12px', borderRadius: 8, fontWeight: 600 }}>
-//             Current Round: {activeRound ? `Round ${activeRound}` : 'None'}
-//           </div>
-//           {/* <Link to="/profile" className="profile-link">
-//             Profile Settings
-//           </Link> */}
-//         </div>
-//       </div>
-
-//       <div className="dashboard-content">
-//         <div className="team-summary">
-//           <h2>Team Summary</h2>
-//           <div className="summary-content">
-//             <div className="summary-item">
-//               <span className="label">Team Name:</span>
-//               <span className="value">{dashboardData.team_name}</span>
-//             </div>
-//             <div className="summary-item">
-//               <span className="label">Team ID:</span>
-//               <span className="value">{dashboardData.team_id}</span>
-//             </div>
-//             <div className="summary-item">
-//               <span className="label">Problem Statement ID:</span>
-//               <span className="value">{dashboardData.problem_statement_id}</span>
-//             </div>
-//             <div className="summary-item">
-//               <span className="label">Category:</span>
-//               <span className="value">{dashboardData.category || "N/A"}</span>
-//             </div>
-//             {dashboardData.subcategory && (
-//               <div className="summary-item">
-//                 <span className="label">Subcategory:</span>
-//                 <span className="value">{dashboardData.subcategory}</span>
-//               </div>
-//             )}
-//             <div className="summary-item">
-//               <span className="label">University Roll No:</span>
-//               <span className="value">{dashboardData.university_roll_no || "N/A"}</span>
-//             </div>
-//           </div>
-//         </div>
-
-//         <div className="dashboard-grid">
-//           <div className="team-members">
-//             <h2>Team Members</h2>
-//             <div className="members-list">
-//               {/* Team Leader */}
-//               {dashboardData.team_leader && (
-//                 <div className="member-card">
-//                   <div className="member-avatar">
-//                     {dashboardData.team_leader.name.charAt(0)}
-//                   </div>
-//                   <div className="member-info">
-//                     <h4>{dashboardData.team_leader.name}</h4>
-//                     <p>Role: Team Leader</p>
-//                     {dashboardData.team_leader.roll_no && (
-//                       <p>Roll No: {dashboardData.team_leader.roll_no}</p>
-//                     )}
-//                     <p>Email: {dashboardData.team_leader.email}</p>
-//                     <p>Contact: {dashboardData.team_leader.contact}</p>
-//                   </div>
-//                 </div>
-//               )}
-//               {/* Team Members */}
-//               {dashboardData.members && dashboardData.members.length > 0 && (
-//                 <div className="member-list">
-//                   <h4>Team Members:</h4>
-//                   <ul>
-//                     {dashboardData.members.map((member, idx) => (
-//                       <li key={idx}>{member}</li>
-//                     ))}
-//                   </ul>
-//                 </div>
-//               )}
-//             </div>
-//           </div>
-
-//           <div className="project-info">
-//             <h2>Problem Statement</h2>
-//             <div className="info-grid">
-//               <div className="info-item">
-//                 <label>Statement:</label>
-//                 <p>{dashboardData.statement || "No statement provided"}</p>
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default Dashboard;
-
-
-
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { TeamContext } from "../context/TeamContext";
+import { Link } from "react-router-dom";
+import { API_BASE_URL } from "../config";
 import "./Dashboard.css";
 
 const Dashboard = () => {
   const { team } = useContext(TeamContext);
-  const [stats, setStats] = useState({
-    submissions: 0,
-    evaluations: 0,
-    averageScore: 0,
-    rank: 0
-  });
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const token = localStorage.getItem("token");
+  const [activeRound, setActiveRound] = useState(null);
 
-  // Mock data for demonstration
   useEffect(() => {
-    if (team) {
-      setStats({
-        submissions: 3,
-        evaluations: 12,
-        averageScore: 87.5,
-        rank: 5
-      });
+    async function fetchTeam() {
+      const teamFromStorage = localStorage.getItem("team");
+      if (!team && token) {
+        let teamId = null;
+        try { teamId = JSON.parse(teamFromStorage)?.team_id; } catch {}
+        if (teamId) {
+          try {
+            const res = await fetch(`${API_BASE_URL}/teams/${teamId}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await res.json();
+            setDashboardData(data);
+          } catch {
+            setError("Failed to fetch team data from backend.");
+            setDashboardData(null);
+          }
+        } else {
+          setError("No teamId found in localStorage.");
+          setDashboardData(null);
+        }
+      } else if (team) {
+        setDashboardData(team);
+      }
+      setLoading(false);
     }
-  }, [team]);
+    fetchTeam();
+  }, [team, token]);
 
-  if (!team) {
-    return (
+  useEffect(() => {
+    let mounted = true;
+    const tick = async () => {
+      try {
+        const r = await fetch(`${API_BASE_URL}/round-state/active`);
+        if (!r.ok) return;
+        const d = await r.json();
+        if (mounted) setActiveRound(d.round);
+      } catch {}
+    };
+    tick();
+    const id = setInterval(tick, 5000);
+    return () => { mounted = false; clearInterval(id); };
+  }, []);
+
+  if (loading) return <div className="loading-state">Loading Dashboard...</div>;
+
+  const Shell = ({ children }) => (
+    <div className="dashboard-page">
       <div className="dashboard-container">
-        <h2>Loading Dashboard...</h2>
+        {children}
+        <div className="page-bottom-spacer" />
       </div>
+    </div>
+  );
+
+  if (error) {
+    return (
+      <Shell>
+        <h1>Team Dashboard</h1>
+        <p style={{ color: "red" }}>Error: {error}</p>
+      </Shell>
+    );
+  }
+
+  if (!dashboardData) {
+    return (
+      <Shell>
+        <h1>Team Dashboard</h1>
+        <p>No team data found. Please <Link to="/signin">sign in</Link>.</p>
+      </Shell>
     );
   }
 
   return (
-    <div className="dashboard-container">
-      <div className="dashboard-header">
-        <h1>Welcome, {team.teamName}!</h1>
-        <p>Track your hackathon progress and performance</p>
-      </div>
-
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-icon">📊</div>
-          <div className="stat-content">
-            <h3>{stats.submissions}</h3>
-            <p>Submissions</p>
-          </div>
-        </div>
-        
-        <div className="stat-card">
-          <div className="stat-icon">⭐</div>
-          <div className="stat-content">
-            <h3>{stats.evaluations}</h3>
-            <p>Evaluations</p>
-          </div>
-        </div>
-        
-        <div className="stat-card">
-          <div className="stat-icon">📈</div>
-          <div className="stat-content">
-            <h3>{stats.averageScore}%</h3>
-            <p>Average Score</p>
-          </div>
-        </div>
-        
-        <div className="stat-card">
-          <div className="stat-icon">🏆</div>
-          <div className="stat-content">
-            <h3>#{stats.rank}</h3>
-            <p>Current Rank</p>
-          </div>
+    <Shell>
+      <div className="dashboard-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div className="current-round">Current Round: {activeRound ? `Round ${activeRound}` : "None"}</div>
         </div>
       </div>
 
       <div className="dashboard-content">
-        <div className="team-info-section">
-          <h2>Team Information</h2>
-          <div className="info-card">
-            <div className="info-item">
-              <strong>Team Name:</strong> {team.teamName}
-            </div>
-            <div className="info-item">
-              <strong>Project Title:</strong> {team.projectTitle || "Not specified"}
-            </div>
-            <div className="info-item">
-              <strong>Category:</strong> {team.category || "Not specified"}
-            </div>
+        <div className="team-summary">
+          <h2>Team Summary</h2>
+          <div className="summary-content">
+            <div className="summary-item"><span className="label">Team Name:</span><span className="value">{dashboardData.team_name}</span></div>
+            <div className="summary-item"><span className="label">Team ID:</span><span className="value">{dashboardData.team_id}</span></div>
+            <div className="summary-item"><span className="label">Problem Statement ID:</span><span className="value">{dashboardData.problem_statement_id}</span></div>
+            <div className="summary-item"><span className="label">Category:</span><span className="value">{dashboardData.category || "N/A"}</span></div>
+            {dashboardData.subcategory && (
+              <div className="summary-item"><span className="label">Subcategory:</span><span className="value">{dashboardData.subcategory}</span></div>
+            )}
+            <div className="summary-item"><span className="label">University Roll No:</span><span className="value">{dashboardData.university_roll_no || "N/A"}</span></div>
           </div>
         </div>
 
-        <div className="team-members-section">
-          <h2>Team Members</h2>
-          <div className="members-list">
-            {team.members && team.members.map((member, index) => (
-              <div key={index} className="member-card">
-                <div className="member-header">
-                  <h4>{member.name}</h4>
-                  {member.isLeader && <span className="leader-badge">Team Leader</span>}
+        <div className="dashboard-grid">
+          <div className="team-members">
+            <h2>Team Members</h2>
+            <div className="members-list">
+              {dashboardData.team_leader && (
+                <div className="member-card">
+                  <div className="member-avatar">{dashboardData.team_leader.name.charAt(0)}</div>
+                  <div className="member-info">
+                    <h4>{dashboardData.team_leader.name}</h4>
+                    <p>Role: Team Leader</p>
+                    {dashboardData.team_leader.roll_no && <p>Roll No: {dashboardData.team_leader.roll_no}</p>}
+                    <p>Email: {dashboardData.team_leader.email}</p>
+                    <p>Contact: {dashboardData.team_leader.contact}</p>
+                  </div>
                 </div>
-                <div className="member-details">
-                  <p><strong>Email:</strong> {member.email}</p>
-                  {member.phone && <p><strong>Phone:</strong> {member.phone}</p>}
+              )}
+              {dashboardData.members?.length > 0 && (
+                <div className="member-list">
+                  <h4>Team Members:</h4>
+                  <ul>{dashboardData.members.map((m, i) => <li key={i}>{m}</li>)}</ul>
                 </div>
-              </div>
-            ))}
+              )}
+            </div>
           </div>
-        </div>
 
-        <div className="recent-activity-section">
-          <h2>Recent Activity</h2>
-          <div className="activity-list">
-            <div className="activity-item">
-              <div className="activity-icon">✅</div>
-              <div className="activity-content">
-                <p>Project submission completed</p>
-                <span className="activity-time">2 hours ago</span>
-              </div>
-            </div>
-            <div className="activity-item">
-              <div className="activity-icon">📝</div>
-              <div className="activity-content">
-                <p>Evaluation received from Judge Smith</p>
-                <span className="activity-time">5 hours ago</span>
-              </div>
-            </div>
-            <div className="activity-item">
-              <div className="activity-icon">🔄</div>
-              <div className="activity-content">
-                <p>Project details updated</p>
-                <span className="activity-time">Yesterday</span>
+          <div className="project-info">
+            <h2>Problem Statement</h2>
+            <div className="info-grid">
+              <div className="info-item">
+                <label>Statement:</label>
+                <p>{dashboardData.statement || "No statement provided"}</p>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </Shell>
   );
 };
 
