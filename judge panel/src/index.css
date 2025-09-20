@@ -5,8 +5,8 @@
 }
 
 :root {
-  --primary-green: #1B4332;
-  --light-green: #B7E4C7;
+  --primary-green: #1857a8;
+  --light-green: #80bdfd;
   --white: #FFFFFF;
   --gray-50: #F9FAFB;
   --gray-100: #F3F4F6;
@@ -18,7 +18,7 @@
   --gray-700: #374151;
   --gray-800: #1F2937;
   --gray-900: #111827;
-  --success: #10B981;
+  --success: #105cb9;
   --warning: #F59E0B;
   --error: #EF4444;
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);

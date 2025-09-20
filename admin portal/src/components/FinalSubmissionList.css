@@ -1,6 +1,6 @@
 /* Final Submission List Styles */
 .final-submission-list {
-  max-width: 1200px;
+  /* max-width: 1200px;add color to */
   margin: 0 auto;
   padding: 2rem;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -38,6 +38,19 @@
 
 .stat-card {
   background: #ffffff;
+}
+
+.stat-card--submissions .stat-icon {
+  background: #40916c;
+  color: #fff;
+}
+.stat-card--score .stat-icon {
+  background: #f9c74f;
+  color: #fff;
+}
+.stat-card--categories .stat-icon {
+  background: #277da1;
+  color: #fff;
   border-radius: 0.75rem;
   padding: 1.5rem;
   box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);

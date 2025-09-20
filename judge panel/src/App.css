@@ -8,7 +8,7 @@
   flex: 1;
   padding: 3rem 3rem 5rem 3rem;
   overflow-y: auto;
-  background: linear-gradient(120deg, #f9fafb 60%, #b7e4c7 100%);
+  background: linear-gradient(120deg, #f9fafb 60%, #80bdfd 100%);
   margin-left: 280px;
   transition: margin-left 0.2s;
   min-height: 100vh;
@@ -48,7 +48,7 @@
   color: var(--primary-green);
   font-size: 1rem;
   font-weight: 600;
-  background: linear-gradient(90deg, #ffffff 60%, #b7e4c7 100%);
+  background: linear-gradient(90deg, #ffffff 60%, #80bdfd 100%);
   letter-spacing: 0.05em;
   border-top: 1px solid var(--gray-200);
 }

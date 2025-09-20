@@ -105,8 +105,8 @@ const FinalSubmissionList = () => {
       {/* Statistics */}
       <div className="stats-section">
         <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-icon" >
+          <div className="stat-card stat-card--submissions">
+            <div className="stat-icon stat-icon--submissions">
               <FileText size={24} />
             </div>
             <div className="stat-content">
@@ -114,18 +114,18 @@ const FinalSubmissionList = () => {
               <p>Final Submissions</p>
             </div>
           </div>
-          <div className="stat-card">
-            <div className="stat-icon">
-              <TrendingUp size={24} />
+          <div className="stat-card stat-card--score">
+            <div className="stat-icon stat-icon--score">
+              <Star size={24} />
             </div>
             <div className="stat-content">
               <h3>8.8</h3>
               <p>Average Score</p>
             </div>
           </div>
-          <div className="stat-card">
-            <div className="stat-icon">
-              <Users size={24} />
+          <div className="stat-card stat-card--categories">
+            <div className="stat-icon stat-icon--categories">
+              <Trophy size={24} />
             </div>
             <div className="stat-content">
               <h3>4</h3>

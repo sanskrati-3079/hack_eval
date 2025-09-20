@@ -275,6 +275,7 @@ body {
   overflow: visible !important;
   transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   animation: scaleIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.8s both;
+  margin-top: 64px; /* Add space below navbar */
 }
 
 .team-summary:hover {

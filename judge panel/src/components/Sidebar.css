@@ -1,22 +1,24 @@
+/* Fixed sidebar always visible */
 .sidebar {
   width: 280px;
-  background: linear-gradient(135deg, #ffffff 70%, #b7e4c7 100%);
+  background: linear-gradient(135deg, #ffffff 70%, #80bdfd 100%);
   border-right: 1px solid var(--gray-200);
   display: flex;
   flex-direction: column;
   position: fixed;
   height: calc(100vh - 70px); /* Adjust height to account for header */
   top: 70px; /* Position below the header */
+  left: 0;
   overflow-y: auto;
   z-index: 10;
   box-shadow: 2px 0 16px 0 rgba(27, 67, 50, 0.08);
-  transition: transform 0.3s ease;
-  transform: translateX(-100%);
 }
 
+
+/* No transform needed, sidebar is always visible */
 .sidebar.sidebar-open {
-  transform: translateX(0);
 }
+
 
 .sidebar-header {
   padding: 2rem 1.5rem 1.5rem;
@@ -98,7 +100,7 @@
 }
 
 .nav-link.active {
-  background: linear-gradient(90deg, #b7e4c7 60%, #ffffff 100%);
+  background: linear-gradient(90deg, #80bdfd 60%, #ffffff 100%);
   color: var(--primary-green);
   border-left-color: var(--primary-green);
   font-weight: 700;

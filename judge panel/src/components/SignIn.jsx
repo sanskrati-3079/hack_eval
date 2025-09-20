@@ -49,7 +49,7 @@ function SignIn() {
             <Header onMenuClick={() => {}} />
             <div className="auth-container">
                 <div className="auth-logo">
-                    <img src="..\..\public\images\gla.png" alt="GLA University" />
+                    <img src="..\..\public\images\codoraai.png" alt="codora.ai" />
                 </div>
                 <h1 className="auth-title">Judge Panel</h1>
                 <p className="auth-subtitle">Hackathon Evaluation Portal</p>
@@ -96,7 +96,7 @@ function SignIn() {
                 </form>
                 
                 <p style={{ textAlign: 'center', marginTop: '20px' }}>
-                    Don't have an account? <Link to="/signup" style={{ color: '#4CAF50' }}>Sign Up</Link>
+                    Don't have an account? <Link to="/signup" style={{ color: '#0468f3ff' }}>Sign Up</Link>
                 </p>
             </div>
         </div>
