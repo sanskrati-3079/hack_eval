@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
-from db.mongo import db
+from db.mongo import get_database  # Import the function instead of direct db
 
 
 class ActiveRoundResponse(BaseModel):
@@ -16,17 +16,30 @@ router = APIRouter(prefix="/round-state", tags=["Round State"])
 
 @router.get("/active", response_model=ActiveRoundResponse)
 async def get_active_round():
-    doc = await db.round_state.find_one({"_id": "active_round"})
-    if not doc:
-        # initialize if not present
-        now = datetime.utcnow()
-        await db.round_state.update_one(
-            {"_id": "active_round"},
-            {"$setOnInsert": {"round": None, "updated_at": now}},
-            upsert=True,
+    db = get_database()
+    if db is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Database connection not available. Please check MongoDB connection."
         )
-        return {"round": None, "updated_at": now}
-    return {"round": doc.get("round"), "updated_at": doc.get("updated_at", datetime.utcnow())}
+    
+    try:
+        doc = await db.round_state.find_one({"_id": "active_round"})
+        if not doc:
+            # initialize if not present
+            now = datetime.utcnow()
+            await db.round_state.update_one(
+                {"_id": "active_round"},
+                {"$setOnInsert": {"round": None, "updated_at": now}},
+                upsert=True,
+            )
+            return {"round": None, "updated_at": now}
+        return {"round": doc.get("round"), "updated_at": doc.get("updated_at", datetime.utcnow())}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error accessing database: {str(e)}"
+        )
 
 
 class SetActiveRoundRequest(BaseModel):
@@ -39,12 +52,23 @@ async def set_active_round(payload: SetActiveRoundRequest):
     if payload.round is not None and payload.round not in [1, 2, 3]:
         raise HTTPException(status_code=400, detail="round must be 1, 2, 3 or null")
 
-    now = datetime.utcnow()
-    await db.round_state.update_one(
-        {"_id": "active_round"},
-        {"$set": {"round": payload.round, "updated_at": now}},
-        upsert=True,
-    )
-    return {"round": payload.round, "updated_at": now}
-
-
+    db = get_database()
+    if db is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Database connection not available. Please check MongoDB connection."
+        )
+    
+    try:
+        now = datetime.utcnow()
+        await db.round_state.update_one(
+            {"_id": "active_round"},
+            {"$set": {"round": payload.round, "updated_at": now}},
+            upsert=True,
+        )
+        return {"round": payload.round, "updated_at": now}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error updating database: {str(e)}"
+        )

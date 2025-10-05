@@ -21,8 +21,8 @@ mongo_cluster = os.getenv("MONGO_CLUSTER", "")
 if mongo_user and mongo_pass and mongo_cluster:
     MONGO_URI = f"mongodb+srv://{quote_plus(mongo_user)}:{quote_plus(mongo_pass)}@{mongo_cluster}/?retryWrites=true&w=majority"
 else:
-    MONGO_URI = "mongodb://localhost:27017"  # Local fallback
-MONGO_DB = os.getenv("MONGO_DB", "hackathon_evaluation")
+    MONGO_URI =  os.getenv("MONGODB_URI"),
+MONGO_DB = os.getenv("DB_NAME", "hackathon_evaluation")
 JWT_SECRET = os.getenv("JWT_SECRET", "your_jwt_secret_key")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 60))

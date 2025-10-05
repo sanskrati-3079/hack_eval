@@ -1,8 +1,7 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import "./SignIn.css";
 import Header from "./Header_SignIn.jsx";
-import { judgeLogin } from "../utils/api.js";
 
 function SignIn() {
     const [username, setUsername] = useState("");
@@ -17,12 +16,25 @@ function SignIn() {
         setError("");
 
         try {
-            const data = await judgeLogin(username, password);
-            
-            // Store the token in localStorage
-            localStorage.setItem('judgeToken', data.access_token);
+            const response = await fetch("http://localhost:8000/judge/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || "Login failed");
+            }
+
+            // Store the token and user info
+            localStorage.setItem('judgeToken', data.data.accessToken);
             localStorage.setItem('judgeUsername', username);
-            // alert("Login successful!");
+            localStorage.setItem('judgeInfo', JSON.stringify(data.data.judge));
+            
             navigate("/dashboard");
         } catch (err) {
             setError(err.message || "Login failed. Please check your credentials.");
@@ -82,6 +94,10 @@ function SignIn() {
                         {isLoading ? "Signing In..." : "Sign In"}
                     </button>
                 </form>
+                
+                <p style={{ textAlign: 'center', marginTop: '20px' }}>
+                    Don't have an account? <Link to="/signup" style={{ color: '#4CAF50' }}>Sign Up</Link>
+                </p>
             </div>
         </div>
     );

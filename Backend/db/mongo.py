@@ -1,50 +1,43 @@
 import os
-import certifi
 from motor.motor_asyncio import AsyncIOMotorClient
-from urllib.parse import quote_plus
+from pymongo.errors import ConnectionFailure, OperationFailure
 from dotenv import load_dotenv
+import asyncio
 
 load_dotenv()
 
-# Read environment variables
-user = os.getenv("MONGO_USER")
-password = os.getenv("MONGO_PASS")
-cluster = os.getenv("MONGO_CLUSTER")
-db_name = os.getenv("MONGO_DB")
+# MongoDB connection details
+MONGO_URI = os.getenv("MONGODB_URI")
+DB_NAME = os.getenv("DB_NAME", "hackathon_evaluation")
 
-if not all([user, password, cluster, db_name]):
-    raise ValueError("❌ Missing MongoDB environment variables")
-
-# Encode credentials to handle special characters
-user = quote_plus(user)
-password = quote_plus(password)
-
-# Build MongoDB connection URI
-MONGO_URI = (
-    f"mongodb+srv://{user}:{password}@{cluster}/{db_name}"
-    "?retryWrites=true&w=majority"
-)
-
-# Initialize variables
 client = None
 db = None
 
 async def connect_to_mongo():
-    """Establish connection to MongoDB Atlas"""
+    """Connect to MongoDB with error handling"""
     global client, db
     try:
-        # ✅ Use certifi CA bundle for SSL verification
-        client = AsyncIOMotorClient(MONGO_URI, tlsCAFile=certifi.where())
-        db = client[db_name]
-
+        if not MONGO_URI:
+            print("❌ MONGODB_URI environment variable not set")
+            return False
+            
+        client = AsyncIOMotorClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+        
         # Test the connection
-        await client.admin.command("ping")
-        print("✅ Successfully connected to MongoDB Atlas")
+        await client.admin.command('ping')
+        
+        db = client[DB_NAME]
+        print(f"✅ Connected to MongoDB: {DB_NAME}")
         return True
-    except Exception as e:
+        
+    except ConnectionFailure as e:
         print(f"❌ MongoDB connection failed: {e}")
-        client = None
-        db = None
+        return False
+    except OperationFailure as e:
+        print(f"❌ MongoDB authentication failed: {e}")
+        return False
+    except Exception as e:
+        print(f"❌ Unexpected MongoDB error: {e}")
         return False
 
 async def close_mongo_connection():
@@ -53,6 +46,30 @@ async def close_mongo_connection():
     if client:
         client.close()
         print("✅ MongoDB connection closed")
+
+def get_database():
+    """Get database instance - for synchronous contexts"""
+    global db
+    return db
+
+async def get_database_async():
+    """Get database instance asynchronously"""
+    global db
+    if db is None:
+        success = await connect_to_mongo()
+        if not success:
+            return None
+    return db
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -63,59 +80,72 @@ async def close_mongo_connection():
 
 # import os
 # from motor.motor_asyncio import AsyncIOMotorClient
-# from urllib.parse import quote_plus
+# from pymongo.errors import ConnectionFailure, OperationFailure
 # from dotenv import load_dotenv
+# import logging
 
 # load_dotenv()
 
-# user = os.getenv("MONGO_USER")
-# password = os.getenv("MONGO_PASS")
-# cluster = os.getenv("MONGO_CLUSTER")
-# db_name = os.getenv("MONGO_DB")
+# # Configure logging
+# logging.basicConfig(level=logging.INFO)
+# logger = logging.getLogger(__name__)
 
-# if not all([user, password, cluster, db_name]):
-#     raise ValueError("Missing MongoDB environment variables")
+# # MongoDB connection details
+# MONGO_URI = os.getenv("MONGODB_URI")
+# DB_NAME = os.getenv("DB_NAME", "hackathon_evaluation")
 
-# user = quote_plus(user)
-# password = quote_plus(password)
-
-# MONGO_URI = f"mongodb+srv://{user}:{password}@{cluster}/{db_name}?retryWrites=true&w=majority"
-
-# # Initialize variables
-# client = None
-# db = None
+# # Global database instance
+# _client = None
+# _db = None
 
 # async def connect_to_mongo():
-#     """Establish connection to MongoDB"""
-#     global client, db
+#     """Connect to MongoDB with error handling"""
+#     global _client, _db
 #     try:
-#         client = AsyncIOMotorClient(MONGO_URI)
-#         db = client[db_name]
-
+#         if not MONGO_URI:
+#             logger.error("❌ MONGODB_URI environment variable not set")
+#             return False
+            
+#         _client = AsyncIOMotorClient(MONGO_URI, serverSelectionTimeoutMS=10000)
+        
 #         # Test the connection
-#         await client.admin.command('ping')
-#         print("✅ MongoDB connected successfully")
+#         await _client.admin.command('ping')
+        
+#         _db = _client[DB_NAME]
+#         logger.info(f"✅ Connected to MongoDB: {DB_NAME}")
 #         return True
+        
+#     except ConnectionFailure as e:
+#         logger.error(f"❌ MongoDB connection failed: {e}")
+#         return False
+#     except OperationFailure as e:
+#         logger.error(f"❌ MongoDB authentication failed: {e}")
+#         return False
 #     except Exception as e:
-#         print(f"❌ MongoDB connection failed: {e}")
-#         client = None
-#         db = None
+#         logger.error(f"❌ Unexpected MongoDB error: {e}")
 #         return False
 
 # async def close_mongo_connection():
 #     """Close MongoDB connection"""
-#     global client
-#     if client:
-#         client.close()
-#         print("✅ MongoDB connection closed")
+#     global _client
+#     if _client:
+#         _client.close()
+#         logger.info("✅ MongoDB connection closed")
 
-# # Try to connect immediately (this will be called during startup)
-# try:
-#     # Create client but don't connect yet
-#     client = AsyncIOMotorClient(MONGO_URI)
-#     db = client[db_name]
-#     print("✅ MongoDB client initialized")
-# except Exception as e:
-#     print(f"❌ MongoDB client initialization failed: {e}")
-#     client = None
-#     db = None
+# def get_database():
+#     """Get database instance with error handling"""
+#     global _db
+#     if _db is None:
+#         logger.error("❌ Database not initialized. Call connect_to_mongo() first.")
+#         raise RuntimeError("Database not initialized")
+#     return _db
+
+# async def check_database_connection():
+#     """Check if database connection is active"""
+#     try:
+#         db = get_database()
+#         await db.command('ping')
+#         return True
+#     except Exception as e:
+#         logger.error(f"Database connection check failed: {e}")
+#         return False

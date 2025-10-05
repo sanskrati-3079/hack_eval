@@ -6,13 +6,17 @@ from datetime import datetime
 from bson import ObjectId
 import bcrypt
 from auth.jwt_handler import create_access_token, verify_access_token
-from core.config import MONGO_URI, MONGO_DB, JWT_SECRET, JWT_ALGORITHM
+from core.config import MONGO_DB, JWT_SECRET, JWT_ALGORITHM
 from typing import Optional
 from Schema.judge import JudgeLogin, JudgeModel, JudgeResponse
 from utils.hash_password import verify_password, get_password_hash
 from jose import JWTError, jwt
 from db.mongo import db  # Use the main database connection
+import os
 
+print(MONGO_DB)
+MONGO_URI = os.getenv("MONGODB_URI")
+print(MONGO_URI)
 
 router = APIRouter()
 
@@ -83,26 +87,30 @@ async def judge_login(form_data: OAuth2PasswordRequestForm = Depends()):
     """Authenticate judge and return JWT token"""
     try:
         check_db_connection()
+        print("kese ho")
+        print("none one: ", form_data.username, form_data.password)
         # Look for judge by username instead of email
-        judge = await db.judges.find_one({"username": form_data.username})
+        judge = await db.judges.find_one({"name": form_data.username})
+        print(judge)
         if not judge:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect username or password"
+                detail="Incorrect name or passwords"
             )
 
         # Check if password matches (assuming passwords are stored as plain text for now)
-        if form_data.password != judge["password"]:
+        verifyPassword = verify_password(form_data.password, judge["password"])
+        if not verifyPassword:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect username or password"
+                detail="Incorrect username or passwords"
             )
 
         # Create access token
         token_data = {
             "sub": str(judge["_id"]),
             "type": "judge",
-            "username": judge["username"]
+            "username": judge["name"]
         }
         access_token = create_access_token(token_data)
 

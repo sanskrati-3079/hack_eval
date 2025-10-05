@@ -21,7 +21,7 @@ async def get_judge_profile(current_judge = Depends(get_current_judge)):
         
         # Transform the database document to match JudgeResponse schema
         # Handle email validation - if username is not a valid email, create a dummy one
-        username = judge.get("username", "")
+        username = judge.get("name", "")
         email = judge.get("email", "")
         if not email and username:
             # Create a valid email format from username if none exists
@@ -29,7 +29,7 @@ async def get_judge_profile(current_judge = Depends(get_current_judge)):
         
         judge_response = {
             "id": str(judge["_id"]),
-            "name": judge.get("name", judge.get("username", "Unknown")),
+            "name": judge.get("name", judge.get("name", "Unknown")),
             "email": email,
             "expertise": judge.get("expertise", []),
             "assigned_teams": judge.get("assigned_teams", []),

@@ -1,9 +1,11 @@
 # schema/admin_extended.py
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field,validator
 from typing import List, Optional, Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
+import dateutil.parser
+from bson import ObjectId
 
 # Dashboard and Statistics
 class AdminDashboardStats(BaseModel):
@@ -17,19 +19,42 @@ class AdminDashboardStats(BaseModel):
 
 # Round Management
 class RoundCreate(BaseModel):
-    name: str
+    name: str = Field(..., min_length=1, max_length=100)
+    description: str = Field(..., min_length=1, max_length=500)
     start_time: datetime
     end_time: datetime
-    description: str
-    judges_required: int
-    evaluation_criteria: List[Dict[str, int]]
-    category: str
+    category: str = Field(..., min_length=1, max_length=50)
+    judges_required: int = Field(..., ge=1, le=20)
+    evaluation_criteria: Optional[List[Dict[str, int]]] = Field(default=[
+        {"problem_solution_fit": 10},
+        {"functionality_features": 20},
+        {"technical_feasibility": 20},
+        {"innovation_creativity": 15},
+        {"user_experience": 15},
+        {"impact_value": 10},
+        {"presentation_demo_quality": 5},
+        {"team_collaboration": 5}
+    ])
+
+    @validator('end_time')
+    def end_time_after_start_time(cls, v, values):
+        if 'start_time' in values and v <= values['start_time']:
+            raise ValueError('End time must be after start time')
+        return v
 
 class Round(RoundCreate):
     round_id: int
-    status: str = "scheduled"
+    status: str = Field(..., pattern="^(draft|scheduled|ongoing|completed)$")
     created_at: datetime
-    created_by: EmailStr
+    created_by: str
+    updated_at: datetime
+
+    class Config:
+        arbitrary_types_allowed = True
+        json_encoders = {
+            ObjectId: str,
+            datetime: lambda v: v.isoformat()
+        }
 
 # Judge Management
 class JudgeAssignment(BaseModel):
@@ -142,9 +167,21 @@ class MentorResponse(MentorBase):
     created_at: datetime
     updated_at: datetime
     last_active: Optional[datetime] = None
+    assigned_teams: List[str] = []
+
+class RoundUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+    description: Optional[str] = Field(None, min_length=1, max_length=500)
+    judges_required: Optional[int] = Field(None, gt=0)
+    evaluation_criteria: Optional[List[Dict[str, int]]] = None
+    category: Optional[str] = Field(None, min_length=1, max_length=50)
+    status: Optional[str] = Field(None, pattern="^(scheduled|ongoing|completed)$")
 
     class Config:
         allow_population_by_field_name = True
+        arbitrary_types_allowed = True
 
 class MentorSession(BaseModel):
     session_id: str
