@@ -12,10 +12,10 @@ const router = Router();
 // Apply judge authentication middleware to all routes
 router.use(verifyJWTJudge);
 
-// Routes
+// IMPORTANT: Static routes MUST come before dynamic routes
+router.route("/my-evaluations").get(getJudgeEvaluations);
 router.route("/submit").post(submitEvaluation);
 router.route("/save-draft").post(saveDraft);
-router.route("/:teamId").get(getEvaluation);
-router.route("/").get(getJudgeEvaluations);
+router.route("/:teamId").get(getEvaluation); 
 
 export default router;
