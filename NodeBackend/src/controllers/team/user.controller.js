@@ -111,8 +111,16 @@ const getCurrentTeam = asyncHandler(async (req, res) => {
   );
 });
 
+const teamLogout = asyncHandler(async (req, res) => {
+  res.status(200).json(
+    new ApiResponse(200, null, "Logout successful")
+  );
+});
+
+
 export {
   teamRegister,
   teamLogin,
-  getCurrentTeam
+  getCurrentTeam,
+  teamLogout
 };

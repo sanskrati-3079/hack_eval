@@ -10,7 +10,7 @@ import {
   FaTimes
 } from 'react-icons/fa';
 import './Header.css';
-// import { logout } from '../api/teams.jsx';
+import { logout } from '../api/teams.jsx';
 
 const Navbar = () => {
   const location = useLocation();
@@ -34,10 +34,10 @@ const Navbar = () => {
   }, []);
 
   const handleLogout = () => {
-    if (window.confirm('Are you sure you want to logout?')) {
-      logout();
-    }
-  };
+  if (window.confirm('Are you sure you want to logout?')) {
+    logout();
+  }
+};
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
