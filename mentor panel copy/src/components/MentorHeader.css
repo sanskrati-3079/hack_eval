@@ -1,0 +1,59 @@
+.mh-root { height: 80px; display: flex; align-items: center; gap: 12px; padding: 0 24px; border-bottom: 1px solid #e5e7eb; background: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.mh-left { display: flex; align-items: center; gap: 10px; }
+.mh-logo { width: 70px; height: 90px; object-fit: contain; }
+
+.mh-title { font-size: 17px; font-weight: 600; }
+.mh-tabs { display: flex; gap: 4px; margin-left: 16px; }
+.mh-tab { padding: 14px 18px; border-bottom: 3px solid transparent; color: #6b7280; text-decoration: none; border-radius: 8px 8px 0 0; }
+.mh-tab:hover { background: #f3f4f6; color: #1f2937; }
+.mh-tab.active { color: #1d4ed8; border-bottom-color: #1d4ed8; background: #eef2ff; }
+
+.mh-spacer {
+  margin-left: auto;
+}
+
+.mh-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.mh-icon-btn:hover {
+  background: #f3f4f6;
+}
+
+.mh-pill { height: 36px; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; background: #e8f0ff; color: #1d4ed8; border: none; border-radius: 10px; font-weight: 600; }
+.mh-pill-value { color: #111827; margin-left: 4px; }
+.mh-logout { margin-left: 8px; height: 36px; padding: 0 14px; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer; font-weight: 600; }
+.mh-logout:hover { background: #f9fafb; }
+
+.mh-profile {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mh-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #eef2ff;
+  color: #1f2937;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mh-name {
+  font-size: 13px;
+  color: #374151;
+}
+
+
