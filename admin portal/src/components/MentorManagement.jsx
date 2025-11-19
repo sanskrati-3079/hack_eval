@@ -5,18 +5,23 @@ import {
   Edit, 
   Trash2, 
   Search, 
-  Filter,
-  Clock,
-  CheckCircle,
-  XCircle,
   Users,
   Mail,
   Phone,
   MapPin,
-  Calendar,
-  ToggleLeft,
-  ToggleRight
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
+import {
+  getMentors,
+  getMentorStatistics,
+  createMentor,
+  updateMentor,
+  deleteMentor,
+  toggleMentorAvailability,
+  addTeamToMentor,
+  removeTeamFromMentor
+} from '../api.js';
 
 const MentorManagement = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -25,86 +30,54 @@ const MentorManagement = () => {
   const [showMentorModal, setShowMentorModal] = useState(false);
   const [selectedMentor, setSelectedMentor] = useState(null);
   const [newTeamNameByMentorId, setNewTeamNameByMentorId] = useState({});
-
-  const [mentors, setMentors] = useState(() => {
-    try {
-      const saved = localStorage.getItem('mentors');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return [
-    {
-      id: 1,
-      name: 'Dr. Sarah Johnson',
-      email: 'sarah.johnson@example.com',
-      phone: '+1 (555) 123-4567',
-      expertise: ['AI/ML', 'Data Science'],
-      availability: true,
-      status: 'active',
-      location: 'San Francisco, CA',
-      bio: 'Senior AI researcher with 10+ years of experience in machine learning and data science.',
-      assignedTeams: ['Team Alpha', 'Team Delta'],
-      totalTeams: 2,
-      rating: 4.8,
-      sessions: 15
-    },
-    {
-      id: 2,
-      name: 'Prof. Robert Chen',
-      email: 'robert.chen@example.com',
-      phone: '+1 (555) 234-5678',
-      expertise: ['Mobile App', 'UI/UX'],
-      availability: true,
-      status: 'active',
-      location: 'New York, NY',
-      bio: 'Mobile app development expert specializing in iOS and Android development.',
-      assignedTeams: ['Team Gamma'],
-      totalTeams: 1,
-      rating: 4.9,
-      sessions: 12
-    },
-    {
-      id: 3,
-      name: 'Dr. Emily Davis',
-      email: 'emily.davis@example.com',
-      phone: '+1 (555) 345-6789',
-      expertise: ['Web Development', 'Full Stack'],
-      availability: false,
-      status: 'busy',
-      location: 'Austin, TX',
-      bio: 'Full-stack developer with expertise in modern web technologies.',
-      assignedTeams: ['Team Beta'],
-      totalTeams: 1,
-      rating: 4.7,
-      sessions: 8
-    },
-    {
-      id: 4,
-      name: 'Prof. Michael Wilson',
-      email: 'michael.wilson@example.com',
-      phone: '+1 (555) 456-7890',
-      expertise: ['IoT', 'Hardware'],
-      availability: true,
-      status: 'active',
-      location: 'Seattle, WA',
-      bio: 'IoT specialist with background in embedded systems and hardware design.',
-      assignedTeams: [],
-      totalTeams: 0,
-      rating: 4.6,
-      sessions: 5
-    }
-    ];
+  const [mentors, setMentors] = useState([]);
+  const [statistics, setStatistics] = useState({
+    totalMentors: 0,
+    availableMentors: 0,
+    totalAssignedTeams: 0
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const categories = ['all', 'AI/ML', 'Web Development', 'Mobile App', 'IoT', 'Data Science', 'UI/UX', 'Full Stack', 'Hardware'];
 
-  const filteredMentors = mentors.filter(mentor => {
-    const matchesCategory = selectedCategory === 'all' || 
-                          mentor.expertise.some(exp => exp === selectedCategory);
-    const matchesStatus = selectedStatus === 'all' || mentor.status === selectedStatus;
-    const matchesSearch = mentor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         mentor.email.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesCategory && matchesStatus && matchesSearch;
-  });
+  useEffect(() => {
+    fetchMentors();
+    fetchStatistics();
+  }, []);
+
+  const fetchMentors = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const params = {};
+      
+      if (selectedCategory !== 'all') params.category = selectedCategory;
+      if (selectedStatus !== 'all') params.status = selectedStatus;
+      if (searchTerm) params.search = searchTerm;
+      
+      const mentorsData = await getMentors(params);
+      setMentors(mentorsData);
+    } catch (err) {
+      console.error('Error fetching mentors:', err);
+      setError('Failed to load mentors. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStatistics = async () => {
+    try {
+      const stats = await getMentorStatistics();
+      setStatistics(stats);
+    } catch (err) {
+      console.error('Error fetching statistics:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchMentors();
+  }, [selectedCategory, selectedStatus, searchTerm]);
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -135,81 +108,89 @@ const MentorManagement = () => {
     setShowMentorModal(true);
   };
 
-  const toggleAvailability = (mentorId) => {
-    setMentors((prev) =>
-      prev.map((m) => (m.id === mentorId ? { ...m, availability: !m.availability } : m))
-    );
+  const toggleAvailability = async (mentorId) => {
+    try {
+      const updatedMentor = await toggleMentorAvailability(mentorId);
+      setMentors(prev => 
+        prev.map(m => m._id === mentorId ? updatedMentor : m)
+      );
+      fetchStatistics(); // Refresh statistics
+    } catch (err) {
+      console.error('Error toggling availability:', err);
+      alert('Failed to update availability. Please try again.');
+    }
   };
 
-  const handleAddAssignedTeam = (mentorId) => {
+  const handleAddAssignedTeam = async (mentorId) => {
     const rawName = (newTeamNameByMentorId[mentorId] || '').trim();
     if (!rawName) return;
-    setMentors((prev) =>
-      prev.map((m) => {
-        if (m.id !== mentorId) return m;
-        const existingLc = (m.assignedTeams || []).map((t) => t.toLowerCase());
-        if (existingLc.includes(rawName.toLowerCase())) return m;
-        const updatedTeams = [...(m.assignedTeams || []), rawName];
-        return { ...m, assignedTeams: updatedTeams, totalTeams: updatedTeams.length };
-      })
-    );
-    setNewTeamNameByMentorId((prev) => ({ ...prev, [mentorId]: '' }));
-  };
-
-  const handleRemoveAssignedTeam = (mentorId, teamName) => {
-    if (!window.confirm(`Remove team "${teamName}" from this mentor?`)) return;
-    setMentors((prev) =>
-      prev.map((m) => {
-        if (m.id !== mentorId) return m;
-        const updatedTeams = (m.assignedTeams || []).filter((t) => t !== teamName);
-        return { ...m, assignedTeams: updatedTeams, totalTeams: updatedTeams.length };
-      })
-    );
-  };
-
-  useEffect(() => {
+    
     try {
-      localStorage.setItem('mentors', JSON.stringify(mentors));
-    } catch {}
-  }, [mentors]);
-
-  const handleSaveMentor = (mentorData) => {
-    if (selectedMentor) {
-      // Update existing mentor
-      setMentors((prev) =>
-        prev.map((m) =>
-          m.id === selectedMentor.id
-            ? {
-                ...m,
-                ...mentorData
-              }
-            : m
-        )
+      const updatedMentor = await addTeamToMentor(mentorId, rawName);
+      setMentors(prev => 
+        prev.map(m => m._id === mentorId ? updatedMentor : m)
       );
-    } else {
-      // Add new mentor
-      const nextId = mentors.length ? Math.max(...mentors.map((m) => m.id)) + 1 : 1;
-      const newMentor = {
-        id: nextId,
-        assignedTeams: [],
-        totalTeams: mentorData.totalTeams ?? 0,
-        rating: mentorData.rating ?? 0,
-        sessions: mentorData.sessions ?? 0,
-        ...mentorData
-      };
-      setMentors((prev) => [newMentor, ...prev]);
+      setNewTeamNameByMentorId(prev => ({ ...prev, [mentorId]: '' }));
+      fetchStatistics(); // Refresh statistics
+    } catch (err) {
+      console.error('Error adding team:', err);
+      alert('Failed to add team. Please try again.');
     }
-    setShowMentorModal(false);
-    setSelectedMentor(null);
   };
 
-  const handleRemoveMentor = (mentorId) => {
-    const mentor = mentors.find((m) => m.id === mentorId);
-    const name = mentor ? mentor.name : 'this mentor';
-    if (!window.confirm(`Remove ${name}? This action cannot be undone.`)) return;
-    setMentors((prev) => prev.filter((m) => m.id !== mentorId));
-    if (selectedMentor?.id === mentorId) {
+  const handleRemoveAssignedTeam = async (mentorId, teamName) => {
+    if (!window.confirm(`Remove team "${teamName}" from this mentor?`)) return;
+    
+    try {
+      const updatedMentor = await removeTeamFromMentor(mentorId, teamName);
+      setMentors(prev => 
+        prev.map(m => m._id === mentorId ? updatedMentor : m)
+      );
+      fetchStatistics(); // Refresh statistics
+    } catch (err) {
+      console.error('Error removing team:', err);
+      alert('Failed to remove team. Please try again.');
+    }
+  };
+
+  const handleSaveMentor = async (mentorData) => {
+    try {
+      if (selectedMentor) {
+        // Update existing mentor
+        const updatedMentor = await updateMentor(selectedMentor._id, mentorData);
+        setMentors(prev => 
+          prev.map(m => m._id === selectedMentor._id ? updatedMentor : m)
+        );
+      } else {
+        // Add new mentor
+        const newMentor = await createMentor(mentorData);
+        setMentors(prev => [newMentor, ...prev]);
+      }
+      setShowMentorModal(false);
       setSelectedMentor(null);
+      fetchStatistics(); // Refresh statistics
+    } catch (err) {
+      console.error('Error saving mentor:', err);
+      alert('Failed to save mentor. Please try again.');
+    }
+  };
+
+  const handleRemoveMentor = async (mentorId) => {
+    const mentor = mentors.find((m) => m._id === mentorId);
+    const name = mentor ? mentor.name : 'this mentor';
+    
+    if (!window.confirm(`Remove ${name}? This action cannot be undone.`)) return;
+    
+    try {
+      await deleteMentor(mentorId);
+      setMentors(prev => prev.filter((m) => m._id !== mentorId));
+      if (selectedMentor?._id === mentorId) {
+        setSelectedMentor(null);
+      }
+      fetchStatistics(); // Refresh statistics
+    } catch (err) {
+      console.error('Error deleting mentor:', err);
+      alert('Failed to delete mentor. Please try again.');
     }
   };
 
@@ -231,7 +212,7 @@ const MentorManagement = () => {
               <h3>Total Mentors</h3>
             </div>
             <div className="card-value">
-              <span className="value">{mentors.length}</span>
+              <span className="value">{statistics.totalMentors}</span>
               <span className="change">Registered</span>
             </div>
           </div>
@@ -244,7 +225,7 @@ const MentorManagement = () => {
               <h3>Available Mentors</h3>
             </div>
             <div className="card-value">
-              <span className="value">{mentors.filter(m => m.availability).length}</span>
+              <span className="value">{statistics.availableMentors}</span>
               <span className="change positive">Active</span>
             </div>
           </div>
@@ -257,23 +238,10 @@ const MentorManagement = () => {
               <h3>Assigned Teams</h3>
             </div>
             <div className="card-value">
-              <span className="value">{mentors.reduce((sum, m) => sum + m.totalTeams, 0)}</span>
+              <span className="value">{statistics.totalAssignedTeams}</span>
               <span className="change">Teams</span>
             </div>
           </div>
-
-          {/* <div className="dashboard-card">
-            <div className="card-header">
-              <div className="card-icon" style={{ backgroundColor: 'var(--warning)20', color: 'var(--warning)' }}>
-                <Clock size={24} />
-              </div>
-              <h3>Total Sessions</h3>
-            </div>
-            <div className="card-value">
-              <span className="value">{mentors.reduce((sum, m) => sum + m.sessions, 0)}</span>
-              <span className="change">Conducted</span>
-            </div>
-          </div> */}
         </div>
       </div>
 
@@ -332,121 +300,153 @@ const MentorManagement = () => {
         </div>
       </div>
 
+      {/* Error Message */}
+      {error && (
+        <div className="alert alert-error">
+          {error}
+          <button className="btn btn-sm" onClick={() => setError(null)}>×</button>
+        </div>
+      )}
+
+      {/* Loading State */}
+      {loading && (
+        <div className="loading-state">
+          <div className="loading-spinner"></div>
+          <p>Loading mentors...</p>
+        </div>
+      )}
+
       {/* Mentors Grid */}
-      <div className="mentors-grid">
-        {filteredMentors.map((mentor) => (
-          <div key={mentor.id} className="mentor-card card">
-            <div className="card-body">
-              <div className="mentor-header">
-                <div className="mentor-avatar">
-                  <span>{mentor.name.split(' ').map(n => n[0]).join('')}</span>
-                </div>
-                <div className="mentor-info">
-                  <h3 className="mentor-name">{mentor.name}</h3>
-                  <p className="mentor-title">{mentor.expertise.join(', ')}</p>
-                  <div className="mentor-status">
-                    {getStatusBadge(mentor.status)}
-                    {getAvailabilityBadge(mentor.availability)}
-                  </div>
-                </div>
-                <div className="mentor-actions">
-                  <button 
-                    className="btn btn-secondary btn-sm"
-                    onClick={() => handleEditMentor(mentor)}
-                  >
-                    <Edit size={14} />
-                    Edit
-                  </button>
-                  <button className="btn btn-error btn-sm" onClick={() => handleRemoveMentor(mentor.id)}>
-                    <Trash2 size={14} />
-                    Remove
-                  </button>
-                </div>
-              </div>
-
-              <div className="mentor-details">
-                <div className="contact-info">
-                  <div className="contact-item">
-                    <Mail size={14} />
-                    <span>{mentor.email}</span>
-                  </div>
-                  <div className="contact-item">
-                    <Phone size={14} />
-                    <span>{mentor.phone}</span>
-                  </div>
-                  <div className="contact-item">
-                    <MapPin size={14} />
-                    <span>{mentor.location}</span>
-                  </div>
-                </div>
-
-                <div className="mentor-bio">
-                  <p>{mentor.bio}</p>
-                </div>
-
-                {/* Removed rating, sessions, and teams stats from mentor card as requested */}
-
-                <div className="assigned-teams">
-                  <h4>Assigned Teams</h4>
-                  {mentor.assignedTeams.length > 0 && (
-                    <div className="team-tags">
-                      {mentor.assignedTeams.map((team, index) => (
-                        <span key={index} className="team-tag" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                          {team}
-                          <button
-                            className="btn btn-error btn-sm"
-                            style={{ padding: '2px 6px' }}
-                            title="Remove team"
-                            onClick={() => handleRemoveAssignedTeam(mentor.id, team)}
-                          >
-                            ×
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  <div className="add-team-row" style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="Add team name..."
-                      value={newTeamNameByMentorId[mentor.id] || ''}
-                      onChange={(e) => setNewTeamNameByMentorId((prev) => ({ ...prev, [mentor.id]: e.target.value }))}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleAddAssignedTeam(mentor.id);
-                        }
-                      }}
-                      style={{ flex: 1 }}
-                    />
-                    <button
-                      className="btn btn-primary btn-sm"
-                      onClick={() => handleAddAssignedTeam(mentor.id)}
-                    >
-                      Add
-                    </button>
-                  </div>
-                </div>
-
-                <div className="availability-toggle">
-                  <label className="toggle-switch">
-                    <input
-                      type="checkbox"
-                      checked={mentor.availability}
-                      onChange={() => toggleAvailability(mentor.id)}
-                    />
-                    <span className="toggle-slider"></span>
-                  </label>
-                  <span className="toggle-label">
-                    {mentor.availability ? 'Available' : 'Unavailable'}
-                  </span>
-                </div>
-              </div>
+      {!loading && !error && (
+        <div className="mentors-grid">
+          {mentors.length === 0 ? (
+            <div className="empty-state">
+              <UserCheck size={48} />
+              <h3>No mentors found</h3>
+              <p>Try adjusting your filters or add a new mentor.</p>
             </div>
-          </div>
-        ))}
-      </div>
+          ) : (
+            mentors.map((mentor) => (
+              <div key={mentor._id} className="mentor-card card">
+                <div className="card-body">
+                  <div className="mentor-header">
+                    <div className="mentor-avatar">
+                      <span>{mentor.name.split(' ').map(n => n[0]).join('')}</span>
+                    </div>
+                    <div className="mentor-info">
+                      <h3 className="mentor-name">{mentor.name}</h3>
+                      <p className="mentor-title">{mentor.expertise.join(', ')}</p>
+                      <div className="mentor-status">
+                        {getStatusBadge(mentor.status)}
+                        {getAvailabilityBadge(mentor.availability)}
+                      </div>
+                    </div>
+                    <div className="mentor-actions">
+                      <button 
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => handleEditMentor(mentor)}
+                      >
+                        <Edit size={14} />
+                        Edit
+                      </button>
+                      <button className="btn btn-error btn-sm" onClick={() => handleRemoveMentor(mentor._id)}>
+                        <Trash2 size={14} />
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="mentor-details">
+                    <div className="contact-info">
+                      <div className="contact-item">
+                        <Mail size={14} />
+                        <span>{mentor.email}</span>
+                      </div>
+                      {mentor.phone && (
+                        <div className="contact-item">
+                          <Phone size={14} />
+                          <span>{mentor.phone}</span>
+                        </div>
+                      )}
+                      {mentor.location && (
+                        <div className="contact-item">
+                          <MapPin size={14} />
+                          <span>{mentor.location}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {mentor.bio && (
+                      <div className="mentor-bio">
+                        <p>{mentor.bio}</p>
+                      </div>
+                    )}
+
+                    <div className="assigned-teams">
+                      <h4>Assigned Teams</h4>
+                      {mentor.assignedTeams && mentor.assignedTeams.length > 0 ? (
+                        <div className="team-tags">
+                          {mentor.assignedTeams.map((team, index) => (
+                            <span key={index} className="team-tag" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                              {team}
+                              <button
+                                className="btn btn-error btn-sm"
+                                style={{ padding: '2px 6px' }}
+                                title="Remove team"
+                                onClick={() => handleRemoveAssignedTeam(mentor._id, team)}
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-muted">No teams assigned</p>
+                      )}
+                      <div className="add-team-row" style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                        <input
+                          type="text"
+                          className="form-input"
+                          placeholder="Add team name..."
+                          value={newTeamNameByMentorId[mentor._id] || ''}
+                          onChange={(e) => setNewTeamNameByMentorId((prev) => ({ ...prev, [mentor._id]: e.target.value }))}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddAssignedTeam(mentor._id);
+                            }
+                          }}
+                          style={{ flex: 1 }}
+                        />
+                        <button
+                          className="btn btn-primary btn-sm"
+                          onClick={() => handleAddAssignedTeam(mentor._id)}
+                        >
+                          Add
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="availability-toggle">
+                      <label className="toggle-switch">
+                        <input
+                          type="checkbox"
+                          checked={mentor.availability}
+                          onChange={() => toggleAvailability(mentor._id)}
+                        />
+                        <span className="toggle-slider"></span>
+                      </label>
+                      <span className="toggle-label">
+                        {mentor.availability ? 'Available' : 'Unavailable'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
 
       {/* Mentor Modal */}
       {showMentorModal && (
@@ -470,10 +470,7 @@ const MentorModal = ({ mentor, onClose, onSave }) => {
     bio: mentor?.bio || '',
     expertise: mentor?.expertise || [],
     availability: mentor?.availability ?? true,
-    status: mentor?.status || 'active',
-    totalTeams: mentor?.totalTeams ?? 0,
-    rating: mentor?.rating ?? 0,
-    sessions: mentor?.sessions ?? 0
+    status: mentor?.status || 'active'
   });
 
   const expertiseOptions = ['AI/ML', 'Web Development', 'Mobile App', 'IoT', 'Data Science', 'UI/UX', 'Full Stack', 'Hardware'];
@@ -627,4 +624,4 @@ const MentorModal = ({ mentor, onClose, onSave }) => {
   );
 };
 
-export default MentorManagement; 
+export default MentorManagement;

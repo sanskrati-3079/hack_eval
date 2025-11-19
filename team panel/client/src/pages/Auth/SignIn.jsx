@@ -1,5 +1,5 @@
-import React, { useState, useContext, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useContext } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { TeamContext } from "../../context/TeamContext";
 import toast from "react-hot-toast";
 import "./Auth.css";
@@ -8,15 +8,13 @@ import HeaderSignIn from "./Header_SignIn";
 
 const SignIn = () => {
   const navigate = useNavigate();
-  const { team, setTeam } = useContext(TeamContext);
+  const { setTeam } = useContext(TeamContext);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  // Remove useEffect navigation to avoid double navigation or redirect loop
 
   const handleChange = (e) => {
     setFormData({
@@ -31,34 +29,25 @@ const SignIn = () => {
     setLoading(true);
 
     try {
-      // 1. POST to backend
-      const response = await fetch(`${API_BASE_URL}/auth/team_login/`, {
+      const response = await fetch(`${API_BASE_URL}/team/team_login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
-      // 2. Parse response
       const data = await response.json();
-      console.log("Login response:", data);
 
       if (!response.ok) {
-        throw new Error(data.detail || "Login failed");
+        throw new Error(data.message || "Login failed");
       }
 
-      // 3. Check if team data is present
-      if (!data.team) {
-        throw new Error(
-          "Team data not returned from backend. Please contact admin.",
-        );
-      }
-
-      // 4. Save to localStorage and context
-      localStorage.setItem("team", JSON.stringify(data.team));
-      localStorage.setItem("token", data.access_token);
-  setTeam(data.team);
-  toast.success("Signed in successfully");
-  navigate("/");
+      // Save to localStorage and context
+      localStorage.setItem("team", JSON.stringify(data.data.team));
+      localStorage.setItem("token", data.data.accessToken);
+      setTeam(data.data.team);
+      
+      toast.success("Signed in successfully");
+      navigate("/");
     } catch (err) {
       setError(err.message);
       toast.error(err.message);
@@ -106,15 +95,9 @@ const SignIn = () => {
               {loading ? "Signing In..." : "Sign In"}
             </button>
 
-            {/* <div className="demo-credentials">
-              <h3>Demo Credentials</h3>
-              <p>
-                <strong>Team ID:</strong> TC-2024-001
-              </p>
-              <p>
-                <strong>Password:</strong> hackathon
-              </p>
-            </div> */}
+            <p className="auth-link">
+              Don't have an account? <Link to="/signup">Sign Up</Link>
+            </p>
           </form>
         </div>
       </div>

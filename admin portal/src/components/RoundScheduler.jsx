@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './RoundScheduler.css';
 import { 
   Plus, 
@@ -7,34 +7,88 @@ import {
   Upload, 
   Edit, 
   Trash2,
-  Eye
+  Eye,
+  Loader,
+  AlertCircle,
+  CheckCircle
 } from 'lucide-react';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 const RoundScheduler = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedRound, setSelectedRound] = useState(null);
   const [viewMode, setViewMode] = useState('list');
+  const [rounds, setRounds] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
 
-  const [rounds, setRounds] = useState([
-    {
-      id: 1,
-      name: 'Round 1: Ideation',
-      startTime: '2024-01-15T09:00:00',
-      endTime: '2024-01-15T17:00:00',
-      uploadDeadline: '2024-01-15T16:00:00',
-      status: 'completed',
-      description: 'Initial idea submission and team formation'
-    },
-    {
-      id: 2,
-      name: 'Round 2: Development',
-      startTime: '2024-01-16T09:00:00',
-      endTime: '2024-01-17T17:00:00',
-      uploadDeadline: '2024-01-17T16:00:00',
-      status: 'live',
-      description: 'Core development and prototype building'
+  // Get auth token
+  const getAuthToken = () => {
+    return localStorage.getItem('authToken');
+  };
+
+  // Fetch rounds from API
+  const fetchRounds = async () => {
+    try {
+      setLoading(true);
+      const token = getAuthToken();
+      
+      if (!token) {
+        setError('Authentication required. Please log in again.');
+        return;
+      }
+      
+      const response = await fetch(`${API_BASE_URL}/admin/rounds`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.status === 401) {
+        setError('Authentication required. Please log in again.');
+        return;
+      }
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to fetch rounds: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      // Use data.data which contains the array of rounds from ApiResponse
+      setRounds(data.data || []);
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+      console.error('Error fetching rounds:', err);
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
+
+  useEffect(() => {
+    fetchRounds();
+  }, []);
+
+  const showMessage = (message, type = 'error') => {
+    if (type === 'error') {
+      setError(message);
+    } else {
+      setSuccess(message);
+    }
+    
+    setTimeout(() => {
+      if (type === 'error') {
+        setError(null);
+      } else {
+        setSuccess(null);
+      }
+    }, 5000);
+  };
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -65,33 +119,87 @@ const RoundScheduler = () => {
     setShowModal(true);
   };
 
-  const handleDeleteRound = (roundId) => {
-    const round = rounds.find((r) => r.id === roundId);
+  const handleDeleteRound = async (roundId) => {
+    const round = rounds.find((r) => r._id === roundId);
     const name = round ? round.name : 'this round';
+    
     if (!window.confirm(`Delete ${name}? This action cannot be undone.`)) return;
-    setRounds((prev) => prev.filter((r) => r.id !== roundId));
+    
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${API_BASE_URL}/admin/rounds/${roundId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.status === 401) {
+        showMessage('Authentication required. Please log in again.');
+        return;
+      }
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to delete round: ${response.status}`);
+      }
+      
+      await fetchRounds();
+      showMessage('Round deleted successfully!', 'success');
+    } catch (err) {
+      showMessage(`Failed to delete round: ${err.message}`);
+      console.error('Error deleting round:', err);
+    }
   };
 
-  // 🔹 Main Add/Edit Logic
-  const handleSaveRound = (roundData) => {
-    if (selectedRound) {
-      // Update existing round
-      setRounds((prev) =>
-        prev.map((r) =>
-          r.id === selectedRound.id ? { ...r, ...roundData } : r
-        )
-      );
-    } else {
-      // Add new round
-      const newRound = {
-        ...roundData,
-        id: rounds.length ? Math.max(...rounds.map((r) => r.id)) + 1 : 1
-      };
-      setRounds((prev) => [...prev, newRound]);
+  const handleSaveRound = async (roundData) => {
+    try {
+      const token = getAuthToken();
+      const url = selectedRound 
+        ? `${API_BASE_URL}/admin/rounds/${selectedRound._id}`
+        : `${API_BASE_URL}/admin/rounds`;
+        
+      const method = selectedRound ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(roundData),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to save round: ${response.status}`);
+      }
+      
+      await fetchRounds();
+      setShowModal(false);
+      setSelectedRound(null);
+      showMessage(`Round ${selectedRound ? 'updated' : 'created'} successfully!`, 'success');
+    } catch (err) {
+      showMessage(`Failed to save round: ${err.message}`);
+      console.error('Error saving round:', err);
     }
-    setShowModal(false);
-    setSelectedRound(null);
   };
+
+  if (loading) {
+    return (
+      <div className="round-scheduler">
+        <div className="page-header">
+          <h1 className="page-title">Round Scheduler</h1>
+          <p className="page-subtitle">Manage hackathon rounds, schedules, and deadlines</p>
+        </div>
+        <div className="loading-container">
+          <Loader size={32} className="spinner" />
+          <p>Loading rounds...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="round-scheduler">
@@ -99,6 +207,32 @@ const RoundScheduler = () => {
         <h1 className="page-title">Round Scheduler</h1>
         <p className="page-subtitle">Manage hackathon rounds, schedules, and deadlines</p>
       </div>
+
+      {error && (
+        <div className="alert alert-error">
+          <AlertCircle size={20} />
+          <span>{error}</span>
+          <button 
+            onClick={() => setError(null)} 
+            className="alert-close"
+          >
+            ×
+          </button>
+        </div>
+      )}
+      
+      {success && (
+        <div className="alert alert-success">
+          <CheckCircle size={20} />
+          <span>{success}</span>
+          <button 
+            onClick={() => setSuccess(null)} 
+            className="alert-close"
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       <div className="action-bar">
         <div className="view-controls">
@@ -109,13 +243,6 @@ const RoundScheduler = () => {
             <Eye size={16} />
             List View
           </button>
-          {/* <button 
-            className={`btn ${viewMode === 'calendar' ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => setViewMode('calendar')}
-          >
-            <Calendar size={16} />
-            Calendar View
-          </button> */}
         </div>
         <button className="btn btn-primary" onClick={handleAddRound}>
           <Plus size={16} />
@@ -125,48 +252,63 @@ const RoundScheduler = () => {
 
       {viewMode === 'list' ? (
         <div className="rounds-list">
-          {rounds.map((round) => (
-            <div key={round.id} className="round-card card">
-              <div className="card-body">
-                <div className="round-header">
-                  <div className="round-info">
-                    <h3 className="round-name">{round.name}</h3>
-                    <p className="round-description">{round.description}</p>
+          {rounds.length === 0 ? (
+            <div className="empty-state">
+              <Calendar size={48} />
+              <h3>No Rounds Scheduled Yet</h3>
+              <p>Get started by creating your first hackathon round</p>
+              <button className="btn btn-primary" onClick={handleAddRound}>
+                <Plus size={16} />
+                Add New Round
+              </button>
+            </div>
+          ) : (
+            rounds.map((round) => (
+              <div key={round._id} className="round-card card">
+                <div className="card-body">
+                  <div className="round-header">
+                    <div className="round-info">
+                      <h3 className="round-name">{round.name}</h3>
+                      <p className="round-description">{round.description}</p>
+                    </div>
+                    <div className="round-status">
+                      {getStatusBadge(round.status)}
+                    </div>
                   </div>
-                  <div className="round-status">
-                    {getStatusBadge(round.status)}
+                  
+                  <div className="round-details">
+                    <div className="detail-item">
+                      <Clock size={16} />
+                      <div><strong>Start:</strong> {formatDateTime(round.startTime)}</div>
+                    </div>
+                    <div className="detail-item">
+                      <Clock size={16} />
+                      <div><strong>End:</strong> {formatDateTime(round.endTime)}</div>
+                    </div>
+                    <div className="detail-item">
+                      <Upload size={16} />
+                      <div><strong>Upload Deadline:</strong> {formatDateTime(round.uploadDeadline)}</div>
+                    </div>
                   </div>
-                </div>
-                
-                <div className="round-details">
-                  <div className="detail-item">
-                    <Clock size={16} />
-                    <div><strong>Start:</strong> {formatDateTime(round.startTime)}</div>
-                  </div>
-                  <div className="detail-item">
-                    <Clock size={16} />
-                    <div><strong>End:</strong> {formatDateTime(round.endTime)}</div>
-                  </div>
-                  <div className="detail-item">
-                    <Upload size={16} />
-                    <div><strong>Upload Deadline:</strong> {formatDateTime(round.uploadDeadline)}</div>
-                  </div>
-                </div>
 
-                <div className="round-actions">
-                  <button 
-                    className="btn btn-secondary"
-                    onClick={() => handleEditRound(round)}
-                  >
-                    <Edit size={16} /> Edit
-                  </button>
-                  <button className="btn btn-error" onClick={() => handleDeleteRound(round.id)}>
-                    <Trash2 size={16} /> Delete
-                  </button>
+                  <div className="round-actions">
+                    <button 
+                      className="btn btn-secondary"
+                      onClick={() => handleEditRound(round)}
+                    >
+                      <Edit size={16} /> Edit
+                    </button>
+                    <button 
+                      className="btn btn-error" 
+                      onClick={() => handleDeleteRound(round._id)}
+                    >
+                      <Trash2 size={16} /> Delete
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       ) : (
         <div className="calendar-view">
@@ -182,7 +324,10 @@ const RoundScheduler = () => {
       {showModal && (
         <RoundModal 
           round={selectedRound}
-          onClose={() => setShowModal(false)}
+          onClose={() => {
+            setShowModal(false);
+            setSelectedRound(null);
+          }}
           onSave={handleSaveRound}
         />
       )}
@@ -195,15 +340,75 @@ const RoundModal = ({ round, onClose, onSave }) => {
   const [formData, setFormData] = useState({
     name: round?.name || '',
     description: round?.description || '',
-    startTime: round?.startTime ? round.startTime.slice(0, 16) : '',
-    endTime: round?.endTime ? round.endTime.slice(0, 16) : '',
-    uploadDeadline: round?.uploadDeadline ? round.uploadDeadline.slice(0, 16) : '',
+    startTime: round?.startTime ? new Date(round.startTime).toISOString().slice(0, 16) : '',
+    endTime: round?.endTime ? new Date(round.endTime).toISOString().slice(0, 16) : '',
+    uploadDeadline: round?.uploadDeadline ? new Date(round.uploadDeadline).toISOString().slice(0, 16) : '',
     status: round?.status || 'draft'
   });
 
-  const handleSubmit = (e) => {
+  const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.name.trim()) newErrors.name = 'Round name is required';
+    if (!formData.description.trim()) newErrors.description = 'Description is required';
+    if (!formData.startTime) newErrors.startTime = 'Start time is required';
+    if (!formData.endTime) newErrors.endTime = 'End time is required';
+    if (!formData.uploadDeadline) newErrors.uploadDeadline = 'Upload deadline is required';
+    
+    if (new Date(formData.endTime) <= new Date(formData.startTime)) {
+      newErrors.endTime = 'End time must be after start time';
+    }
+    
+    if (new Date(formData.uploadDeadline) < new Date(formData.startTime) || 
+        new Date(formData.uploadDeadline) > new Date(formData.endTime)) {
+      newErrors.uploadDeadline = 'Upload deadline must be between start and end time';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSave(formData);
+    
+    if (!validateForm()) return;
+    
+    setSaving(true);
+    
+    try {
+      // Convert datetime strings to proper format
+      const submitData = {
+        ...formData,
+        startTime: new Date(formData.startTime).toISOString(),
+        endTime: new Date(formData.endTime).toISOString(),
+        uploadDeadline: new Date(formData.uploadDeadline).toISOString()
+      };
+      
+      await onSave(submitData);
+    } catch (err) {
+      console.error('Error in form submission:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    // Clear error when field is edited
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
   };
 
   return (
@@ -216,68 +421,79 @@ const RoundModal = ({ round, onClose, onSave }) => {
         
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
-            {/* name */}
             <div className="form-group">
               <label className="form-label">Round Name</label>
               <input
                 type="text"
-                className="form-input"
+                name="name"
+                className={`form-input ${errors.name ? 'error' : ''}`}
                 value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                onChange={handleChange}
                 required
               />
+              {errors.name && <span className="error-text">{errors.name}</span>}
             </div>
-            {/* description */}
+            
             <div className="form-group">
               <label className="form-label">Description</label>
               <textarea
-                className="form-input"
+                name="description"
+                className={`form-input ${errors.description ? 'error' : ''}`}
                 value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                onChange={handleChange}
                 rows="3"
+                required
               />
+              {errors.description && <span className="error-text">{errors.description}</span>}
             </div>
-            {/* dates */}
+            
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label">Start Time</label>
                 <input
                   type="datetime-local"
-                  className="form-input"
+                  name="startTime"
+                  className={`form-input ${errors.startTime ? 'error' : ''}`}
                   value={formData.startTime}
-                  onChange={(e) => setFormData({...formData, startTime: e.target.value})}
+                  onChange={handleChange}
                   required
                 />
+                {errors.startTime && <span className="error-text">{errors.startTime}</span>}
               </div>
               <div className="form-group">
                 <label className="form-label">End Time</label>
                 <input
                   type="datetime-local"
-                  className="form-input"
+                  name="endTime"
+                  className={`form-input ${errors.endTime ? 'error' : ''}`}
                   value={formData.endTime}
-                  onChange={(e) => setFormData({...formData, endTime: e.target.value})}
+                  onChange={handleChange}
                   required
                 />
+                {errors.endTime && <span className="error-text">{errors.endTime}</span>}
               </div>
             </div>
-            {/* deadline */}
+            
             <div className="form-group">
               <label className="form-label">Upload Deadline</label>
               <input
                 type="datetime-local"
-                className="form-input"
+                name="uploadDeadline"
+                className={`form-input ${errors.uploadDeadline ? 'error' : ''}`}
                 value={formData.uploadDeadline}
-                onChange={(e) => setFormData({...formData, uploadDeadline: e.target.value})}
+                onChange={handleChange}
                 required
               />
+              {errors.uploadDeadline && <span className="error-text">{errors.uploadDeadline}</span>}
             </div>
-            {/* status */}
+            
             <div className="form-group">
               <label className="form-label">Status</label>
               <select
+                name="status"
                 className="form-select"
                 value={formData.status}
-                onChange={(e) => setFormData({...formData, status: e.target.value})}
+                onChange={handleChange}
               >
                 <option value="draft">Draft</option>
                 <option value="live">Live</option>
@@ -287,10 +503,20 @@ const RoundModal = ({ round, onClose, onSave }) => {
           </div>
 
           <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={onClose}>
+            <button 
+              type="button" 
+              className="btn btn-secondary" 
+              onClick={onClose}
+              disabled={saving}
+            >
               Cancel
             </button>
-            <button type="submit" className="btn btn-primary">
+            <button 
+              type="submit" 
+              className="btn btn-primary"
+              disabled={saving}
+            >
+              {saving ? <Loader size={16} className="spinner" /> : null}
               {round ? 'Update Round' : 'Create Round'}
             </button>
           </div>

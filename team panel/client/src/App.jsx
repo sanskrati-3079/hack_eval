@@ -15,6 +15,7 @@ import Analytics from "./pages/Analytics.jsx";
 import Notifications from "./pages/Notifications.jsx";
 import SignIn from "./pages/Auth/SignIn.jsx";
 import ProfileSettings from "./pages/Auth/ProfileSettings.jsx";
+import SignUp from "./pages/Auth/Signup.jsx";
 
 // Styles
 import "./pages/styles.css";
@@ -80,6 +81,7 @@ function App() {
                         </PrivateRoute>
                       }
                     />
+                    
                     <Route
                       path="/team"
                       element={
@@ -143,6 +145,10 @@ function App() {
           ) : (
             <Routes>
               <Route path="/signin" element={<SignIn />} />
+              <Route path="/signup"
+                     element={
+                      <SignUp />
+                     } />
               <Route path="*" element={<Navigate to="/signin" replace />} />
             </Routes>
           )}
