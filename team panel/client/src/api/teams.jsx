@@ -235,3 +235,15 @@ export const getTeamsByCategory = async (category) => {
     );
   }
 };
+
+// Logout API call
+export const logout = async () => {
+  try {
+    await api.post("/team_logout");
+  } catch (error) {
+    console.log("Error during logout:", error);
+  }
+  localStorage.removeItem("token");
+  localStorage.removeItem("team"); 
+  window.location.href = "/signin";
+};

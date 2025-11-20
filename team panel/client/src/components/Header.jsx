@@ -10,7 +10,7 @@ import {
   FaUser
 } from 'react-icons/fa';
 import './Header.css';
-// import { logout } from '../api/teams.jsx';
+import { logout } from '../api/teams.jsx';
 
 const Navbar = () => {
   const location = useLocation();
@@ -29,6 +29,10 @@ const Navbar = () => {
       console.log('Logout clicked');
     }
   };
+  if (window.confirm('Are you sure you want to logout?')) {
+    logout();
+  }
+};
 
   return (
     <div className="admin-layout">

@@ -4,13 +4,12 @@ import {
   Download, 
   Search, 
   Eye, 
-  Edit,
+  CheckCircle,
   TrendingUp,
   BarChart3,
-  CheckCircle,
-  Upload,
   RefreshCw
 } from 'lucide-react';
+import { API_BASE_URL } from '../config';
 
 const ScoreCompiler = () => {
   const [selectedRound, setSelectedRound] = useState('all');
@@ -26,92 +25,51 @@ const ScoreCompiler = () => {
   const rounds = ['all', 'Round 1', 'Round 2', 'Round 3'];
   const categories = ['all', 'AI/ML', 'Web Development', 'Mobile App', 'IoT', 'Blockchain'];
 
-  // Fetch teams and evaluations data
-  // In your ScoreCompiler component, update the fetch calls:
-// Temporary fallback to mock data if endpoints don't exist
-useEffect(() => {
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      
-      // Try to fetch from API first
+  // Fetch teams and evaluations from the database (no static/mock data)
+  useEffect(() => {
+    const fetchData = async () => {
       try {
-        const teamsResponse = await fetch('/judge/evaluation/all-teams');
-        if (teamsResponse.ok) {
-          const teamsData = await teamsResponse.json();
-          setTeams(teamsData.data || []);
-        } else {
-          throw new Error('API endpoint not available');
-        }
-      } catch (apiError) {
-        console.log('Using mock teams data');
-        // Fallback to mock data
-        setTeams([
-          {
-            _id: 1,
-            teamName: 'Team Alpha',
-            category: 'AI/ML',
-            currentRound: 1,
-            assignedJudge: { name: 'Dr. Sarah Johnson' },
-            evaluationStatus: 'completed'
-          },
-          // ... more mock teams
-        ]);
-      }
-      
-      // Similarly for evaluations
-      try {
-        const evaluationsResponse = await fetch('/judge/evaluation/all-evaluations');
-        if (evaluationsResponse.ok) {
-          const evaluationsData = await evaluationsResponse.json();
-          setEvaluations(evaluationsData.data || []);
-        } else {
-          throw new Error('API endpoint not available');
-        }
-      } catch (apiError) {
-        console.log('Using mock evaluations data');
-        // Fallback to mock data
-        setEvaluations([
-          {
-            team_id: 1,
-            team_name: 'Team Alpha',
-            problem_statement: 'AI Solution',
-            category: 'AI/ML',
-            round_id: 1,
-            problem_solution_fit: 9,
-            functionality_features: 8,
-            technical_feasibility: 7,
-            innovation_creativity: 8,
-            user_experience: 7,
-            impact_value: 8,
-            presentation_demo_quality: 7,
-            team_collaboration: 8,
-            personalized_feedback: 'Excellent technical implementation',
-            total_score: 8.0,
-            average_score: 8.0,
-            judge_id: 1,
-            judge_name: 'Dr. Sarah Johnson',
-            status: 'submitted'
-          },
-          // ... more mock evaluations
-        ]);
-      }
-      
-    } catch (err) {
-      setError(err.message);
-      console.error('Error fetching data:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+        setLoading(true);
+        setError(null);
 
-  fetchData();
-}, []);
+        const adminAuthHeaders = {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem('authToken') || ""}`
+        };
 
-  // Combine team data with evaluation data
+        // Teams fetch
+        const teamsResp = await fetch(`${API_BASE_URL}/admin/evaluation/all-teams`, {
+          headers: adminAuthHeaders
+        });
+        if (!teamsResp.ok) throw new Error("Failed to fetch teams");
+        const teamsJson = await teamsResp.json();
+        setTeams(teamsJson.data || []);
+
+        // Evaluations fetch
+        const evalsResp = await fetch(`${API_BASE_URL}/admin/evaluation/all-evaluations`, {
+          headers: adminAuthHeaders
+        });
+        if (!evalsResp.ok) throw new Error("Failed to fetch evaluations");
+        const evalsJson = await evalsResp.json();
+        setEvaluations(evalsJson.data || []);
+
+      } catch (err) {
+        setError(err.message);
+        console.error('Error fetching data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Properly join team + evaluation data
   const getTeamWithEvaluation = (team) => {
-    const evaluationData = evaluations.find(e => e.team_id === team._id);
-    
+    const evaluationData = evaluations.find(e =>
+      String(e.team_id?._id || e.team_id) === String(team._id)
+    );
+
     if (!evaluationData) {
       return {
         id: team._id,
@@ -136,7 +94,6 @@ useEffect(() => {
         evaluationStatus: team.evaluationStatus || 'unassigned'
       };
     }
-
     return {
       id: team._id,
       name: team.teamName || team.name,
@@ -155,7 +112,7 @@ useEffect(() => {
       },
       totalScore: evaluationData.total_score,
       averageScore: evaluationData.average_score,
-      qualified: evaluationData.average_score >= 6, // Assuming 6 is the qualifying threshold
+      qualified: evaluationData.average_score >= 6,
       feedback: evaluationData.personalized_feedback,
       evaluationStatus: 'completed'
     };
@@ -213,9 +170,7 @@ useEffect(() => {
     const avgScore = completedEvaluations.length > 0 
       ? completedEvaluations.reduce((sum, t) => sum + t.averageScore, 0) / completedEvaluations.length 
       : 0;
-    
     const scores = completedEvaluations.map(t => t.averageScore);
-    
     return {
       totalTeams: teams.length,
       evaluatedTeams: completedEvaluations.length,
@@ -252,9 +207,8 @@ useEffect(() => {
         </div>
         <div className="error-container">
           <p className="error-message">Error: {error}</p>
-          <button className="btn btn-primary" onClick={() => window.location.reload()}>
-            <RefreshCw size={16} />
-            Try Again
+          <button className="btn btn-primary" onClick={handleRefreshData}>
+            <RefreshCw size={16} /> Try Again
           </button>
         </div>
       </div>
@@ -375,12 +329,10 @@ useEffect(() => {
 
         <div className="action-buttons">
           <button className="btn btn-secondary" onClick={handleRefreshData}>
-            <RefreshCw size={16} />
-            Refresh
+            <RefreshCw size={16} /> Refresh
           </button>
           <button className="btn btn-primary" onClick={handleExportScores}>
-            <Download size={16} />
-            Export Scores
+            <Download size={16} /> Export Scores
           </button>
         </div>
       </div>
@@ -467,6 +419,7 @@ useEffect(() => {
     </div>
   );
 };
+
 
 // Modal Component
 const ScorecardModal = ({ team, onClose }) => {

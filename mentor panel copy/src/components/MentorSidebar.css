@@ -1,0 +1,112 @@
+.ms-root {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+}
+
+.ms-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 12px 8px 12px;
+}
+
+.ms-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+}
+
+.ms-brand {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.ms-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.ms-subtitle {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.ms-section-label {
+  padding: 6px 12px;
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.ms-menu {
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  gap: 4px;
+}
+
+.ms-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  color: #111827;
+  text-decoration: none;
+}
+
+.ms-item:hover {
+  background: #f3f4f6;
+}
+
+.ms-item.active {
+  background: #eef2ff;
+  color: #1d4ed8;
+}
+
+.ms-item-label {
+  font-size: 13px;
+}
+
+.ms-footer {
+  margin-top: auto;
+  padding: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.ms-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ms-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #e0f2fe;
+  color: #111827;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ms-user-role {
+  font-size: 10px;
+  color: #6b7280;
+}
+
+.ms-user-name {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+

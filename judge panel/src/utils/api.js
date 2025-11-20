@@ -1,4 +1,4 @@
-import { API_BASE_URL} from "../config";
+import { API_BASE_URL } from "../config";
 const AAPI_BASE_URL = API_BASE_URL;
 
 // Helper function to get auth headers
@@ -8,6 +8,26 @@ export const getAuthHeaders = () => {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
     };
+};
+
+// Helper function for safe JSON parsing
+const safeJsonParse = async (response, url) => {
+    const responseText = await response.text();
+    
+    let data;
+    try {
+        data = JSON.parse(responseText);
+    } catch (parseError) {
+        console.error('Response is not JSON:', responseText.substring(0, 200));
+        throw new Error(`Server returned HTML instead of JSON. Check if backend is running and URL is correct: ${url}`);
+    }
+    
+    if (!response.ok) {
+        const errorMsg = data.message || data.detail || `HTTP ${response.status}: Request failed`;
+        throw new Error(errorMsg);
+    }
+    
+    return data;
 };
 
 // Judge authentication
@@ -26,7 +46,6 @@ export const judgeLogin = async (username, password) => {
         });
 
         console.log('Response status:', response.status);
-        console.log('Response headers:', response.headers);
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
@@ -48,55 +67,45 @@ export const judgeLogin = async (username, password) => {
 
 // Get judge profile
 export const getJudgeProfile = async () => {
-    const response = await fetch(`${AAPI_BASE_URL}/judge/profile`, {
+    const url = `${AAPI_BASE_URL}/judge/profile`;
+    const response = await fetch(url, {
         headers: getAuthHeaders(),
     });
 
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to fetch profile');
-    }
-
-    return response.json();
+    return await safeJsonParse(response, url);
 };
 
 // Get assigned teams
 export const getAssignedTeams = async (roundId = null) => {
     const url = roundId 
-        ? `${API_BASE_URL}/judge/assigned-teams?round_id=${roundId}`
-        : `${API_BASE_URL}/judge/assigned-teams`;
+        ? `${AAPI_BASE_URL}/judge/assigned-teams?round_id=${roundId}`
+        : `${AAPI_BASE_URL}/judge/assigned-teams`;
     
     const response = await fetch(url, {
         headers: getAuthHeaders(),
     });
 
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to fetch assigned teams');
-    }
-
-    return response.json();
+    return await safeJsonParse(response, url);
 };
 
-// Submit evaluation
+// Submit evaluation (CORRECTED URL based on your app.js route)
 export const submitEvaluation = async (teamId, evaluation) => {
-    const response = await fetch(`${AAPI_BASE_URL}/judge/evaluate/${teamId}`, {
+    const url = `${AAPI_BASE_URL}/judge/team-evaluation/submit`;
+    const response = await fetch(url, {
         method: 'POST',
         headers: getAuthHeaders(),
-        body: JSON.stringify(evaluation),
+        body: JSON.stringify({
+            teamId: teamId,
+            ...evaluation
+        }),
     });
 
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to submit evaluation');
-    }
-
-    return response.json();
+    return await safeJsonParse(response, url);
 };
 
 // Get evaluations
 export const getEvaluations = async (roundId = null, teamId = null) => {
-    let url = `${API_BASE_URL}/judge/evaluations`;
+    let url = `${AAPI_BASE_URL}/judge/evaluation`;
     const params = new URLSearchParams();
     
     if (roundId) params.append('round_id', roundId);
@@ -110,68 +119,97 @@ export const getEvaluations = async (roundId = null, teamId = null) => {
         headers: getAuthHeaders(),
     });
 
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to fetch evaluations');
-    }
-
-    return response.json();
+    return await safeJsonParse(response, url);
 };
 
-// Get judge's own evaluations
+// Get judge's own evaluations (CORRECTED URL based on your app.js route)
 export const getMyEvaluations = async () => {
-    const response = await fetch(`${AAPI_BASE_URL}/judge/evaluation/my-evaluations`, {
-        headers: getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to fetch my evaluations');
-    }
-
-    return response.json();
+  const url = `${AAPI_BASE_URL}/judge/team-evaluation/my-evaluations`;
+  const response = await fetch(url, { headers: getAuthHeaders() });
+  const parsed = await safeJsonParse(response, url);
+  if (!Array.isArray(parsed.data)) {
+    throw new Error("Malformed API response: expected data array");
+  }
+  return parsed.data; // return the actual array
 };
 
-// Get team details by team ID
-export const getTeamDetails = async (teamId) => {
-    const response = await fetch(`${AAPI_BASE_URL}/team-ps/teams/${teamId}`, {
+
+// Get specific evaluation by teamId (CORRECTED URL)
+export const getEvaluation = async (teamId) => {
+    const url = `${AAPI_BASE_URL}/judge/team-evaluation/${teamId}`;
+    
+    const response = await fetch(url, {
         headers: getAuthHeaders(),
     });
 
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to fetch team details');
-    }
+    return await safeJsonParse(response, url);
+};
 
-    return response.json();
+// Save draft evaluation (CORRECTED URL)
+export const saveDraftEvaluation = async (teamId, evaluation) => {
+    const url = `${AAPI_BASE_URL}/judge/team-evaluation/save-draft`;
+    
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+            teamId: teamId,
+            ...evaluation
+        }),
+    });
+
+    return await safeJsonParse(response, url);
+};
+
+// Get team details
+export const getTeamDetails = async (teamId) => {
+    const url = `${AAPI_BASE_URL}/team-ps/teams/${teamId}`;
+    
+    try {
+        const response = await fetch(url, {
+            headers: getAuthHeaders(),
+        });
+
+        const data = await safeJsonParse(response, url);
+        return data.data || data;
+        
+    } catch (error) {
+        console.error('getTeamDetails error:', error);
+        throw error;
+    }
 };
 
 // Get all teams with problem statement details
 export const getAllTeams = async () => {
-    const response = await fetch(`${AAPI_BASE_URL}/judge/all-teams`, {
+    const url = `${AAPI_BASE_URL}/judge/all-teams`;
+    
+    const response = await fetch(url, {
         headers: getAuthHeaders(),
     });
 
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to fetch teams');
-    }
-
-    return response.json();
+    return await safeJsonParse(response, url);
 };
 
-// Count evaluations by team name
+// Count evaluations by team name (CORRECTED URL)
 export const countEvaluationsByTeamName = async (teamName) => {
-    const response = await fetch(`${AAPI_BASE_URL}/judge/evaluation/count-by-team-name/${encodeURIComponent(teamName)}`, {
+    const url = `${AAPI_BASE_URL}/judge/evaluation/count-by-team-name/${encodeURIComponent(teamName)}`;
+    
+    const response = await fetch(url, {
         headers: getAuthHeaders(),
     });
 
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to count evaluations');
-    }
+    return await safeJsonParse(response, url);
+};
 
-    return response.json();
+// Debug function to check API configuration
+export const debugApiConfig = () => {
+    console.log('=== API Configuration Debug ===');
+    console.log('API Base URL:', AAPI_BASE_URL);
+    console.log('Judge Token:', localStorage.getItem('judgeToken') ? 'Present' : 'Missing');
+    console.log('Expected My Evaluations URL:', `${AAPI_BASE_URL}/judge/team-evaluation/my-evaluations`);
+    console.log('Expected Submit Evaluation URL:', `${AAPI_BASE_URL}/judge/team-evaluation/submit`);
+    console.log('Expected Get Evaluation URL:', `${AAPI_BASE_URL}/judge/team-evaluation/:teamId`);
+    console.log('=============================');
 };
 
 // Check if user is authenticated
@@ -186,3 +224,18 @@ export const logout = () => {
     localStorage.removeItem('judgeUsername');
     window.location.href = '/';
 };
+
+// Test API connectivity
+export const testApiConnection = async () => {
+    try {
+        const response = await fetch(`${AAPI_BASE_URL}/`);
+        const data = await response.json();
+        console.log('API Connection Test:', data);
+        return true;
+    } catch (error) {
+        console.error('API Connection Failed:', error);
+        return false;
+    }
+};
+
+
