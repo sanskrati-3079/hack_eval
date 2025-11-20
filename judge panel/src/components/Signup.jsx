@@ -79,9 +79,9 @@ function SignUp() {
         <div className="auth-background">
             <Header onMenuClick={() => {}} />
             <div className="auth-container">
-                <div className="auth-logo">
+                {/* <div className="auth-logo">
                     <img src="..\..\public\images\gla.png" alt="GLA University" />
-                </div>
+                </div> */}
                 <h1 className="auth-title">Judge Registration</h1>
                 <p className="auth-subtitle">Create your account for Hackathon Evaluation Portal</p>
                 

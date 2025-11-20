@@ -4,7 +4,6 @@ import toast, { Toaster } from "react-hot-toast";
 
 // Components
 import Header from "./components/Header.jsx";
-import Sidebar from "./components/Sidebar.jsx";
 import PrivateRoute from "./components/PrivateRoute.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import TeamInfo from "./pages/TeamInfo.jsx";
@@ -26,7 +25,7 @@ import { TeamContext } from "./context/TeamContext.js";
 function App() {
   const [team, setTeam] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Sidebar state removed
 
   // Load team data from localStorage on app start
   useEffect(() => {
@@ -65,82 +64,75 @@ function App() {
         <div className="app">
           {team ? (
             <>
-              <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
-              <div className="app-content">
-                <Sidebar
-                  isOpen={sidebarOpen}
-                  onClose={() => setSidebarOpen(false)}
-                />
-                <main className="main-content">
-                  <Routes>
-                    <Route
-                      path="/"
-                      element={
-                        <PrivateRoute>
-                          <Dashboard />
-                        </PrivateRoute>
-                      }
-                    />
-                    
-                    <Route
-                      path="/team"
-                      element={
-                        <PrivateRoute>
-                          <TeamInfo />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/submissions"
-                      element={
-                        <PrivateRoute>
-                          <Submissions />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/leaderboard"
-                      element={
-                        <PrivateRoute>
-                          <Leaderboard />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/mentors"
-                      element={
-                        <PrivateRoute>
-                          <Mentors />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/analytics"
-                      element={
-                        <PrivateRoute>
-                          <Analytics />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/notifications"
-                      element={
-                        <PrivateRoute>
-                          <Notifications />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/profile"
-                      element={
-                        <PrivateRoute>
-                          <ProfileSettings />
-                        </PrivateRoute>
-                      }
-                    />
-                  </Routes>
-                </main>
-              </div>
+              <Header />
+              <main className="main-content">
+                <Routes>
+                  <Route
+                    path="/"
+                    element={
+                      <PrivateRoute>
+                        <Dashboard />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/team"
+                    element={
+                      <PrivateRoute>
+                        <TeamInfo />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/submissions"
+                    element={
+                      <PrivateRoute>
+                        <Submissions />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/leaderboard"
+                    element={
+                      <PrivateRoute>
+                        <Leaderboard />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/mentors"
+                    element={
+                      <PrivateRoute>
+                        <Mentors />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/analytics"
+                    element={
+                      <PrivateRoute>
+                        <Analytics />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/notifications"
+                    element={
+                      <PrivateRoute>
+                        <Notifications />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/profile"
+                    element={
+                      <PrivateRoute>
+                        <ProfileSettings />
+                      </PrivateRoute>
+                    }
+                  />
+                </Routes>
+              </main>
             </>
           ) : (
             <Routes>

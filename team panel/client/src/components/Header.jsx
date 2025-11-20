@@ -6,16 +6,15 @@ import {
   FaTrophy, 
   FaChartBar, 
   FaSignOutAlt,
-  FaBars,
-  FaTimes
+  FaBell,
+  FaUser
 } from 'react-icons/fa';
 import './Header.css';
 import { logout } from '../api/teams.jsx';
 
 const Navbar = () => {
   const location = useLocation();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [currentRound, setCurrentRound] = useState('None');
 
   const menuItems = [
     { path: '/', icon: FaHome, label: 'Dashboard' },
@@ -24,120 +23,74 @@ const Navbar = () => {
     { path: '/program-schedule', icon: FaChartBar, label: 'Schedule' },
   ];
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   const handleLogout = () => {
+    if (window.confirm('Are you sure you want to logout?')) {
+      // logout();
+      console.log('Logout clicked');
+    }
+  };
   if (window.confirm('Are you sure you want to logout?')) {
     logout();
   }
 };
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
-
-  const closeMobileMenu = () => {
-    setIsMobileMenuOpen(false);
-  };
-
   return (
-    <>
-      <nav className={`navbar ${isScrolled ? 'scrolled' : ''}`}>
-        <div className="navbar-container">
-          {/* Brand/Logo Section */}
-          <div className="navbar-brand">
-            {/* <div className="brand-logo">
-              <img src='../../public/images/DC.png' alt="DC Logo" className="brand-image" />
-            </div> */}
-            <div className="brand-text">
-              <span className="brand-title">Team Dashboard</span>
-              {/* <span className="brand-subtitle">Team Dashboard</span> */}
+    <div className="admin-layout">
+      {/* Header Section */}
+      <header className="admin-header">
+        <div className="admin-header-content">
+          {/* Left Section */}
+          <div className="admin-header-left">
+            <div className="admin-logo">
+              <img src='../../public/images/codoraai.png' alt="codoro.ai" className="logo-image" />
             </div>
-          </div>
-
-          {/* Desktop Navigation */}
-          <div className="navbar-nav desktop-nav">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = location.pathname === item.path;
-              
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`nav-link ${isActive ? 'active' : ''}`}
-                >
-                  <Icon className="nav-icon" />
-                  <span className="nav-text">{item.label}</span>
-                </Link>
-              );
-            })}
+            <h1 className="admin-title">Team Dashboard</h1>
           </div>
 
           {/* Right Section */}
-          <div className="navbar-right">
+          <div className="admin-header-right">
+            <div className="current-round">
+              <span className="round-label">Current Round:</span>
+              <span className="round-value">{currentRound}</span>
+            </div>
+            
+            <div className="notification-icon">
+              <FaBell />
+              <span className="notification-badge">1</span>
+            </div>
+
             <button 
               onClick={handleLogout}
-              className="logout-btn desktop-logout"
+              className="logout-button"
             >
-              <FaSignOutAlt className="logout-icon" />
-              <span className="logout-text">Logout</span>
-            </button>
-
-            {/* Mobile Menu Toggle */}
-            <button 
-              className="mobile-menu-toggle"
-              onClick={toggleMobileMenu}
-              aria-label="Toggle mobile menu"
-            >
-              {isMobileMenuOpen ? <FaTimes /> : <FaBars />}
+              <FaUser className="user-icon" />
+              <span>Logout</span>
             </button>
           </div>
         </div>
+      </header>
 
-        {/* Mobile Navigation */}
-        <div className={`mobile-nav ${isMobileMenuOpen ? 'open' : ''}`}>
-          <div className="mobile-nav-content">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = location.pathname === item.path;
-              
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`mobile-nav-link ${isActive ? 'active' : ''}`}
-                  onClick={closeMobileMenu}
-                >
-                  <Icon className="mobile-nav-icon" />
-                  <span className="mobile-nav-text">{item.label}</span>
-                </Link>
-              );
-            })}
+      {/* Navigation Tabs */}
+      <nav className="admin-navigation">
+        <div className="nav-tabs">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.path;
             
-            <button 
-              onClick={handleLogout}
-              className="mobile-logout-btn"
-            >
-              <FaSignOutAlt className="mobile-logout-icon" />
-              <span className="mobile-logout-text">Logout</span>
-            </button>
-          </div>
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`nav-tab ${isActive ? 'active' : ''}`}
+              >
+                <Icon className="tab-icon" />
+                <span className="tab-label">{item.label}</span>
+              </Link>
+            );
+          })}
         </div>
       </nav>
-
-      {/* Mobile Overlay */}
-      {isMobileMenuOpen && (
-        <div className="mobile-overlay" onClick={closeMobileMenu}></div>
-      )}
-    </>
+    </div>
   );
 };
 
