@@ -153,12 +153,14 @@ const getEvaluation = asyncHandler(async (req, res) => {
 
 // Get all evaluations by judge
 const getJudgeEvaluations = asyncHandler(async (req, res) => {
-  const evaluations = await Evaluation.find({ judge_id: req.judge._id });
-
+  const judgeId = req.judge._id;
+  const evaluations = await Evaluation.find({ judge_id: judgeId });
   res.status(200).json(
     new ApiResponse(200, evaluations, "Evaluations retrieved successfully")
   );
 });
+
+
 
 export {
   submitEvaluation,
