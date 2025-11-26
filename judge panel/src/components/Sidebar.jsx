@@ -51,13 +51,13 @@ const Sidebar = ({ isOpen, onClose }) => {
   return (
     <aside className={`sidebar ${isOpen ? 'sidebar-open' : ''}`}>
       <div className="sidebar-header">
-        <div className="logo">
+        {/* <div className="logo">
           <GraduationCap size={32} color="#1B4332" />
           <div className="logo-text">
             <h2>GLA University</h2>
             <p>Judge Portal</p>
           </div>
-        </div>
+        </div> */}
         <button className="sidebar-close" onClick={onClose}>
           <X size={20} />
         </button>
@@ -82,7 +82,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       </nav>
       
       {/* Logout Button */}
-      <div className="logout-section">
+      {/* <div className="logout-section">
         <button 
           className="logout-button" 
           onClick={() => navigate("/signin")}
@@ -91,7 +91,7 @@ const Sidebar = ({ isOpen, onClose }) => {
           <LogOut size={20} />
           <span>Logout</span>
         </button>
-      </div>
+      </div> */}
       
       
     </aside>

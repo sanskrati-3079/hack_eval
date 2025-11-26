@@ -1,0 +1,17 @@
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #f7f9fc;
+}
+
+.app-main {
+  display: contents;
+}
+
+.app-content {
+  padding: 24px;
+  width: 100%;
+  max-width: 100%;
+  margin: 100px auto 0; /* ensure content starts below header/tabs */
+}
